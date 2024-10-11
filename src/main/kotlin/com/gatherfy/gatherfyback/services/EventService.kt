@@ -4,12 +4,16 @@ import com.gatherfy.gatherfyback.dtos.EventDTO
 import com.gatherfy.gatherfyback.entities.Event
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
+import io.minio.GetPresignedObjectUrlArgs
+import io.minio.MinioClient
+import io.minio.http.Method
 import org.springframework.stereotype.Service
 
 @Service
 class EventService(
     val eventRepository: EventRepository,
-    val userRepository: UserRepository
+    val adminRepository: AdministratorRepository,
+    private val minioClient: MinioClient
 ) {
 
     fun getAllEvents() : List<EventDTO> {
@@ -43,8 +47,19 @@ class EventService(
             capacity = event.event_capacity,
             status = event.event_status,
             slug = event.event_slug,
-            image = event.event_image,
+            image =  getImageUrl(event.event_image, "thumnails"),
             organizer = organizeName
+        )
+    }
+
+    fun getImageUrl(objectName: String, bucketName: String): String{
+        return minioClient.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .bucket(bucketName)
+                .`object`(objectName)
+                .method(Method.GET)
+                .expiry(60*60)
+                .build()
         )
     }
 }
