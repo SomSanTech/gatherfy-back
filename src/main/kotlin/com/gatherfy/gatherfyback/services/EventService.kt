@@ -3,7 +3,7 @@ package com.gatherfy.gatherfyback.services
 import com.gatherfy.gatherfyback.dtos.EventDTO
 import com.gatherfy.gatherfyback.entities.Event
 import com.gatherfy.gatherfyback.repositories.EventRepository
-import com.gatherfy.gatherfyback.repositories.UserRepository
+import com.gatherfy.gatherfyback.repositories.AdministratorRepository
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.http.Method
@@ -33,8 +33,8 @@ class EventService(
     }
 
     fun toEventDto(event: Event) : EventDTO {
-        val organizeName: String = userRepository.findById(event.event_organizer).map {
-            it.user_organize_name
+        val organizeName: String = adminRepository.findById(event.event_organizer).map {
+            it.admin_username
         }.orElse("Unknown Organizer")
         return EventDTO(
             name = event.event_name,
