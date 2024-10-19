@@ -26,6 +26,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.modelmapper:modelmapper:3.1.1")
 	implementation("io.minio:minio:8.5.12")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

@@ -5,13 +5,14 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 
-@Entity(name = "attendees")
-data class Attendee(
+@Entity(name = "users")
+data class User(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var att_id: Long,
-    var att_firstname: String,
-    var att_lastname: String,
-    var att_gender: String,
-    var att_email: String,
-    var att_phone: String,
+    var users_id: Long,
+    var users_firstname: String,
+    var users_lastname: String,
+    var username: String,
+    var users_gender: String,
+    var users_email: String,
+    var users_phone: String,
 )

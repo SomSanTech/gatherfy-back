@@ -21,5 +21,5 @@ data class Event(
     var event_status: String,
     var event_slug: String,
     var event_image: String,
-    var event_organizer: Long
+    var event_owner: Long
 )

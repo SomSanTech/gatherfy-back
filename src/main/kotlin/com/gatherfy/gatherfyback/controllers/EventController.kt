@@ -10,21 +10,22 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("api/events")
+@RequestMapping("api")
 class EventController(var eventService: EventService) {
 
-    @GetMapping("")
-    fun getAllEvents(): List<EventDTO> {
-        return eventService.getAllEvents()
+    @GetMapping("/v1/events")
+    fun getAllEvents(
+        @RequestParam(required = false) keyword: String?,
+    ): List<EventDTO> {
+        return if(keyword.isNullOrEmpty()) {
+            eventService.getAllEvents()
+        } else {
+            eventService.getEventByKeyword(keyword)
+        }
     }
 
-    @GetMapping("/{slug}")
+    @GetMapping("/v1/events/{slug}")
     fun getEvent(@PathVariable slug: String) : EventDTO {
         return eventService.getEventBySlug(slug)
-    }
-
-    @GetMapping("/search")
-    fun getEventSearch(@RequestParam keyword: String) : List<EventDTO> {
-        return eventService.getEventByKeyword((keyword))
     }
 }

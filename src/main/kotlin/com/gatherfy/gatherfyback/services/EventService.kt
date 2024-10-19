@@ -3,7 +3,7 @@ package com.gatherfy.gatherfyback.services
 import com.gatherfy.gatherfyback.dtos.EventDTO
 import com.gatherfy.gatherfyback.entities.Event
 import com.gatherfy.gatherfyback.repositories.EventRepository
-import com.gatherfy.gatherfyback.repositories.AdministratorRepository
+import com.gatherfy.gatherfyback.repositories.UserRepository
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.http.Method
@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service
 @Service
 class EventService(
     val eventRepository: EventRepository,
-    val adminRepository: AdministratorRepository,
-    private val minioClient: MinioClient
+    private val minioClient: MinioClient,
+    private val userRepository: UserRepository
 ) {
 
     fun getAllEvents() : List<EventDTO> {
@@ -33,8 +33,8 @@ class EventService(
     }
 
     fun toEventDto(event: Event) : EventDTO {
-        val organizeName: String = adminRepository.findById(event.event_organizer).map {
-            it.admin_username
+        val ownerEventName: String = userRepository.findById(event.event_owner).map {
+            it.username
         }.orElse("Unknown Organizer")
         return EventDTO(
             name = event.event_name,
@@ -48,7 +48,7 @@ class EventService(
             status = event.event_status,
             slug = event.event_slug,
             image =  getImageUrl(event.event_image, "thumnails"),
-            organizer = organizeName
+            owner = ownerEventName
         )
     }
 
