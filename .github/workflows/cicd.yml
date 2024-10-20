@@ -1,9 +1,9 @@
-name: CI/CD Backend
+name: CI/CD kub pom
 
 on:
   push:
     branches:
-      - 'sprint1/main'
+      - 'sprint1-pbi-1-2-3'
 
 jobs:
   build:
@@ -13,87 +13,79 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up JDK
+      - name: setup-java21
         uses: actions/setup-java@v3
         with:
-          java-version: '17' # Adjust according to your project requirements
-          distribution: 'temurin' # OpenJDK distribution
+          distribution: 'oracle'
+          java-version: '17'
 
-      - name: Build with Gradle
+      - name: Build project
         run: ./gradlew build
 
-      - name: Archive build files
-        run: tar -czf build.tar.gz build/libs/*.jar
+#      - name: Upload build files
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: build-files
+#          path: build/libs/gatherfy-back-0.0.1-SNAPSHOT.jar
 
-      - name: Upload build files
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-files
-          path: build.tar.gz
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Download build files
-        uses: actions/download-artifact@v3
-        with:
-          name: build-files
-          path: ./build
-
-      - name: Install SSH client
-        run: sudo apt-get install -y openssh-client
-
-      - name: Install OpenVPN
-        run: |
-          sudo apt update
-          sudo apt install -y openvpn openvpn-systemd-resolved
-
-      - name: Connect to VPN
-        uses: "kota65535/github-openvpn-connect-action@v2"
-        with:
-          config_file: .github/workflows/sitst-client.ovpn
-          username: ${{ secrets.VPN_USERNAME }}
-          password: ${{ secrets.VPN_PASSWORD }}
-
-      - name: Copy build files to server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_rsa
-          ssh-keyscan -p 22 ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Install sshpass
-        run: sudo apt-get install -y sshpass
-
-      - name: Copy build files to VM
-        run: |
-          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./build/build.tar.gz ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy
-
-      - name: Deploy Docker containers on VM
-        env:
-          REMOTE_PASSWORD: ${{ secrets.REMOTE_PASSWORD }}
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-        run: |
-          sshpass -p "$REMOTE_PASSWORD" ssh -t -o StrictHostKeyChecking=no -p 22 -i ~/.ssh/id_rsa $REMOTE_USER@$REMOTE_HOST << 'EOF'
-            cd /home/somsan/Gatherfy
-            tar -xzf build.tar.gz
-
-            # Ensure the necessary Docker containers are running
-            docker-compose -f docker-compose.yml up -d
-
-            # Build and run the backend application
-            docker stop gatherfy-backend || true
-            docker rm gatherfy-backend || true
-            docker build -t gatherfy-backend:latest .
-            docker run -d --name gatherfy-backend -p 8080:8080 gatherfy-backend:latest
-          EOF
+#  deploy:
+#    runs-on: ubuntu-latest
+#    needs: build
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      - name: Download build files
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: build-files
+#          path: ./build
+#
+#      - name: Install SSH client
+#        run: sudo apt-get install -y openssh-client
+#
+#      - name: Install OpenVPN
+#        run: |
+#          sudo apt update
+#          sudo apt install -y openvpn openvpn-systemd-resolved
+#
+#      - name: Connect to VPN
+#        uses: "kota65535/github-openvpn-connect-action@v2"
+#        with:
+#          config_file: .github/workflows/sitst-client.ovpn
+#          username: ${{ secrets.VPN_USERNAME }}
+#          password: ${{ secrets.VPN_PASSWORD }}
+#
+#      - name: Copy build files to server
+#        env:
+#          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+#        run: |
+#          mkdir -p ~/.ssh
+#          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | sed 's/\\n/\n/g' > ~/.ssh/id_rsa
+#          chmod 600 ~/.ssh/id_rsa
+#          eval "$(ssh-agent -s)"
+#          ssh-add ~/.ssh/id_rsa
+#          ssh-keyscan -p 22 ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+#
+#      - name: Install sshpass
+#        run: sudo apt-get install -y sshpass
+#
+#      - name: Copy build files to VM
+#        run: |
+#          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./build/build.tar.gz ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/front
+#
+#      - name: Deploy Docker container on VM
+#        env:
+#          REMOTE_PASSWORD: ${{ secrets.REMOTE_PASSWORD }}
+#          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+#          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+#        run: |
+#          sshpass -p "$REMOTE_PASSWORD" ssh -t -o StrictHostKeyChecking=no -p 22 -i ~/.ssh/id_rsa $REMOTE_USER@$REMOTE_HOST << 'EOF'
+#            cd /home/somsan/Gatherfy/front
+#            tar -xzf build.tar.gz
+#
+#            docker stop gatherfy || true
+#            docker rm gatherfy || true
+#            docker build -t gatherfront:latest .
+#            docker run -d --name gatherfy -p 3000:3000 gatherfront:latest
