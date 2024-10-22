@@ -13,11 +13,14 @@ class EventController(var eventService: EventService) {
     @GetMapping("/v1/events")
     fun getAllEvents(
         @RequestParam(required = false) keyword: String?,
+        @RequestParam(required = false) tags: List<String>,
     ): List<EventDTO> {
-        return if(keyword.isNullOrEmpty()) {
-            eventService.getAllEvents()
-        } else {
+        return if(!keyword.isNullOrEmpty()) {
             eventService.getEventByKeyword(keyword)
+        } else if(tags.isNotEmpty()) {
+            eventService.getEventsByTagsTitle(tags)
+        } else {
+            eventService.getAllEvents()
         }
     }
 

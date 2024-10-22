@@ -13,4 +13,7 @@ interface EventRepository: JpaRepository<Event, Long> {
 
     @Query("from events where event_name LIKE %:keyword%")
     fun findEventByKeyword(@Param("keyword") keyword: String) : List<Event>
+
+    @Query("select e from events e join event_tag et on et.event.event_id=e.event_id join tags t on et.tag.tag_id=t.tag_id where t.tag_title in :tags")
+    fun findEventsByTags(@Param("tags") tags: List<String>) : List<Event>
 }

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 class EventService(
     val eventRepository: EventRepository,
     private val minioClient: MinioClient,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
 
     fun getAllEvents() : List<EventDTO> {
@@ -28,6 +28,12 @@ class EventService(
 
     fun getEventByKeyword(keyword: String) : List<EventDTO> {
         return eventRepository.findEventByKeyword(keyword).map { event ->
+            toEventDto(event)
+        }
+    }
+
+    fun getEventsByTagsTitle(tags: List<String>) : List<EventDTO> {
+        return eventRepository.findEventsByTags(tags).map { event ->
             toEventDto(event)
         }
     }
