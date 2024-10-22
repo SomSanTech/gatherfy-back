@@ -14,5 +14,6 @@ data class EventDTO(
     var status: String,
     var slug: String,
     var image: String,
-    var owner: String
+    var owner: String,
+    var tags: List<String>?
 )

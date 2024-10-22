@@ -1,9 +1,6 @@
 package com.gatherfy.gatherfyback.entities
 
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
+import jakarta.persistence.*
 import java.time.ZonedDateTime
 
 @Entity(name = "events")
@@ -21,5 +18,12 @@ data class Event(
     var event_status: String,
     var event_slug: String,
     var event_image: String,
-    var event_owner: Long
+    var event_owner: Long,
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "event_tag",
+        joinColumns = [JoinColumn(name = "event_id")],
+        inverseJoinColumns = [JoinColumn(name = "tag_id")]
+    )
+    var tags: List<Tag> = mutableListOf()
 )

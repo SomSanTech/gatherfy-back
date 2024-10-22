@@ -48,7 +48,8 @@ class EventService(
             status = event.event_status,
             slug = event.event_slug,
             image =  getImageUrl(event.event_image, "thumnails"),
-            owner = ownerEventName
+            owner = ownerEventName,
+            tags = event.tags?.map { it.tag_title }
         )
     }
 
