@@ -8,6 +8,7 @@ import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.http.Method
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 
 @Service
 class EventService(
@@ -37,6 +38,48 @@ class EventService(
             toEventDto(event)
         }
     }
+
+    fun getEventsByDate(date: LocalDate) : List<EventDTO> {
+        return eventRepository.findEventsByDate(date).map { event ->
+            toEventDto(event)
+        }
+    }
+
+    // Search keyword, Filter tags and date
+    fun getFilteredEvents(keyword: String?, tags: List<String>?, date: LocalDate?): List<EventDTO> {
+        val events: List<Event> = when {
+            !keyword.isNullOrEmpty() && !tags.isNullOrEmpty() && date != null -> {
+                eventRepository.findEventsByKeywordAndTagsAndDate(keyword, tags, date)
+            }
+            !keyword.isNullOrEmpty() && !tags.isNullOrEmpty() -> {
+                eventRepository.findEventsByKeywordAndTags(keyword, tags)
+            }
+            !keyword.isNullOrEmpty() && date != null -> {
+                eventRepository.findEventsByKeywordAndDate(keyword, date)
+            }
+            !tags.isNullOrEmpty() && date != null -> {
+                eventRepository.findEventsByTagsAndDate(tags, date)
+            }
+            !keyword.isNullOrEmpty() -> {
+                eventRepository.findEventByKeyword(keyword)
+            }
+            !tags.isNullOrEmpty() -> {
+                eventRepository.findEventsByTags(tags)
+            }
+            date != null -> {
+                eventRepository.findEventsByDate(date)
+            }
+            else -> {
+                eventRepository.findAll()
+            }
+        }
+        // Mapping the list of events to EventDTO
+        return events.map { event ->
+            toEventDto(event)
+        }
+    }
+
+
 
     fun toEventDto(event: Event) : EventDTO {
         val ownerEventName: String = userRepository.findById(event.event_owner).map {
