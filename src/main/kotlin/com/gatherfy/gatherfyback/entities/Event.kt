@@ -6,19 +6,31 @@ import java.time.ZonedDateTime
 @Entity(name = "events")
 data class Event(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var event_id: Long?,
-    var event_name: String,
-    var event_desc: String,
-    var event_detail: String,
-    var event_start_date: ZonedDateTime,
-    var event_end_date: ZonedDateTime,
-    var event_location: String,
-    var event_google_map: String,
-    var event_capacity: Long,
-    var event_status: String,
+    @Column(name = "event_id")
+    var eventId: Long?,
+    @Column(name = "event_name")
+    var eventName: String,
+    @Column(name = "event_desc")
+    var eventDesc: String,
+    @Column(name = "event_detail")
+    var eventDetail: String,
+    @Column(name = "event_start_date")
+    var eventStartDate: ZonedDateTime,
+    @Column(name = "event_end_date")
+    var eventEndDate: ZonedDateTime,
+    @Column(name = "event_location")
+    var eventLocation: String,
+    @Column(name = "event_google_map")
+    var eventGoogleMap: String,
+    @Column(name = "event_capacity")
+    var eventCapacity: Long,
+    @Column(name = "event_status")
+    var eventStatus: String,
     var event_slug: String,
-    var event_image: String,
-    var event_owner: Long,
+    @Column(name = "event_image")
+    var eventImage: String,
+    @Column(name = "event_owner")
+    var eventOwner: Long,
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "event_tag",

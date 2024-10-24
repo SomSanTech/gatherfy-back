@@ -7,6 +7,7 @@ import com.gatherfy.gatherfyback.repositories.UserRepository
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.http.Method
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 
 @Service
@@ -16,38 +17,61 @@ class EventService(
     private val userRepository: UserRepository
 ) {
 
-    fun getAllEvents() : List<EventDTO> {
-        return eventRepository.findAll().map { event ->
-            toEventDto(event) // Use toEventDto() to convert the event to EventDTO
+//    fun getAllEvents() : List<EventDTO> {
+//        return eventRepository.findAll().map { event ->
+//            toEventDto(event) // Use toEventDto() to convert the event to EventDTO
+//        }
+//    }
+
+    fun getAllEventsSorted(sortField: String, sortDirection: String): List<EventDTO> {
+        val sort = if (sortDirection.equals("asc", ignoreCase = true)) {
+            Sort.by(Sort.Order.asc(sortField))
+        } else {
+            Sort.by(Sort.Order.desc(sortField))
         }
+        val events = eventRepository.findAll(sort)
+        return events.map { event -> toEventDto(event) }
     }
 
     fun getEventBySlug(slug : String) : EventDTO {
         return toEventDto(eventRepository.findEventBySlug(slug))
     }
 
-    fun getEventByKeyword(keyword: String) : List<EventDTO> {
-        return eventRepository.findEventByKeyword(keyword).map { event ->
-            toEventDto(event)
+//    fun getEventByKeyword(keyword: String) : List<EventDTO> {
+//        return eventRepository.findEventByKeyword(keyword).map { event ->
+//            toEventDto(event)
+//        }
+//    }
+
+    fun getEventsByKeywordAndSort(keyword: String, sortField: String?, sortDirection: String?): List<EventDTO> {
+        val sort = if (!sortField.isNullOrEmpty() && sortDirection.equals("asc", ignoreCase = true)) {
+            Sort.by(Sort.Order.asc(sortField))
+        } else if (!sortField.isNullOrEmpty()) {
+            Sort.by(Sort.Order.desc(sortField))
+        } else {
+            Sort.unsorted() // ถ้าไม่มี sortField จะไม่เรียงลำดับ
         }
+
+        val events = eventRepository.findEventByKeyword(keyword, sort)
+        return events.map { event -> toEventDto(event) }
     }
 
     fun toEventDto(event: Event) : EventDTO {
-        val ownerEventName: String = userRepository.findById(event.event_owner).map {
+        val ownerEventName: String = userRepository.findById(event.eventOwner).map {
             it.username
         }.orElse("Unknown Organizer")
         return EventDTO(
-            name = event.event_name,
-            description = event.event_desc,
-            detail = event.event_detail,
-            start_date =  event.event_start_date,
-            end_date = event.event_end_date,
-            location = event.event_location,
-            map = event.event_google_map,
-            capacity = event.event_capacity,
-            status = event.event_status,
+            name = event.eventName,
+            description = event.eventDesc,
+            detail = event.eventDetail,
+            start_date =  event.eventStartDate,
+            end_date = event.eventEndDate,
+            location = event.eventLocation,
+            map = event.eventGoogleMap,
+            capacity = event.eventCapacity,
+            status = event.eventStatus,
             slug = event.event_slug,
-            image =  getImageUrl(event.event_image, "thumnails"),
+            image =  getImageUrl(event.eventImage, "thumnails"),
             owner = ownerEventName,
             tags = event.tags?.map { it.tag_title }
         )
