@@ -29,9 +29,10 @@ dependencies {
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+	testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
 	runtimeOnly("com.h2database:h2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
 
 kotlin {
@@ -41,5 +42,9 @@ kotlin {
 }
 
 tasks.withType<Test> {
+	useJUnitPlatform()
+}
+
+tasks.test {
 	useJUnitPlatform()
 }
