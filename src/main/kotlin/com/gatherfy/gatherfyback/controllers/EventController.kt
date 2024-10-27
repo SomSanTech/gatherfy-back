@@ -9,7 +9,7 @@ import java.time.LocalDate
 
 @RestController
 @RequestMapping("api")
-@CrossOrigin(origins = ["*"])
+@CrossOrigin(origins = ["http://cp24us1.sit.kmutt.ac.th:3000/","http://localhost:3000/"])
 class EventController(var eventService: EventService) {
 
     @GetMapping("/v1/events")
