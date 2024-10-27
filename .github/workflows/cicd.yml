@@ -24,7 +24,9 @@ jobs:
         run: java -version
 
       - name: Build project
-        run: ./gradlew clean build
+        run: ./gradlew clean build --stacktrace --info --debug
+        env:
+          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
 
       - name: Upload build files
         uses: actions/upload-artifact@v3
@@ -87,7 +89,6 @@ jobs:
         run: |
           sshpass -p "$REMOTE_PASSWORD" ssh -t -o StrictHostKeyChecking=no -p 22 -i ~/.ssh/id_rsa $REMOTE_USER@$REMOTE_HOST << 'EOF'
             cd /home/somsan/Gatherfy/back
-            tar -xzf build.tar.gz
 
             docker stop gatherback  || true
             docker rm gatherback  || true
