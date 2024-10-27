@@ -19,6 +19,13 @@ jobs:
           distribution: 'oracle'
           java-version: '17'
 
+      - name: Verify Database Connectivity
+        run: |
+          apt-get update
+          apt-get install -y mysql-client
+          mysql -h cp24us1.sit.kmutt.ac.th -P 3303 -u root -p somsanpassword -e "SHOW DATABASES;"
+
+
       - name: Build project
         env:
           DB_URL: jdbc:mysql://cp24us1.sit.kmutt.ac.th:3303/eventdb
