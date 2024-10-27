@@ -9,18 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      db:
-        image: mysql:8.0
-        ports:
-          - 3303:3306
-        env:
-          MYSQL_DATABASE: eventdb
-          MYSQL_ROOT_PASSWORD: somsanpassword
-          MYSQL_USER: sealb
-          MYSQL_PASSWORD: sealb013
-        options: --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=3
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -33,10 +21,10 @@ jobs:
 
       - name: Build project
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://cp24us1.sit.kmutt.ac.th:3303/eventdb
-          SPRING_DATASOURCE_USERNAME: root
-          SPRING_DATASOURCE_PASSWORD: somsanpassword
-        run: ./gradlew clean build
+          DB_URL: jdbc:mysql://cp24us1.sit.kmutt.ac.th:3303/eventdb
+          DB_USER: root
+          DB_PASSWORD: somsanpassword
+        run: ./gradlew clean build -Dspring.datasource.url=$DB_URL -Dspring.datasource.username=$DB_USER -Dspring.datasource.password=$DB_PASSWORD
 
 
       - name: Upload build files
