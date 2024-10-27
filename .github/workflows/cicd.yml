@@ -21,9 +21,9 @@ jobs:
 
       - name: Verify Database Connectivity
         run: |
-          apt-get update
-          apt-get install -y mysql-client
-          mysql -h cp24us1.sit.kmutt.ac.th -P 3303 -u root -p somsanpassword -e "SHOW DATABASES;"
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          mysql -h cp24us1.sit.kmutt.ac.th -P 3303 -u root -p'somsanpassword' -e "SHOW DATABASES;"
 
 
       - name: Build project
