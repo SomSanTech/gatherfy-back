@@ -24,9 +24,8 @@ jobs:
         run: java -version
 
       - name: Build project
-        run: ./gradlew clean build --stacktrace --info --debug
-        env:
-          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
+        run: ./gradlew clean build
+
 
       - name: Upload build files
         uses: actions/upload-artifact@v3
