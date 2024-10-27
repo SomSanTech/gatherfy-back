@@ -24,7 +24,7 @@ jobs:
         run: java -version
 
       - name: Build project
-        run: ./gradlew clean build --stacktrace --info
+        run: ./gradlew clean build
 
       - name: Upload build files
         uses: actions/upload-artifact@v3
@@ -77,7 +77,7 @@ jobs:
 
       - name: Copy build files to VM
         run: |
-          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./backend-build/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/back
+          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./build/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/back
 
       - name: Deploy Docker container on VM
         env:
@@ -90,6 +90,6 @@ jobs:
             tar -xzf build.tar.gz
 
             docker stop gatherback  || true
-            docker rm gatherbac  || true
+            docker rm gatherback  || true
             docker build -t gatherback:latest .
             docker run -d --name gatherfy-back -p 8080:8080 gatherback:latest
