@@ -18,9 +18,20 @@ jobs:
         with:
           distribution: 'oracle'
           java-version: '17'
+      - name: Install OpenVPN
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
 
-      - name: Run sql
-        run: docker compose up -d
+      - name: Connect to VPN
+        uses: "kota65535/github-openvpn-connect-action@v2"
+        with:
+          config_file: .github/workflows/sitst-client.ovpn
+          username: ${{ secrets.VPN_USERNAME }}
+          password: ${{ secrets.VPN_PASSWORD }}
+
+#      - name: Run sql
+#        run: docker compose up -d
 
       - name: Build project
         run: ./gradlew clean build
