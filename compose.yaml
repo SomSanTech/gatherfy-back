@@ -1,0 +1,12 @@
+services:
+  gatherfydb:
+    image: mysql:8.0.32
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ROOT_PASSWORD=somsanpassword
+      - MYSQL_USER=sealb
+      - MYSQL_PASSWORD=sealb013
+      - MYSQL_DATABASE=eventdb
