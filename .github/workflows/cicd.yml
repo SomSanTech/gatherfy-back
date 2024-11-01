@@ -85,9 +85,6 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
         run: |
           sshpass -p "$REMOTE_PASSWORD" ssh -t -o StrictHostKeyChecking=no -p 22 -i ~/.ssh/id_rsa $REMOTE_USER@$REMOTE_HOST << 'EOF'
-            cd /home/somsan/Gatherfy/back
-
-            docker stop gatherback  || true
-            docker rm gatherback  || true
-            docker build -t gatherback:latest .
-            docker run -d --name gatherfy-back -p 8080:8080 gatherback:latest
+            cd /home/somsan/Gatherfy
+          
+            docker compose -f compose.staging.yml up -d qaback
