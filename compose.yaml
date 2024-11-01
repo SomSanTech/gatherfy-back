@@ -2,7 +2,7 @@ services:
   gatherfydb:
     image: mysql:8.0.32
     ports:
-      - "3307:3306"
+      - "3303:3306"
     volumes:
       - ./database:/docker-entrypoint-initdb.d
     environment:
