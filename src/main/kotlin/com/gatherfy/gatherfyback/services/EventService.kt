@@ -1,6 +1,7 @@
 package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.dtos.EventDTO
+import com.gatherfy.gatherfyback.dtos.EventRegistrationDTO
 import com.gatherfy.gatherfyback.entities.Event
 import com.gatherfy.gatherfyback.entities.SortOption
 import com.gatherfy.gatherfyback.repositories.EventRepository
@@ -71,6 +72,20 @@ class EventService(
             toEventDto(event)
         }
     }
+
+    fun getEventByOwner(ownerId:Long?): List<EventRegistrationDTO> {
+       val events =  eventRepository.findEventsByEventOwner(ownerId)
+        return events.map { toEventRegistrationDTO(it) }
+    }
+
+    private fun toEventRegistrationDTO(event: Event):EventRegistrationDTO{
+        return EventRegistrationDTO(
+            eventId = event.event_id,
+            eventName = event.event_name,
+            eventLocation = event.event_location,
+        )
+    }
+
 
     fun toEventDto(event: Event) : EventDTO {
         val ownerEventName: String = userRepository.findById(event.event_owner).map {

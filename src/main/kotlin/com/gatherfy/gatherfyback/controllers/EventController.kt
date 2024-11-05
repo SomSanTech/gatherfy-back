@@ -1,6 +1,7 @@
 package com.gatherfy.gatherfyback.controllers
 
 import com.gatherfy.gatherfyback.dtos.EventDTO
+import com.gatherfy.gatherfyback.dtos.EventRegistrationDTO
 import com.gatherfy.gatherfyback.entities.SortOption
 import com.gatherfy.gatherfyback.services.EventService
 import org.springframework.format.annotation.DateTimeFormat
@@ -25,5 +26,10 @@ class EventController(var eventService: EventService) {
     @GetMapping("/v1/events/{slug}")
     fun getEvent(@PathVariable slug: String) : EventDTO {
         return eventService.getEventBySlug(slug)
+    }
+
+    @GetMapping("/v1/events/registration/{ownerId}")
+    fun getOwnerEvent(@PathVariable ownerId: Long?): List<EventRegistrationDTO> {
+        return eventService.getEventByOwner(ownerId)
     }
 }
