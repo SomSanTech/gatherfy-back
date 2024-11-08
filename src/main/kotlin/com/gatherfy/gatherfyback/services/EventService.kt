@@ -92,6 +92,7 @@ class EventService(
             it.username
         }.orElse("Unknown Organizer")
         return EventDTO(
+            eventId = event.event_id,
             name = event.event_name,
             description = event.event_desc,
             detail = event.event_detail,
