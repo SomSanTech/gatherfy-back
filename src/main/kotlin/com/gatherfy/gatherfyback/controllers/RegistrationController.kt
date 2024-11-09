@@ -15,6 +15,12 @@ class RegistrationController(val registrationService: RegistrationService) {
     fun getAllRegistrations():List<RegistrationDTO> {
         return registrationService.getAllRegistration()
     }
+    @GetMapping("/v1/registrations/owner/{ownerId}")
+    fun getRegistrationsByOwner(@PathVariable("ownerId") ownerId: String): List<RegistrationDTO> {
+        val registrationId = ownerId.toLongOrNull()
+            ?: throw IllegalArgumentException("Invalid registration ID format")
+        return registrationService.getAllRegistrationsByOwner(registrationId)
+    }
 
     @GetMapping("/v1/registrations/{id}")
     fun getRegistrationById(@PathVariable("id") id: String): RegistrationDTO {

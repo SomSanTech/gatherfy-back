@@ -26,7 +26,10 @@ class RegistrationService (
         val registrations = registrationRepository.findRegistrationsByEventId(eventId)
         return registrations.map { toRegistrationDTO(it) }
     }
-
+    fun getAllRegistrationsByOwner(ownerId: Long): List<RegistrationDTO> {
+        val registrations = registrationRepository.findRegistrationsByEventOwner(ownerId)
+        return registrations.map { toRegistrationDTO(it) }
+    }
     fun getRegistrationById(registrationId: Long): Optional<RegistrationDTO> {
         val registration = registrationRepository.findById(registrationId)
         return registration.map { toRegistrationDTO(it) }
