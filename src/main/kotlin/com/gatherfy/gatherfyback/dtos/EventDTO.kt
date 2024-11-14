@@ -3,6 +3,7 @@ package com.gatherfy.gatherfyback.dtos
 import java.time.ZonedDateTime
 
 data class EventDTO(
+    var eventId: Long?,
     var name: String,
     var description: String,
     var detail: String,
