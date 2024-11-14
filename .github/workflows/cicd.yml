@@ -3,7 +3,7 @@ name: CI/CD kub pom
 on:
   push:
     branches:
-      - 'sprint1-pbi-1-2-3'
+      - 'staging'
 
 jobs:
   build:
