@@ -73,6 +73,8 @@ class RegistrationService (
             lastName = registration.user.users_lastname,
             username = registration.user.username,
             gender = registration.user.users_gender,
+            dateOfBirth = registration.user.users_birthday,
+            age = registration.user.users_age,
             email = registration.user.users_email,
             phone = registration.user.users_phone,
             status = registration.status,
