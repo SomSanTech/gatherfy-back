@@ -8,3 +8,13 @@ class ViewDTO(
     val view_date: Date?,
     val view_count: Long?,
 )
+
+data class EventViewsDTO(
+    val event_id: Long,
+    val views: List<ViewData>
+)
+
+data class ViewData(
+    val date: String,
+    val count: Long?
+)
