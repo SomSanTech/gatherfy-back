@@ -1,4 +1,4 @@
-name: CI/CD kub pom
+name: backend staging
 
 on:
   push:
