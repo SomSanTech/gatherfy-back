@@ -22,7 +22,9 @@ class EventService(
     fun getEventBySlug(slug : String) : EventDTO {
         return toEventDto(eventRepository.findEventBySlug(slug))
     }
-
+    fun getEventById(id : Long) : EventDTO {
+        return toEventDto(eventRepository.findEventByEventId(id))
+    }
     // Search keyword, Filter tags and date, also Sort event
     fun getFilteredEvents(
         keyword: String?,
