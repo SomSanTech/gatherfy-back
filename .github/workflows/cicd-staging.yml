@@ -1,4 +1,4 @@
-name: CI/CD kub pom
+name: backend staging
 
 on:
   push:
@@ -85,8 +85,9 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
 
-      - name: Copy build files to VM
+      - name: Copy build files and properties to VM
         run: |
+          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./src/main/resources/application-staging.properties ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/back/application.properties
           sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./build/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/back
 
       - name: Deploy Docker container on VM
