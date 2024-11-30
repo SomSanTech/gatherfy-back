@@ -87,8 +87,8 @@ jobs:
 
       - name: Copy build files and properties to VM
         run: |
-          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./src/main/resources/application-staging.properties ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/back/application.properties
-          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./build/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/back
+          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./src/main/resources/application-staging.properties ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/staging/back/application.properties
+          sshpass -p "${{ secrets.REMOTE_PASSWORD }}" scp -P 22 ./build/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/somsan/Gatherfy/staging/back
 
       - name: Deploy Docker container on VM
         env:
