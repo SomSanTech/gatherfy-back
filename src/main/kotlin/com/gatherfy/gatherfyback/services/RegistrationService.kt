@@ -72,6 +72,18 @@ class RegistrationService (
             val user = userRepository.findById(registrationCreateDTO.userId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND,"User not found") }
 
+            // Check for existing registration to prevent duplicates
+            val existingRegistration = registrationRepository.findByEventIdAndUserId(
+                registrationCreateDTO.eventId,
+                registrationCreateDTO.userId
+            )
+            if (existingRegistration != null) {
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "User is already registered for this event"
+                )
+            }
+
             val registration = Registration(
                 event = event,
                 user = user,

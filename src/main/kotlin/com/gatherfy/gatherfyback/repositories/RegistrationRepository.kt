@@ -14,4 +14,6 @@ interface RegistrationRepository: JpaRepository<Registration,Long> {
 
     @Query("SELECT r FROM registrations r JOIN r.event e WHERE e.event_owner = :eventOwner")
     fun findRegistrationsByEventOwner(@Param("eventOwner") eventOwner: Long): List<Registration>
+
+    fun findByEventIdAndUserId(eventId: Long, userId: Long): Registration?
 }
