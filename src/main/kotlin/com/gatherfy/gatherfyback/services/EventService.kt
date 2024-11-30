@@ -9,7 +9,9 @@ import com.gatherfy.gatherfyback.repositories.UserRepository
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.http.Method
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
 
 @Service
@@ -20,7 +22,11 @@ class EventService(
 ) {
 
     fun getEventBySlug(slug : String) : EventDTO {
-        return toEventDto(eventRepository.findEventBySlug(slug))
+        try{
+            return toEventDto(eventRepository.findEventBySlug(slug))
+        } catch (ex: Exception){
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, ex.localizedMessage, ex)
+        }
     }
 
     // Search keyword, Filter tags and date, also Sort event
@@ -30,46 +36,54 @@ class EventService(
         date: LocalDate?,
         sort: SortOption?
     ): List<EventDTO> {
-        val events: List<Event> = when {
-            !keyword.isNullOrEmpty() && !tags.isNullOrEmpty() && date != null -> {
-                eventRepository.findEventsByKeywordAndTagsAndDate(keyword, tags, date)
+        try{
+            val events: List<Event> = when {
+                !keyword.isNullOrEmpty() && !tags.isNullOrEmpty() && date != null -> {
+                    eventRepository.findEventsByKeywordAndTagsAndDate(keyword, tags, date)
+                }
+                !keyword.isNullOrEmpty() && !tags.isNullOrEmpty() -> {
+                    eventRepository.findEventsByKeywordAndTags(keyword, tags)
+                }
+                !keyword.isNullOrEmpty() && date != null -> {
+                    eventRepository.findEventsByKeywordAndDate(keyword, date)
+                }
+                !tags.isNullOrEmpty() && date != null -> {
+                    eventRepository.findEventsByTagsAndDate(tags, date)
+                }
+                !keyword.isNullOrEmpty() -> {
+                    eventRepository.findEventByKeyword(keyword)
+                }
+                !tags.isNullOrEmpty() -> {
+                    eventRepository.findEventsByTags(tags)
+                }
+                date != null -> {
+                    eventRepository.findEventsByDate(date)
+                }
+                else -> {
+                    eventRepository.findAll()
+                }
             }
-            !keyword.isNullOrEmpty() && !tags.isNullOrEmpty() -> {
-                eventRepository.findEventsByKeywordAndTags(keyword, tags)
-            }
-            !keyword.isNullOrEmpty() && date != null -> {
-                eventRepository.findEventsByKeywordAndDate(keyword, date)
-            }
-            !tags.isNullOrEmpty() && date != null -> {
-                eventRepository.findEventsByTagsAndDate(tags, date)
-            }
-            !keyword.isNullOrEmpty() -> {
-                eventRepository.findEventByKeyword(keyword)
-            }
-            !tags.isNullOrEmpty() -> {
-                eventRepository.findEventsByTags(tags)
-            }
-            date != null -> {
-                eventRepository.findEventsByDate(date)
-            }
-            else -> {
-                eventRepository.findAll()
-            }
-        }
 
-        // Sort based on the SortOption
-        val sortedEvents = when (sort) {
-            SortOption.date_asc -> events.sortedBy { it.event_start_date }
-            SortOption.date_desc -> events.sortedByDescending { it.event_start_date }
-            SortOption.name_asc -> events.sortedBy { it.event_name }
-            SortOption.name_desc -> events.sortedByDescending { it.event_name }
-            SortOption.capacity_asc -> events.sortedBy { it.event_capacity }
-            SortOption.capacity_desc -> events.sortedByDescending { it.event_capacity }
-            else -> events.sortedByDescending { it.event_start_date } // if no sorting, sort by date desc
-        }
-        // Mapping the list of events to EventDTO
-        return sortedEvents.map { event ->
-            toEventDto(event)
+            // Sort based on the SortOption
+            val sortedEvents = when (sort) {
+                SortOption.date_asc -> events.sortedWith(
+                    compareBy<Event> { it.event_start_date }.thenBy { it.event_end_date }.thenBy { it.event_name }
+                )
+                SortOption.date_desc -> events.sortedWith(
+                    compareByDescending<Event> { it.event_start_date }.thenBy { it.event_end_date }.thenBy { it.event_name }
+                )
+                SortOption.name_asc -> events.sortedBy { it.event_name }
+                SortOption.name_desc -> events.sortedByDescending { it.event_name }
+                SortOption.capacity_asc -> events.sortedBy { it.event_capacity }
+                SortOption.capacity_desc -> events.sortedByDescending { it.event_capacity }
+                else -> events.sortedByDescending { it.created_at } // if no sorting, sort by date desc
+            }
+            // Mapping the list of events to EventDTO
+            return sortedEvents.map { event ->
+                toEventDto(event)
+            }
+        } catch (e: RuntimeException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, e.localizedMessage, e)
         }
     }
 
@@ -85,7 +99,6 @@ class EventService(
             eventLocation = event.event_location,
         )
     }
-
 
     fun toEventDto(event: Event) : EventDTO {
         val ownerEventName: String = userRepository.findById(event.event_owner).map {

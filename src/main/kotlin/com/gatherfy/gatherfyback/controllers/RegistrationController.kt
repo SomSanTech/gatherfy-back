@@ -4,8 +4,10 @@ import com.gatherfy.gatherfyback.dtos.RegistrationCreateDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationUpdateStatusDTO
 import com.gatherfy.gatherfyback.services.RegistrationService
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("api")
@@ -18,16 +20,16 @@ class RegistrationController(val registrationService: RegistrationService) {
     @GetMapping("/v1/registrations/owner/{ownerId}")
     fun getRegistrationsByOwner(@PathVariable("ownerId") ownerId: String): List<RegistrationDTO> {
         val registrationId = ownerId.toLongOrNull()
-            ?: throw IllegalArgumentException("Invalid registration ID format")
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid registration ID format")
         return registrationService.getAllRegistrationsByOwner(registrationId)
     }
 
     @GetMapping("/v1/registrations/{id}")
     fun getRegistrationById(@PathVariable("id") id: String): RegistrationDTO {
         val registrationId = id.toLongOrNull()
-            ?: throw IllegalArgumentException("Invalid registration ID format")
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid registration ID format")
         return registrationService.getRegistrationById(registrationId)
-            .orElseThrow { NoSuchElementException("Registration not found") }
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND,"Registration not found") }
     }
 
     @PutMapping("/v1/registrations/{id}")

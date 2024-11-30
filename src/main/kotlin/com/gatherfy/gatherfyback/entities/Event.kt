@@ -1,7 +1,7 @@
 package com.gatherfy.gatherfyback.entities
 
 import jakarta.persistence.*
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 
 @Entity(name = "events")
 data class Event(
@@ -10,8 +10,8 @@ data class Event(
     var event_name: String,
     var event_desc: String,
     var event_detail: String,
-    var event_start_date: ZonedDateTime,
-    var event_end_date: ZonedDateTime,
+    var event_start_date: LocalDateTime,
+    var event_end_date: LocalDateTime,
     var event_location: String,
     var event_google_map: String,
     var event_capacity: Long,
@@ -25,5 +25,6 @@ data class Event(
         joinColumns = [JoinColumn(name = "event_id")],
         inverseJoinColumns = [JoinColumn(name = "tag_id")]
     )
-    var tags: List<Tag> = mutableListOf()
+    var tags: List<Tag> = mutableListOf(),
+    var created_at: LocalDateTime,
 )

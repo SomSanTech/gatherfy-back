@@ -6,7 +6,9 @@ import com.gatherfy.gatherfyback.entities.Registration
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -24,45 +26,68 @@ class RegistrationService (
 
     fun getAllRegistrationsByEventId(eventId: Long): List<RegistrationDTO> {
         val registrations = registrationRepository.findRegistrationsByEventId(eventId)
+        if (registrations.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found")
+        }
         return registrations.map { toRegistrationDTO(it) }
     }
+
     fun getAllRegistrationsByOwner(ownerId: Long): List<RegistrationDTO> {
         val registrations = registrationRepository.findRegistrationsByEventOwner(ownerId)
+        if (registrations.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found")
+        }
         return registrations.map { toRegistrationDTO(it) }
     }
+
     fun getRegistrationById(registrationId: Long): Optional<RegistrationDTO> {
         val registration = registrationRepository.findById(registrationId)
+        if (registration.isEmpty) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found")
+        }
         return registration.map { toRegistrationDTO(it) }
     }
 
     fun updateStatus(id: Long, newStatus: String): RegistrationDTO {
-        val registration = registrationRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Registration not found") }
+        try{
+            val registration = registrationRepository.findById(id)
+                .orElseThrow {  ResponseStatusException(HttpStatus.NOT_FOUND,"Event not found") }
 
-        registration.status = newStatus
-        val updatedRegistration = registrationRepository.save(registration)
+            registration.status = newStatus
+            val updatedRegistration = registrationRepository.save(registration)
 
-        return toRegistrationDTO(updatedRegistration)
+            return toRegistrationDTO(updatedRegistration)
+        } catch (e: ResponseStatusException){
+            throw e
+        } catch (e: Exception){
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+        }
     }
 
     fun createRegistration(registrationCreateDTO: RegistrationCreateDTO): RegistrationDTO {
-        val event = eventRepository.findById(registrationCreateDTO.eventId)
-            .orElseThrow { NoSuchElementException("Event not found") }
+        try {
+            val event = eventRepository.findById(registrationCreateDTO.eventId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND,"Event not found") }
 
-        val user = userRepository.findById(registrationCreateDTO.userId)
-            .orElseThrow { NoSuchElementException("User not found") }
+            val user = userRepository.findById(registrationCreateDTO.userId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND,"User not found") }
 
-        val registration = Registration(
-            event = event,
-            user = user,
-            status = registrationCreateDTO.status,
-            createdAt = ZonedDateTime.now(),
-            eventId = registrationCreateDTO.eventId,
-            userId = registrationCreateDTO.userId
-        )
+            val registration = Registration(
+                event = event,
+                user = user,
+                status = registrationCreateDTO.status,
+                createdAt = ZonedDateTime.now(),
+                eventId = registrationCreateDTO.eventId,
+                userId = registrationCreateDTO.userId
+            )
 
-        val savedRegistration = registrationRepository.save(registration)
-        return toRegistrationDTO(savedRegistration)
+            val savedRegistration = registrationRepository.save(registration)
+            return toRegistrationDTO(savedRegistration)
+        } catch (e: ResponseStatusException) {
+            throw e
+        } catch (e: Exception){
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+        }
     }
 
     private fun toRegistrationDTO(registration: Registration): RegistrationDTO {
@@ -79,8 +104,4 @@ class RegistrationService (
             createdAt = registration.createdAt
         )
     }
-
-
-
-
 }
