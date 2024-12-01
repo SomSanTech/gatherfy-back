@@ -69,15 +69,13 @@ class EventService(
             // Sort based on the SortOption
             val sortedEvents = when (sort) {
                 SortOption.date_asc -> events.sortedWith(
-                    compareBy<Event> { it.event_start_date }.thenBy { it.event_end_date }.thenBy { it.event_name }
+                    compareBy<Event> { it.event_start_date }.thenBy { it.event_end_date }.thenBy { it.event_name.lowercase() }
                 )
                 SortOption.date_desc -> events.sortedWith(
-                    compareByDescending<Event> { it.event_start_date }.thenBy { it.event_end_date }.thenBy { it.event_name }
+                    compareByDescending<Event> { it.event_start_date }.thenBy { it.event_end_date }.thenBy { it.event_name.lowercase() }
                 )
-                SortOption.name_asc -> events.sortedBy { it.event_name }
-                SortOption.name_desc -> events.sortedByDescending { it.event_name }
-                SortOption.capacity_asc -> events.sortedBy { it.event_capacity }
-                SortOption.capacity_desc -> events.sortedByDescending { it.event_capacity }
+                SortOption.name_asc -> events.sortedBy { it.event_name.lowercase() }
+                SortOption.name_desc -> events.sortedByDescending { it.event_name.lowercase() }
                 else -> events.sortedByDescending { it.created_at } // if no sorting, sort by date desc
             }
             // Mapping the list of events to EventDTO
