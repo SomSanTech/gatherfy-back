@@ -1,14 +1,14 @@
 package com.gatherfy.gatherfyback.dtos
 
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 
 data class EventDTO(
     var eventId: Long?,
     var name: String,
     var description: String,
     var detail: String,
-    var start_date: ZonedDateTime,
-    var end_date: ZonedDateTime,
+    var start_date: LocalDateTime,
+    var end_date: LocalDateTime,
     var location: String,
     var map: String,
     var capacity: Long,

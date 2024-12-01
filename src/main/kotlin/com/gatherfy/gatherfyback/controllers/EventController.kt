@@ -28,6 +28,11 @@ class EventController(var eventService: EventService) {
         return eventService.getEventBySlug(slug)
     }
 
+    @GetMapping("/v1/events/backoffice/{id}")
+    fun getEvent(@PathVariable id: Long) : EventDTO {
+        return eventService.getEventById(id)
+    }
+
     @GetMapping("/v1/events/registration/{ownerId}")
     fun getOwnerEvent(@PathVariable ownerId: Long?): List<EventRegistrationDTO> {
         return eventService.getEventByOwner(ownerId)

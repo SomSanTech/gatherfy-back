@@ -4,6 +4,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import java.time.ZonedDateTime
 
 @Entity(name = "users")
 data class User(
@@ -15,4 +16,6 @@ data class User(
     var users_gender: String,
     var users_email: String,
     var users_phone: String,
+    var users_age: Long,
+    var users_birthday: ZonedDateTime,
 )
