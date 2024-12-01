@@ -1,6 +1,8 @@
 package com.gatherfy.gatherfyback.repositories
 
+import com.gatherfy.gatherfyback.dtos.RecommendEvent
 import com.gatherfy.gatherfyback.entities.Event
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -38,4 +40,7 @@ interface EventRepository: JpaRepository<Event, Long> {
 
     @Query("from events where event_owner = :ownerId")
     fun findEventsByEventOwner(@Param("ownerId") ownerId: Long?) : List<Event>
+
+    @Query("SELECT v.eventId as eventId , SUM(v.view_count) AS totalViews FROM views v GROUP BY v.eventId ORDER BY totalViews DESC")
+    fun findTopEvents(limit: Pageable): List<RecommendEvent>
 }

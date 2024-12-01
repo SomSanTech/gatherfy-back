@@ -9,6 +9,8 @@ import com.gatherfy.gatherfyback.repositories.UserRepository
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.http.Method
+import jakarta.persistence.EntityNotFoundException
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -90,6 +92,19 @@ class EventService(
     fun getEventByOwner(ownerId:Long?): List<EventRegistrationDTO> {
        val events =  eventRepository.findEventsByEventOwner(ownerId)
         return events.map { toEventRegistrationDTO(it) }
+    }
+
+    fun getRecommendedEvent(limit: Int): List<EventDTO> {
+        val pageable = PageRequest.of(0, limit) // LIMIT functionality
+        val recommend = eventRepository.findTopEvents(pageable)
+        // Fetch full event details for each eventId and map it to RecommendEventDTO
+        return recommend.map { item ->
+            // Fetch the full Event entity using the eventId
+            val event = eventRepository.findById(item.eventId).orElseThrow {
+                EntityNotFoundException("Event not found for ID ${item.eventId}")
+            }
+            toEventDto(event)
+        }
     }
 
     private fun toEventRegistrationDTO(event: Event):EventRegistrationDTO{

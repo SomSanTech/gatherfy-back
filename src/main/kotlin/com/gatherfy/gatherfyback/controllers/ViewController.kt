@@ -1,9 +1,7 @@
 package com.gatherfy.gatherfyback.controllers
 
 import com.gatherfy.gatherfyback.dtos.*
-import com.gatherfy.gatherfyback.services.RegistrationService
 import com.gatherfy.gatherfyback.services.ViewService
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
