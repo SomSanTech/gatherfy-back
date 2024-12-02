@@ -136,7 +136,7 @@ class EventService(
         )
     }
 
-    fun getImageUrl( bucketName: String, objectName: String): String{
+    fun getImageUrl( bucketName: String, objectName: String): String {
         return "$minioDomain/$bucketName/$objectName"
     }
 }
