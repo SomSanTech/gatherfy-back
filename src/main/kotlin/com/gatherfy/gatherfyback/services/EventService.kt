@@ -6,9 +6,8 @@ import com.gatherfy.gatherfyback.entities.Event
 import com.gatherfy.gatherfyback.entities.SortOption
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
-import io.minio.MinioClient
-import jakarta.persistence.EntityNotFoundException
 import org.springframework.beans.factory.annotation.Value
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -18,10 +17,8 @@ import java.time.LocalDate
 @Service
 class EventService(
     val eventRepository: EventRepository,
-    private val minioClient: MinioClient,
     private val userRepository: UserRepository,
 ) {
-
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
 
@@ -139,7 +136,7 @@ class EventService(
         )
     }
 
-    fun getImageUrl( bucketName: String, objectName: String): String {
+    fun getImageUrl( bucketName: String, objectName: String): String{
         return "$minioDomain/$bucketName/$objectName"
     }
 }
