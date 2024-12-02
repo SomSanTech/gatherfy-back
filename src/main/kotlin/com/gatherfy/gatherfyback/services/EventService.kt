@@ -9,6 +9,7 @@ import com.gatherfy.gatherfyback.repositories.UserRepository
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.http.Method
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -17,9 +18,10 @@ import java.time.LocalDate
 @Service
 class EventService(
     val eventRepository: EventRepository,
-    private val minioClient: MinioClient,
     private val userRepository: UserRepository,
 ) {
+    @Value("\${minio.domain}")
+    private lateinit var minioDomain: String
 
     fun getEventBySlug(slug : String) : EventDTO {
         try{
@@ -116,20 +118,13 @@ class EventService(
             capacity = event.event_capacity,
             status = event.event_status,
             slug = event.event_slug,
-            image =  getImageUrl(event.event_image, "thumnails"),
+            image =  getImageUrl("thumbnails", event.event_image),
             owner = ownerEventName,
             tags = event.tags?.map { it.tag_title }
         )
     }
 
-    fun getImageUrl(objectName: String, bucketName: String): String{
-        return minioClient.getPresignedObjectUrl(
-            GetPresignedObjectUrlArgs.builder()
-                .bucket(bucketName)
-                .`object`(objectName)
-                .method(Method.GET)
-                .expiry(60*60)
-                .build()
-        )
+    fun getImageUrl( bucketName: String, objectName: String): String{
+        return "$minioDomain/$bucketName/$objectName"
     }
 }
