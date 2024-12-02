@@ -6,10 +6,12 @@ import com.gatherfy.gatherfyback.entities.Event
 import com.gatherfy.gatherfyback.entities.SortOption
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
-import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.http.Method
 import org.springframework.beans.factory.annotation.Value
+import jakarta.persistence.EntityNotFoundException
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -20,6 +22,9 @@ class EventService(
     val eventRepository: EventRepository,
     private val userRepository: UserRepository,
 ) {
+    @Value("\${minio.domain}")
+    private lateinit var minioDomain: String
+
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
 
@@ -94,6 +99,19 @@ class EventService(
         return events.map { toEventRegistrationDTO(it) }
     }
 
+    fun getRecommendedEvent(limit: Int): List<EventDTO> {
+        val pageable = PageRequest.of(0, limit) // LIMIT functionality
+        val recommend = eventRepository.findTopEvents(pageable)
+        // Fetch full event details for each eventId and map it to RecommendEventDTO
+        return recommend.map { item ->
+            // Fetch the full Event entity using the eventId
+            val event = eventRepository.findById(item.eventId).orElseThrow {
+                EntityNotFoundException("Event not found for ID ${item.eventId}")
+            }
+            toEventDto(event)
+        }
+    }
+
     private fun toEventRegistrationDTO(event: Event):EventRegistrationDTO{
         return EventRegistrationDTO(
             eventId = event.event_id,
@@ -124,7 +142,7 @@ class EventService(
         )
     }
 
-    fun getImageUrl( bucketName: String, objectName: String): String{
+    fun getImageUrl( bucketName: String, objectName: String): String {
         return "$minioDomain/$bucketName/$objectName"
     }
 }

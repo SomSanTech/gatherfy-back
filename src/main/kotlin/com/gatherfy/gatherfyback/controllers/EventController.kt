@@ -33,8 +33,13 @@ class EventController(var eventService: EventService) {
         return eventService.getEventById(id)
     }
 
-    @GetMapping("/v1/events/registration/{ownerId}")
+    @GetMapping("/v1/events/owner/{ownerId}")
     fun getOwnerEvent(@PathVariable ownerId: Long?): List<EventRegistrationDTO> {
         return eventService.getEventByOwner(ownerId)
+    }
+
+    @GetMapping("/v1/events/recommended")
+    fun getRecommendedEvent(@RequestParam(defaultValue = "5") limit: Int): List<EventDTO> {
+        return eventService.getRecommendedEvent(limit)
     }
 }
