@@ -111,6 +111,7 @@ class EventService(
             eventId = event.event_id,
             eventName = event.event_name,
             eventLocation = event.event_location,
+            eventStartDate = event.event_start_date,
         )
     }
 
