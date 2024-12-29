@@ -1,8 +1,11 @@
 package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.dtos.CreateQuestionDTO
+import com.gatherfy.gatherfyback.dtos.FeedbackDTO
+import com.gatherfy.gatherfyback.dtos.RegistrationDTO
 import com.gatherfy.gatherfyback.entities.Feedback
 import com.gatherfy.gatherfyback.entities.Question
+import com.gatherfy.gatherfyback.entities.Registration
 import com.gatherfy.gatherfyback.repositories.FeedbackRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -28,12 +31,12 @@ class FeedbackService (
         return feedbackList
     }
 
-    fun getAllFeedbackByOwner(ownerId: Long) : List<Feedback>{
+    fun getAllFeedbackByOwner(ownerId: Long) : List<FeedbackDTO>{
         val feedbackList = feedbackRepository.findFeedbacksByOwnerId(ownerId)
         if(feedbackList.isEmpty()){
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "No feedback now")
         }
-        return feedbackList
+        return feedbackList.map { toFeedbackDTO(it) }
     }
 
     fun createFeedback(createFeedback: Feedback): Feedback {
@@ -64,5 +67,17 @@ class FeedbackService (
         } catch (e: Exception) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
         }
+    }
+
+    private fun toFeedbackDTO(feedback: Feedback): FeedbackDTO {
+        return FeedbackDTO(
+            feedbackId = feedback.feedbackId,
+            eventId = feedback.eventId,
+            eventName = feedback.event!!.event_name,
+            userId = feedback.userId,
+            feedbackComment = feedback.feedbackComment,
+            feedbackRating = feedback.feedbackRating,
+            createdAt = feedback.createdAt
+        )
     }
 }

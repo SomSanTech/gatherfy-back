@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.entities
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -18,6 +19,11 @@ data class Feedback(
     var feedbackComment: String,
     @Column(name = "created_at", insertable = false, updatable = false)
     var createdAt: LocalDateTime?=null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id" , insertable = false, updatable = false)
+    @JsonIgnore
+    var event: Event?=null,
 ){
     @PrePersist
     fun prePersist() {

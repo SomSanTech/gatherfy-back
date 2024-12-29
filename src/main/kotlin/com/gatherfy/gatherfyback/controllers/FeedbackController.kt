@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.controllers
 
+import com.gatherfy.gatherfyback.dtos.FeedbackDTO
 import com.gatherfy.gatherfyback.entities.Feedback
 import com.gatherfy.gatherfyback.services.FeedbackService
 import org.springframework.http.ResponseEntity
@@ -20,7 +21,7 @@ class FeedbackController(val feedbackService: FeedbackService) {
     }
 
     @GetMapping("/v1/feedbacks/owner/{ownerId}")
-    fun getFeedbackByOwner(@PathVariable ownerId: Long): List<Feedback> {
+    fun getFeedbackByOwner(@PathVariable ownerId: Long): List<FeedbackDTO> {
         return feedbackService.getAllFeedbackByOwner(ownerId)
     }
 
