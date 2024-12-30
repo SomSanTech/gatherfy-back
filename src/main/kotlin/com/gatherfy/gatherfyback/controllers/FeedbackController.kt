@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.controllers
 
+import com.gatherfy.gatherfyback.dtos.FeedbackCountDTO
 import com.gatherfy.gatherfyback.dtos.FeedbackDTO
 import com.gatherfy.gatherfyback.entities.Feedback
 import com.gatherfy.gatherfyback.services.FeedbackService
@@ -18,6 +19,11 @@ class FeedbackController(val feedbackService: FeedbackService) {
     @GetMapping("/v1/feedbacks/event/{eventId}")
     fun getFeedbackByEventId(@PathVariable eventId: Long): List<Feedback> {
         return feedbackService.getAllFeedbackByEventId(eventId)
+    }
+
+    @GetMapping("/v2/feedbacks/event/{eventId}")
+    fun getFeedbackAndCountByEventId(@PathVariable eventId: Long): FeedbackCountDTO {
+        return feedbackService.getFeedbackAndCountByEventId(eventId)
     }
 
     @GetMapping("/v1/feedbacks/owner/{ownerId}")

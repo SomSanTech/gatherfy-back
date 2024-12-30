@@ -1,11 +1,8 @@
 package com.gatherfy.gatherfyback.services
 
-import com.gatherfy.gatherfyback.dtos.CreateQuestionDTO
+import com.gatherfy.gatherfyback.dtos.FeedbackCountDTO
 import com.gatherfy.gatherfyback.dtos.FeedbackDTO
-import com.gatherfy.gatherfyback.dtos.RegistrationDTO
 import com.gatherfy.gatherfyback.entities.Feedback
-import com.gatherfy.gatherfyback.entities.Question
-import com.gatherfy.gatherfyback.entities.Registration
 import com.gatherfy.gatherfyback.repositories.FeedbackRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -30,6 +27,19 @@ class FeedbackService (
         }
         return feedbackList
     }
+
+    fun getFeedbackAndCountByEventId(eventId: Long): FeedbackCountDTO {
+        val feedbackList = feedbackRepository.findFeedbacksByEventId(eventId)
+        if (feedbackList.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found")
+        }
+        // ดึงเฉพาะ comment จาก Feedback
+        return FeedbackCountDTO(
+            count = feedbackList.count(),
+            feedback = feedbackList
+        )
+    }
+
 
     fun getAllFeedbackByOwner(ownerId: Long) : List<FeedbackDTO>{
         val feedbackList = feedbackRepository.findFeedbacksByOwnerId(ownerId)
