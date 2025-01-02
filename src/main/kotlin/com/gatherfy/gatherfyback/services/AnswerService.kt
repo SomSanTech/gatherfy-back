@@ -29,6 +29,14 @@ class AnswerService(val answerRepository: AnswerRepository,val feedbackRepositor
         return answerList.map { toAnswerDTO(it) }
     }
 
+    fun getAnswerByQuestionId(questionId: Long) : List<AnswerDTO> {
+        val answer = answerRepository.findAnswersByQuestionId(questionId)
+        if(answer.isEmpty()){
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Answer not found")
+        }
+        return answer.map { toAnswerDTO(it) }
+    }
+
     fun createAnswer(createAnswerDTO: CreateAnswerDTO): AnswerDTO {
         try {
              val feedback = feedbackRepository.findById(createAnswerDTO.feedbackId)

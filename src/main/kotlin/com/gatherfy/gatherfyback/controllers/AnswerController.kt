@@ -21,6 +21,11 @@ class AnswerController(val answerService: AnswerService) {
         return answerService.getAllAnswerByOwner(ownerId)
     }
 
+    @GetMapping("/v1/answers/question/{questionId}")
+    fun getAnswerByQuestionId(@PathVariable("questionId") questionId: Long): List<AnswerDTO> {
+        return answerService.getAnswerByQuestionId(questionId)
+    }
+
     @PostMapping("/v1/answers")
     fun createAnswer(
         @RequestBody createAnswerDTO: CreateAnswerDTO
