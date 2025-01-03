@@ -14,38 +14,24 @@ class FeedbackService (
 ){
     fun getAllFeedback() : List<Feedback>{
         val feedbackList = feedbackRepository.findAll()
-        if(feedbackList.isEmpty()){
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "No feedback now")
-        }
         return feedbackList
     }
 
     fun getAllFeedbackByEventId(eventId: Long) : List<Feedback>{
         val feedbackList = feedbackRepository.findFeedbacksByEventId(eventId)
-        if(feedbackList.isEmpty()){
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found")
-        }
         return feedbackList
     }
 
     fun getFeedbackAndCountByEventId(eventId: Long): FeedbackCountDTO {
         val feedbackList = feedbackRepository.findFeedbacksByEventId(eventId)
-        if (feedbackList.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found")
-        }
-        // ดึงเฉพาะ comment จาก Feedback
         return FeedbackCountDTO(
             count = feedbackList.count(),
             feedback = feedbackList
         )
     }
 
-
     fun getAllFeedbackByOwner(ownerId: Long) : List<FeedbackDTO>{
         val feedbackList = feedbackRepository.findFeedbacksByOwnerId(ownerId)
-        if(feedbackList.isEmpty()){
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "No feedback now")
-        }
         return feedbackList.map { toFeedbackDTO(it) }
     }
 

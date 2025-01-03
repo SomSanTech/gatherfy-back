@@ -14,9 +14,6 @@ class QuestionService (
 
     fun getAllQuestionByEventId(eventId:Long): List<Question> {
         val questions = questionRepository.findQuestionsByEventId(eventId)
-        if (questions.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found")
-        }
         return questions
     }
 
@@ -61,21 +58,4 @@ class QuestionService (
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
         }
     }
-
-//    private fun toRegistrationDTO(registration: Registration): RegistrationDTO {
-//        return RegistrationDTO(
-//            registrationId = registration.registrationId,
-//            eventName = registration.event.event_name,
-//            firstName = registration.user.users_firstname,
-//            lastName = registration.user.users_lastname,
-//            username = registration.user.username,
-//            gender = registration.user.users_gender,
-//            dateOfBirth = registration.user.users_birthday,
-//            age = registration.user.users_age,
-//            email = registration.user.users_email,
-//            phone = registration.user.users_phone,
-//            status = registration.status,
-//            createdAt = registration.createdAt
-//        )
-//    }
 }
