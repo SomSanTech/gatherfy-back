@@ -17,7 +17,7 @@ class FeedbackController(val feedbackService: FeedbackService) {
     }
 
     @GetMapping("/v1/feedbacks/event/{eventId}")
-    fun getFeedbackByEventId(@PathVariable eventId: Long): List<Feedback> {
+    fun getFeedbackByEventId(@PathVariable eventId: Long): List<FeedbackDTO> {
         return feedbackService.getAllFeedbackByEventId(eventId)
     }
 

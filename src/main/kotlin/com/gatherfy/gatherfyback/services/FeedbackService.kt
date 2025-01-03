@@ -17,9 +17,9 @@ class FeedbackService (
         return feedbackList
     }
 
-    fun getAllFeedbackByEventId(eventId: Long) : List<Feedback>{
+    fun getAllFeedbackByEventId(eventId: Long) : List<FeedbackDTO>{
         val feedbackList = feedbackRepository.findFeedbacksByEventId(eventId)
-        return feedbackList
+        return feedbackList.map { toFeedbackDTO(it) }
     }
 
     fun getFeedbackAndCountByEventId(eventId: Long): FeedbackCountDTO {
@@ -71,6 +71,7 @@ class FeedbackService (
             eventId = feedback.eventId,
             eventName = feedback.event!!.event_name,
             userId = feedback.userId,
+            username = feedback.user!!.username,
             feedbackComment = feedback.feedbackComment,
             feedbackRating = feedback.feedbackRating,
             createdAt = feedback.createdAt

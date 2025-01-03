@@ -21,6 +21,11 @@ data class Feedback(
     var createdAt: LocalDateTime?=null,
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id" , insertable = false, updatable = false)
+    @JsonIgnore
+    var user: User?=null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id" , insertable = false, updatable = false)
     @JsonIgnore
     var event: Event?=null,
