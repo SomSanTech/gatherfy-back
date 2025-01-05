@@ -37,6 +37,16 @@ class FeedbackService (
 
     fun createFeedback(createFeedback: Feedback): Feedback {
         try {
+            val existingFeedback = feedbackRepository.findByUserIdAndEventId(
+                createFeedback.userId,
+                createFeedback.eventId
+            )
+            if (existingFeedback != null) {
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "User is already feedback this event"
+                )
+            }
             val feedback = Feedback(
                 eventId = createFeedback.eventId,
                 userId = createFeedback.userId,
