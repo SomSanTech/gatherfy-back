@@ -1,7 +1,10 @@
 package com.gatherfy.gatherfyback.controllers
 
+import com.gatherfy.gatherfyback.dtos.CreateEventDTO
 import com.gatherfy.gatherfyback.dtos.EventDTO
+import com.gatherfy.gatherfyback.dtos.EventFullTagDTO
 import com.gatherfy.gatherfyback.dtos.EventRegistrationDTO
+import com.gatherfy.gatherfyback.entities.Event
 import com.gatherfy.gatherfyback.entities.SortOption
 import com.gatherfy.gatherfyback.services.EventService
 import org.springframework.format.annotation.DateTimeFormat
@@ -33,6 +36,11 @@ class EventController(var eventService: EventService) {
         return eventService.getEventById(id)
     }
 
+    @GetMapping("/v2/events/backoffice/{id}")
+    fun getEventWithFullTag(@PathVariable id: Long) : EventFullTagDTO {
+        return eventService.getEventFullTagById(id)
+    }
+
     @GetMapping("/v1/events/owner/{ownerId}")
     fun getOwnerEvent(@PathVariable ownerId: Long?): List<EventRegistrationDTO> {
         return eventService.getEventByOwner(ownerId)
@@ -42,4 +50,20 @@ class EventController(var eventService: EventService) {
     fun getRecommendedEvent(@RequestParam(defaultValue = "5") limit: Int): List<EventDTO> {
         return eventService.getRecommendedEvent(limit)
     }
+
+    @PostMapping("/v1/events")
+    fun createEvent(@RequestBody eventDTO: CreateEventDTO): Event {
+        return eventService.createEvent(eventDTO)
+    }
+
+    @PutMapping("/v1/events/{eventId}")
+    fun updateEvent( @PathVariable eventId: Long,@RequestBody eventDTO: CreateEventDTO): Event {
+        return eventService.updateEvent(eventId,eventDTO)
+    }
+
+    @DeleteMapping("/v1/events/{eventId}")
+    fun deleteEvent(@PathVariable eventId: Long) {
+        eventService.deleteEvent(eventId)
+    }
+
 }
