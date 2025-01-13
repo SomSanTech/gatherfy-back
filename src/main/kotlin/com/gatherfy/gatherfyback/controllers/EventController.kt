@@ -5,6 +5,7 @@ import com.gatherfy.gatherfyback.dtos.EventDTO
 import com.gatherfy.gatherfyback.dtos.EventFullTagDTO
 import com.gatherfy.gatherfyback.dtos.EventRegistrationDTO
 import com.gatherfy.gatherfyback.entities.Event
+import com.gatherfy.gatherfyback.entities.EventTag
 import com.gatherfy.gatherfyback.entities.SortOption
 import com.gatherfy.gatherfyback.services.EventService
 import org.springframework.format.annotation.DateTimeFormat

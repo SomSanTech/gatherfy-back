@@ -49,10 +49,7 @@ class EventService(
 
     // Search keyword, Filter tags and date, also Sort event
     fun getFilteredEvents(
-        keyword: String?,
-        tags: List<String>?,
-        date: LocalDate?,
-        sort: SortOption?
+        keyword: String?, tags: List<String>?, date: LocalDate?, sort: SortOption?
     ): List<EventDTO> {
         try {
             val events: List<Event> = when {
@@ -91,15 +88,11 @@ class EventService(
 
             // Sort based on the SortOption
             val sortedEvents = when (sort) {
-                SortOption.date_asc -> events.sortedWith(
-                    compareBy<Event> { it.event_start_date }.thenBy { it.event_end_date }
-                        .thenBy { it.event_name.lowercase() }
-                )
+                SortOption.date_asc -> events.sortedWith(compareBy<Event> { it.event_start_date }.thenBy { it.event_end_date }
+                    .thenBy { it.event_name.lowercase() })
 
-                SortOption.date_desc -> events.sortedWith(
-                    compareByDescending<Event> { it.event_start_date }.thenBy { it.event_end_date }
-                        .thenBy { it.event_name.lowercase() }
-                )
+                SortOption.date_desc -> events.sortedWith(compareByDescending<Event> { it.event_start_date }.thenBy { it.event_end_date }
+                    .thenBy { it.event_name.lowercase() })
 
                 SortOption.name_asc -> events.sortedBy { it.event_name.lowercase() }
                 SortOption.name_desc -> events.sortedByDescending { it.event_name.lowercase() }
@@ -199,7 +192,11 @@ class EventService(
     }
 
     fun deleteEvent(eventId: Long) {
-
+        val event = eventRepository.findById(eventId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found: $eventId") }
+        val existingEventTags = eventTagRepository.findAllByEvent(event)
+        eventTagRepository.deleteAll(existingEventTags)
+        eventRepository.delete(event)
     }
 
     private fun toEventRegistrationDTO(event: Event): EventRegistrationDTO {
@@ -215,8 +212,7 @@ class EventService(
         val ownerEventName: String = userRepository.findById(event.event_owner).map {
             it.username
         }.orElse("Unknown Organizer")
-        return EventDTO(
-            eventId = event.event_id,
+        return EventDTO(eventId = event.event_id,
             name = event.event_name,
             description = event.event_desc,
             detail = event.event_detail,
@@ -227,13 +223,12 @@ class EventService(
             location = event.event_location,
             map = event.event_google_map,
             capacity = event.event_capacity,
-            registration_goal= event.event_registration_goal!!,
+            registration_goal = event.event_registration_goal!!,
             status = event.event_status,
             slug = event.event_slug,
             image = getImageUrl("thumbnails", event.event_image),
             owner = ownerEventName,
-            tags = event.tags?.map { it.tag_title }
-        )
+            tags = event.tags?.map { it.tag_title })
     }
 
     fun toEventFullTagDto(event: Event): EventFullTagDTO {
@@ -251,7 +246,7 @@ class EventService(
             ticket_end_date = event.event_ticket_end_date!!,
             location = event.event_location,
             map = event.event_google_map,
-            registration_goal= event.event_registration_goal!!,
+            registration_goal = event.event_registration_goal!!,
             capacity = event.event_capacity,
             status = event.event_status,
             slug = event.event_slug,

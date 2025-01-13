@@ -68,14 +68,4 @@ class EventTagService(
         }
     }
 
-    fun deleteEventTag(eventId: Long, tags: List<Long>) {
-        val event = eventRepository.findById(eventId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found: $eventId") }
-        val existingEventTags = eventTagRepository.findAllByEvent(event)
-
-        val tagsToRemove = existingEventTags.filter { it.tag.tag_id !in tags }
-        eventTagRepository.deleteAll(tagsToRemove)
-    }
-
-
 }
