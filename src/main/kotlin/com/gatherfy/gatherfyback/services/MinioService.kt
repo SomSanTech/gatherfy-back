@@ -3,6 +3,7 @@ package com.gatherfy.gatherfyback.services
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.MinioClient
 import io.minio.PutObjectArgs
+import io.minio.RemoveObjectArgs
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -27,6 +28,21 @@ class MinioService(
         )
 
         return fileName
+    }
+
+    fun deleteFile(objectName: String): Boolean {
+        return try {
+            minioClient.removeObject(
+                RemoveObjectArgs.builder()
+                    .bucket(bucket)
+                    .`object`(objectName)
+                    .build()
+            )
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
     fun getFileUrl(fileName: String): String {

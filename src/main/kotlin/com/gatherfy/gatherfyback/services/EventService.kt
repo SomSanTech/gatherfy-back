@@ -26,7 +26,8 @@ class EventService(
     private val userRepository: UserRepository,
     val eventTagRepository: EventTagRepository,
     val eventTagService: EventTagService,
-    val tagRepository: TagRepository
+    val tagRepository: TagRepository,
+    val minioService: MinioService,
 ) {
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
@@ -162,6 +163,7 @@ class EventService(
         try {
             val event = eventRepository.findById(eventId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found: $eventId") }
+            minioService.deleteFile(event.event_image)
 
             event.event_name = updateData.event_name!!
             event.event_desc = updateData.event_desc!!
@@ -196,6 +198,7 @@ class EventService(
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found: $eventId") }
         val existingEventTags = eventTagRepository.findAllByEvent(event)
         eventTagRepository.deleteAll(existingEventTags)
+        minioService.deleteFile(event.event_image)
         eventRepository.delete(event)
     }
 
