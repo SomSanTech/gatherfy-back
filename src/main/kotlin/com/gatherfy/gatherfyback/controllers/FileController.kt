@@ -24,4 +24,9 @@ class FileController(private val minioService: MinioService) {
             return ResponseEntity.status(500).body(mapOf("error" to "File upload failed: ${e.message}"))
         }
     }
+
+    @DeleteMapping("delete/{fileName}")
+    fun deleteFile(@PathVariable("fileName") fileName: String) {
+        minioService.deleteFile(fileName)
+    }
 }
