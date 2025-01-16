@@ -163,7 +163,6 @@ class EventService(
         try {
             val event = eventRepository.findById(eventId)
                 .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found: $eventId") }
-            minioService.deleteFile(event.event_image)
 
             event.event_name = updateData.event_name!!
             event.event_desc = updateData.event_desc!!
