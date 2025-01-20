@@ -33,7 +33,7 @@ class SecurityConfiguration(
                         "/api/v1/questions/event/**")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
-                        "/api/auth",
+                        "/api/login",
                         "/api/v1/signup")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
