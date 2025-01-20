@@ -4,18 +4,20 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 
 @Entity(name = "users")
 data class User(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var users_id: Long,
+    var users_id: Long?,
     var users_firstname: String,
     var users_lastname: String,
     var username: String,
+    var password: String,
     var users_gender: String,
     var users_email: String,
     var users_phone: String,
-    var users_age: Long,
-    var users_birthday: ZonedDateTime,
+    var users_role: String,
+    var users_age: Long?,
+    var users_birthday: LocalDateTime,
 )
