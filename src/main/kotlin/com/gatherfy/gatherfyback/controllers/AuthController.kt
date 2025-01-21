@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = ["http://cp24us1.sit.kmutt.ac.th:3000/","http://localhost:3000/"])
 class AuthController(private val authService: AuthService) {
-    @PostMapping("/login")
+    @PostMapping("/v1/login")
     fun createAuthenticationToken(@RequestBody authRequest: AuthRequest): AuthResponse{
         return authService.authentication(authRequest)
     }

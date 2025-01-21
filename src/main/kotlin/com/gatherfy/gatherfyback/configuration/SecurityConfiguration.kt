@@ -1,5 +1,7 @@
 package com.gatherfy.gatherfyback.configuration
 
+import com.gatherfy.gatherfyback.Exception.AuthenticationEntryPoint
+import com.gatherfy.gatherfyback.Exception.CustomAccessDeniedHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -18,7 +20,9 @@ class SecurityConfiguration(
     @Bean
     fun securityFilterChain(
         http: HttpSecurity,
-        jwtAuthenticationFilter: JwtAuthenticationFilter
+        jwtAuthenticationFilter: JwtAuthenticationFilter,
+        authenticationEntryPoint: AuthenticationEntryPoint,
+        customAccessDeniedHandler: CustomAccessDeniedHandler
     ): DefaultSecurityFilterChain{
         http
             .csrf { it.disable() }
@@ -33,7 +37,7 @@ class SecurityConfiguration(
                         "/api/v1/questions/event/**")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
-                        "/api/login",
+                        "/api/v1/login",
                         "/api/v1/signup")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
@@ -62,7 +66,11 @@ class SecurityConfiguration(
                         "/api/v1/feedbacks/**",)
                     .hasRole("Organization")
                     .anyRequest()
-                    .fullyAuthenticated()
+                    .authenticated()
+            }
+            .exceptionHandling {
+                it.accessDeniedHandler(customAccessDeniedHandler)
+                it.authenticationEntryPoint(authenticationEntryPoint)
             }
             .sessionManagement {
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
