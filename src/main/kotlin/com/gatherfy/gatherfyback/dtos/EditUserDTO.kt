@@ -9,6 +9,7 @@ data class EditUserDTO(
     var gender: String,
     var email: String,
     var phone: String,
+    var image: String,
     var birthday: LocalDateTime,
     var password: String
 )

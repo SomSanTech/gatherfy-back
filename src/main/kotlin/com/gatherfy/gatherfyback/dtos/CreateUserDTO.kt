@@ -9,6 +9,7 @@ data class CreateUserDTO(
     var gender: String,
     var email: String,
     var phone: String,
+    var image: String,
     var role: String,
     var birthday: LocalDateTime,
     var password: String

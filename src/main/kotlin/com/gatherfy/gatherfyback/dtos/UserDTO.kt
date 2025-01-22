@@ -6,4 +6,5 @@ data class UserDTO(
     var email: String,
     var phone: String,
     var role: String,
+    var image: String,
 )

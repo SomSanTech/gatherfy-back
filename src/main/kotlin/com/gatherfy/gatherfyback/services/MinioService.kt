@@ -12,9 +12,9 @@ import io.minio.http.Method
 @Service
 class MinioService(
     private val minioClient: MinioClient,
-    @Value("\${minio.bucket}") private val bucket: String
+//    @Value("\${minio.bucket}") private val bucket: String
 ) {
-    fun uploadFile(file: MultipartFile): String {
+    fun uploadFile(bucket: String, file: MultipartFile): String {
 //        val fileName = "${System.currentTimeMillis()}-${file.originalFilename}"
         val fileName = "${file.originalFilename}"
 
@@ -30,7 +30,7 @@ class MinioService(
         return fileName
     }
 
-    fun deleteFile(objectName: String): Boolean {
+    fun deleteFile(bucket: String, objectName: String): Boolean {
         return try {
             minioClient.removeObject(
                 RemoveObjectArgs.builder()
@@ -45,7 +45,7 @@ class MinioService(
         }
     }
 
-    fun getFileUrl(fileName: String): String {
+    fun getFileUrl(bucket: String, fileName: String): String {
         return minioClient.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
                 .bucket(bucket)

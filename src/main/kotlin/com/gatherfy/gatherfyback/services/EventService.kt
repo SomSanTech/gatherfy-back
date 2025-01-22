@@ -197,7 +197,7 @@ class EventService(
             .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found: $eventId") }
         val existingEventTags = eventTagRepository.findAllByEvent(event)
         eventTagRepository.deleteAll(existingEventTags)
-        minioService.deleteFile(event.event_image)
+        minioService.deleteFile("thumbnails",event.event_image)
         eventRepository.delete(event)
     }
 

@@ -11,10 +11,10 @@ import org.springframework.web.multipart.MultipartFile
 class FileController(private val minioService: MinioService) {
 
     @PostMapping("/upload")
-    fun uploadFile(@RequestParam("file") file: MultipartFile): ResponseEntity<Map<String, String>> {
+    fun uploadFile(@RequestParam("bucket") bucket: String, @RequestParam("file") file: MultipartFile): ResponseEntity<Map<String, String>> {
         try {
-            val fileName = minioService.uploadFile(file)
-            val fileUrl = minioService.getFileUrl(fileName)
+            val fileName = minioService.uploadFile(bucket, file)
+            val fileUrl = minioService.getFileUrl(bucket, fileName)
             val response = mapOf(
                 "message" to "File uploaded successfully",
                 "fileUrl" to fileUrl
@@ -26,7 +26,7 @@ class FileController(private val minioService: MinioService) {
     }
 
     @DeleteMapping("delete/{fileName}")
-    fun deleteFile(@PathVariable("fileName") fileName: String) {
-        minioService.deleteFile(fileName)
+    fun deleteFile(@RequestParam("bucket") bucket: String, @PathVariable("fileName") fileName: String) {
+        minioService.deleteFile(bucket, fileName)
     }
 }

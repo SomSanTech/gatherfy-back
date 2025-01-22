@@ -6,7 +6,7 @@ import com.gatherfy.gatherfyback.dtos.UserDTO
 import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.repositories.UserRepository
 import org.apache.coyote.BadRequestException
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
@@ -14,6 +14,10 @@ import org.springframework.web.server.ResponseStatusException
 
 @Service
 class UserService(private val userRepository: UserRepository) {
+
+    @Value("\${minio.domain}")
+    private lateinit var minioDomain: String
+
     fun createUser(userDto: CreateUserDTO): UserDTO {
         try{
             val existingUsername = userRepository.findByUsername(userDto.username)
@@ -46,6 +50,7 @@ class UserService(private val userRepository: UserRepository) {
                         users_gender = userDto.gender,
                         users_email = userDto.email,
                         users_phone = userDto.phone,
+                        users_image = userDto.image,
                         users_role = userDto.role,
                         users_birthday = userDto.birthday,
                         users_age = null,
@@ -89,6 +94,7 @@ class UserService(private val userRepository: UserRepository) {
                         userProfile.users_gender = userEdit.gender
                         userProfile.users_email = userEdit.email
                         userProfile.users_phone = userEdit.phone
+                        userProfile.users_image = userEdit.image
                         userProfile.users_birthday = userEdit.birthday
                         userProfile.password = encoder.encode(userEdit.password)
                         val savedUser = userRepository.save(userProfile)
@@ -105,7 +111,11 @@ class UserService(private val userRepository: UserRepository) {
 
     fun getUserProfile(username: String): User?{
         try {
-            return userRepository.findByUsername(username)
+            val user = userRepository.findByUsername(username)
+            if(user != null){
+                user.users_image = getImageUrl("profiles",user.users_image)
+            }
+            return user
         } catch (e: Exception){
             throw ResponseStatusException(HttpStatus.NOT_FOUND,"User not found")
         }
@@ -116,22 +126,13 @@ class UserService(private val userRepository: UserRepository) {
             username = user.username,
             email = user.users_email,
             phone = user.users_phone,
-            role = user.users_role
+            role = user.users_role,
+            image = getImageUrl("profiles", user.users_image)
         )
     }
 
-    fun toEditUserDto(user: User): EditUserDTO{
-        return EditUserDTO(
-            firstname = user.users_firstname,
-            lastname = user.users_lastname,
-            username = user.username,
-            gender = user.users_gender,
-            email = user.users_email,
-            phone = user.users_phone,
-            birthday = user.users_birthday,
-            password = user.password
-        )
+    fun getImageUrl(bucketName: String, objectName: String): String {
+        return "$minioDomain/$bucketName/$objectName"
     }
-
 }
 
