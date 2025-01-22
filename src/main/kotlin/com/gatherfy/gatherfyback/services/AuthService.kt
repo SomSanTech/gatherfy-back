@@ -27,7 +27,6 @@ class AuthService(
                 )
             )
             val user = userDetailsService.loadUserByUsername(authRequest.username)
-            println(user)
             val accessToken = tokenService.generateToken(user,getAccessTokenExpiration())
             val refreshToken = tokenService.generateToken(user,getRefreshTokenExpiration())
             return AuthResponse(accessToken, refreshToken)

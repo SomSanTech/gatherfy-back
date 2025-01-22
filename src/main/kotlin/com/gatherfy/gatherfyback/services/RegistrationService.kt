@@ -1,11 +1,14 @@
 package com.gatherfy.gatherfyback.services
 
+import com.gatherfy.gatherfyback.dtos.EventDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationCreateDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationDTO
+import com.gatherfy.gatherfyback.dtos.UserRegistrationDTO
 import com.gatherfy.gatherfyback.entities.Registration
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -18,6 +21,8 @@ class RegistrationService (
     val eventRepository: EventRepository,
     val userRepository: UserRepository
 ){
+    @Value("\${minio.domain}")
+    private lateinit var minioDomain: String
 
     fun getAllRegistration(): List<RegistrationDTO> {
         val registrations = registrationRepository.findAll()
@@ -117,5 +122,40 @@ class RegistrationService (
             status = registration.status,
             createdAt = registration.createdAt
         )
+    }
+
+    fun getRegistrationByUser(username: String): List<UserRegistrationDTO>{
+        try{
+            val user = userRepository.findByUsername(username)
+            val registrations = user?.users_id?.let { registrationRepository.findRegistrationsByUserId(it) }
+                return registrations!!.map { registration -> toUserRegistrationDto(registration) }
+        }
+        catch (e: Exception){
+            throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        }
+    }
+
+    private fun toUserRegistrationDto(registration: Registration): UserRegistrationDTO{
+        val ownerEventName: String = userRepository.findById(registration.event.event_owner).map {
+            it.username
+        }.orElse("Unknown Organizer")
+        return UserRegistrationDTO(
+            registrationId = registration.registrationId,
+            eventId = registration.eventId,
+            name = registration.event.event_name,
+            description = registration.event.event_desc,
+            detail = registration.event.event_detail,
+            start_date = registration.event.event_start_date,
+            end_date = registration.event.event_end_date,
+            location = registration.event.event_location,
+            status = registration.event.event_status,
+            slug = registration.event.event_slug,
+            image = getImageUrl("thumbnails", registration.event.event_image),
+            owner = ownerEventName,
+            tags = registration.event.tags?.map { it.tag_title }
+        )
+    }
+    fun getImageUrl(bucketName: String, objectName: String): String {
+        return "$minioDomain/$bucketName/$objectName"
     }
 }

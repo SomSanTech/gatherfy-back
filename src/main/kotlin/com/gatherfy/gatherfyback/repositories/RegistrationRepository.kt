@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.repositories
 
+import com.gatherfy.gatherfyback.dtos.EventDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationDTO
 import com.gatherfy.gatherfyback.entities.Registration
 import org.springframework.data.jpa.repository.JpaRepository
@@ -16,4 +17,6 @@ interface RegistrationRepository: JpaRepository<Registration,Long> {
     fun findRegistrationsByEventOwner(@Param("eventOwner") eventOwner: Long): List<Registration>
 
     fun findByEventIdAndUserId(eventId: Long, userId: Long): Registration?
+
+    fun findRegistrationsByUserId(userId: Long): List<Registration>
 }

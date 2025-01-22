@@ -1,18 +1,23 @@
 package com.gatherfy.gatherfyback.controllers
 
-import com.gatherfy.gatherfyback.dtos.RegistrationCreateDTO
-import com.gatherfy.gatherfyback.dtos.RegistrationDTO
-import com.gatherfy.gatherfyback.dtos.RegistrationUpdateStatusDTO
+import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.services.RegistrationService
+import com.gatherfy.gatherfyback.services.TokenService
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("api")
 @CrossOrigin(origins = ["http://cp24us1.sit.kmutt.ac.th:3000/","http://localhost:3000/"])
-class RegistrationController(val registrationService: RegistrationService) {
+class RegistrationController(
+    val registrationService: RegistrationService,
+    private val tokenService: TokenService,
+    @Qualifier("userDetailsService") private val userDetailsService: UserDetailsService
+) {
     @GetMapping("/v1/registrations")
     fun getAllRegistrations():List<RegistrationDTO> {
         return registrationService.getAllRegistration()
@@ -51,5 +56,11 @@ class RegistrationController(val registrationService: RegistrationService) {
     @GetMapping("/v1/registrations/event/{id}")
     fun getRegistrationEvents(@PathVariable("id") id: Long): List<RegistrationDTO> {
         return registrationService.getAllRegistrationsByEventId(id)
+    }
+
+    @GetMapping("/v1/tickets")
+    fun getRegistration(@RequestHeader("Authorization") token: String): List<UserRegistrationDTO>{
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return registrationService.getRegistrationByUser(username)
     }
 }
