@@ -65,9 +65,15 @@ class RegistrationController(
         return registrationService.getRegistrationByUser(username)
     }
 
-    @PostMapping("/v1/checkedIn/{eventId}")
+    @PostMapping("/v1/check-in/{eventId}")
     fun getCheckInToken(@RequestHeader("Authorization") token: String, @PathVariable eventId: Long): RegistrationCheckin{
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return registrationService.checkedIn(username, eventId)
+        return registrationService.getCheckInToken(username, eventId)
+    }
+
+    @PutMapping("/v1/check-in")
+    fun checkedInAttendee(@RequestHeader("Authorization") qrToken: String):RegistrationCreateDTO{
+        val token = qrToken.substringAfter("Bearer ")
+        return registrationService.CheckedInAttendee(token)
     }
 }

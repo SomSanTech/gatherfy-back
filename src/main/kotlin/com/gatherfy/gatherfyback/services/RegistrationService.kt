@@ -8,8 +8,10 @@ import com.gatherfy.gatherfyback.entities.RegistrationCheckin
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import java.time.ZonedDateTime
@@ -20,7 +22,8 @@ class RegistrationService(
     val registrationRepository: RegistrationRepository,
     val eventRepository: EventRepository,
     val userRepository: UserRepository,
-    private val tokenService: TokenService
+    private val tokenService: TokenService,
+    @Qualifier("userDetailsService") private val userDetailsService: UserDetailsService
 ){
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
@@ -160,14 +163,31 @@ class RegistrationService(
         return "$minioDomain/$bucketName/$objectName"
     }
 
-    fun checkedIn(username: String, eventId: Long): RegistrationCheckin{
+    fun getCheckInToken(username: String, eventId: Long): RegistrationCheckin{
         val user = userRepository.findByUsername(username)
         val additionalClaims = mapOf(
             "userId" to user!!.users_id,
             "eventId" to eventId
         )
         val expirationDate = Date(System.currentTimeMillis() + 600000)
-        val checkInToken = tokenService.generateCheckInToken(expirationDate, additionalClaims)
+        val checkInToken = tokenService.generateCheckInToken(username, expirationDate, additionalClaims)
         return RegistrationCheckin(checkInToken)
+    }
+
+    fun CheckedInAttendee(token: String): RegistrationCreateDTO{
+        val userId = (tokenService.getAdditionalClaims(token, "userId")) as Int
+        val eventId = (tokenService.getAdditionalClaims(token, "eventId")) as Int
+        val registration = registrationRepository.findRegistrationsByUserIdAndEventId(userId,eventId)
+        registration.status = "Checked In"
+        val updatedRegistration = registrationRepository.save(registration)
+        return toCheckedInDto(updatedRegistration)
+    }
+
+    fun toCheckedInDto(registration: Registration): RegistrationCreateDTO{
+        return RegistrationCreateDTO(
+            userId = registration.userId,
+            eventId = registration.eventId,
+            status = registration.status
+        )
     }
 }

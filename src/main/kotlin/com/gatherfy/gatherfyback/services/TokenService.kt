@@ -4,11 +4,9 @@ import com.gatherfy.gatherfyback.properties.JwtProperties
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import io.jsonwebtoken.io.Encoders
 import io.jsonwebtoken.security.Keys
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
-import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.crypto.SecretKey
 
@@ -34,10 +32,12 @@ class TokenService(
         .compact()
 
     fun generateCheckInToken(
+        username: String,
         expirationDate: Date,
         additionalClaims: Map<String, Long?> = emptyMap()
     ): String = Jwts.builder()
         .claims()
+        .subject(username)
         .issuedAt(Date(System.currentTimeMillis()))
         .expiration(expirationDate)
         .add(additionalClaims)
@@ -61,5 +61,9 @@ class TokenService(
     fun isValidToken(token: String, userDetails: UserDetails): Boolean{
         val username = getUsernameFromToken(token)
         return username == userDetails.username && !isTokenExpired(token)
+    }
+
+    fun getAdditionalClaims(token: String, claimKey: String): Any? {
+        return getAllClaimsFromToken(token)[claimKey]
     }
 }
