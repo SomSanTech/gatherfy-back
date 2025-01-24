@@ -1,10 +1,10 @@
 package com.gatherfy.gatherfyback.services
 
-import com.gatherfy.gatherfyback.dtos.EventDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationCreateDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationDTO
 import com.gatherfy.gatherfyback.dtos.UserRegistrationDTO
 import com.gatherfy.gatherfyback.entities.Registration
+import com.gatherfy.gatherfyback.entities.RegistrationCheckin
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
@@ -16,10 +16,11 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @Service
-class RegistrationService (
+class RegistrationService(
     val registrationRepository: RegistrationRepository,
     val eventRepository: EventRepository,
-    val userRepository: UserRepository
+    val userRepository: UserRepository,
+    private val tokenService: TokenService
 ){
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
@@ -157,5 +158,16 @@ class RegistrationService (
     }
     fun getImageUrl(bucketName: String, objectName: String): String {
         return "$minioDomain/$bucketName/$objectName"
+    }
+
+    fun checkedIn(username: String, eventId: Long): RegistrationCheckin{
+        val user = userRepository.findByUsername(username)
+        val additionalClaims = mapOf(
+            "userId" to user!!.users_id,
+            "eventId" to eventId
+        )
+        val expirationDate = Date(System.currentTimeMillis() + 600000)
+        val checkInToken = tokenService.generateCheckInToken(expirationDate, additionalClaims)
+        return RegistrationCheckin(checkInToken)
     }
 }

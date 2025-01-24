@@ -18,6 +18,7 @@ class TokenService(
     private val jwtProperties: JwtProperties
 ) {
     private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtProperties.key.toByteArray())
+
     fun generateToken(
         userDetails: UserDetails,
         expirationDate: Date,
@@ -25,6 +26,18 @@ class TokenService(
     ): String = Jwts.builder()
         .claims()
         .subject(userDetails.username)
+        .issuedAt(Date(System.currentTimeMillis()))
+        .expiration(expirationDate)
+        .add(additionalClaims)
+        .and()
+        .signWith(secretKey,SignatureAlgorithm.HS256)
+        .compact()
+
+    fun generateCheckInToken(
+        expirationDate: Date,
+        additionalClaims: Map<String, Long?> = emptyMap()
+    ): String = Jwts.builder()
+        .claims()
         .issuedAt(Date(System.currentTimeMillis()))
         .expiration(expirationDate)
         .add(additionalClaims)

@@ -1,6 +1,7 @@
 package com.gatherfy.gatherfyback.controllers
 
 import com.gatherfy.gatherfyback.dtos.*
+import com.gatherfy.gatherfyback.entities.RegistrationCheckin
 import com.gatherfy.gatherfyback.services.RegistrationService
 import com.gatherfy.gatherfyback.services.TokenService
 import org.springframework.beans.factory.annotation.Qualifier
@@ -62,5 +63,11 @@ class RegistrationController(
     fun getRegistration(@RequestHeader("Authorization") token: String): List<UserRegistrationDTO>{
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
         return registrationService.getRegistrationByUser(username)
+    }
+
+    @PostMapping("/v1/checkedIn/{eventId}")
+    fun getCheckInToken(@RequestHeader("Authorization") token: String, @PathVariable eventId: Long): RegistrationCheckin{
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return registrationService.checkedIn(username, eventId)
     }
 }
