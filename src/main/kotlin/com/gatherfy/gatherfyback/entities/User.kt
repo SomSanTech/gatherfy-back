@@ -17,7 +17,7 @@ data class User(
     var users_gender: String,
     var users_email: String,
     var users_phone: String,
-    var users_image: String,
+    var users_image: String?,
     var users_role: String,
     var users_age: Long?,
     var users_birthday: LocalDateTime,

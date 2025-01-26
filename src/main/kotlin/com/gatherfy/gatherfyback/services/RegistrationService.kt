@@ -1,5 +1,7 @@
 package com.gatherfy.gatherfyback.services
 
+import com.gatherfy.gatherfyback.Exception.ConflictException
+import com.gatherfy.gatherfyback.dtos.CheckInDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationCreateDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationDTO
 import com.gatherfy.gatherfyback.dtos.UserRegistrationDTO
@@ -8,6 +10,8 @@ import com.gatherfy.gatherfyback.entities.RegistrationCheckin
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
+import jakarta.persistence.EntityNotFoundException
+import org.apache.coyote.BadRequestException
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -34,42 +38,51 @@ class RegistrationService(
     }
 
     fun getAllRegistrationsByEventId(eventId: Long): List<RegistrationDTO> {
-        val registrations = registrationRepository.findRegistrationsByEventId(eventId)
-        if (registrations.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found")
+        try{
+            val registrations = registrationRepository.findRegistrationsByEventId(eventId)
+            return registrations.map { toRegistrationDTO(it) }
+        }catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
         }
-        return registrations.map { toRegistrationDTO(it) }
+
     }
 
-    fun getAllRegistrationsByOwner(ownerId: Long): List<RegistrationDTO> {
+    fun getAllRegistrationsByOwner(ownerId: Long): List<RegistrationDTO>? {
         val registrations = registrationRepository.findRegistrationsByEventOwner(ownerId)
-        if (registrations.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found")
-        }
-        return registrations.map { toRegistrationDTO(it) }
+        return registrations?.map { toRegistrationDTO(it) }
     }
 
-    fun getRegistrationById(registrationId: Long): Optional<RegistrationDTO> {
-        val registration = registrationRepository.findById(registrationId)
-        if (registration.isEmpty) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Registration not found")
+    fun getAllRegistrationsByOwnerAuth(username: String): List<RegistrationDTO>? {
+        val user = userRepository.findByUsername(username)
+        val registrations = registrationRepository.findRegistrationsByEventOwner(user?.users_id!!)
+        return registrations?.map { toRegistrationDTO(it) }
+    }
+
+    fun getRegistrationById(registrationId: Long): Optional<RegistrationDTO>? {
+        try{
+            val registration = registrationRepository.findById(registrationId)
+            if (registration.isEmpty) {
+                throw EntityNotFoundException("Registration id $registrationId does not exist")
+            }
+            return registration.map { toRegistrationDTO(it) }
+        }catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
         }
-        return registration.map { toRegistrationDTO(it) }
     }
 
     fun updateStatus(id: Long, newStatus: String): RegistrationDTO {
         try{
             val registration = registrationRepository.findById(id)
-                .orElseThrow {  ResponseStatusException(HttpStatus.NOT_FOUND,"Event not found") }
+                .orElseThrow {  EntityNotFoundException("Registration id $id does not exist") }
 
             registration.status = newStatus
             val updatedRegistration = registrationRepository.save(registration)
 
             return toRegistrationDTO(updatedRegistration)
-        } catch (e: ResponseStatusException){
-            throw e
+        } catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
         } catch (e: Exception){
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+            throw BadRequestException("Invalid status provided. Allowed values are: 'Awaiting Check-in', 'Checked in', or 'Unattended'.")
         }
     }
 
@@ -108,6 +121,41 @@ class RegistrationService(
             throw e
         } catch (e: Exception){
             throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    fun createRegistrationWithAuth(username: String, eventId: Long): RegistrationDTO {
+        try {
+            val user = userRepository.findByUsername(username)
+            val event = eventRepository.findById(eventId)
+                .orElseThrow { EntityNotFoundException("Event id $eventId does not exist") }
+
+            // Check for existing registration to prevent duplicates
+            val existingRegistration = registrationRepository.findByEventIdAndUserId(
+                eventId,
+                user?.users_id!!
+            )
+            if (existingRegistration != null) {
+                throw ConflictException("User is already registered for this event")
+            }
+
+            val registration = Registration(
+                event = event,
+                user = user,
+                status = "Awaiting Check-in",
+                createdAt = ZonedDateTime.now(),
+                eventId = eventId,
+                userId = user.users_id!!
+            )
+
+            val savedRegistration = registrationRepository.save(registration)
+            return toRegistrationDTO(savedRegistration)
+        } catch (e: EntityNotFoundException) {
+            throw EntityNotFoundException(e.message)
+        } catch (e: ConflictException) {
+            throw ConflictException(e.message!!)
+        } catch (e: Exception){
+            throw BadRequestException("Invalid status provided. Allowed values are: 'Awaiting Check-in', 'Checked in', or 'Unattended'.")
         }
     }
 
@@ -164,23 +212,51 @@ class RegistrationService(
     }
 
     fun getCheckInToken(username: String, eventId: Long): RegistrationCheckin{
-        val user = userRepository.findByUsername(username)
-        val additionalClaims = mapOf(
-            "userId" to user!!.users_id,
-            "eventId" to eventId
-        )
-        val expirationDate = Date(System.currentTimeMillis() + 600000)
-        val checkInToken = tokenService.generateCheckInToken(username, expirationDate, additionalClaims)
-        return RegistrationCheckin(checkInToken)
+        try{
+            val isEventExist = eventRepository.findById(eventId)
+            if(isEventExist.isEmpty){
+                throw EntityNotFoundException("Event id $eventId does not exist")
+            }
+            val user = userRepository.findByUsername(username)
+            val additionalClaims = mapOf(
+                "userId" to user!!.users_id,
+                "eventId" to eventId
+            )
+            val expirationDate = Date(System.currentTimeMillis() + 600000)
+            val checkInToken = tokenService.generateCheckInToken(username, expirationDate, additionalClaims)
+            return RegistrationCheckin(checkInToken)
+        }catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        }
     }
 
     fun CheckedInAttendee(token: String): RegistrationCreateDTO{
         val userId = (tokenService.getAdditionalClaims(token, "userId")) as Int
         val eventId = (tokenService.getAdditionalClaims(token, "eventId")) as Int
         val registration = registrationRepository.findRegistrationsByUserIdAndEventId(userId,eventId)
-        registration.status = "Checked In"
-        val updatedRegistration = registrationRepository.save(registration)
+        registration?.status = "Checked In"
+        val updatedRegistration = registrationRepository.save(registration!!)
         return toCheckedInDto(updatedRegistration)
+    }
+
+    fun CheckedInAttendeeWithAuth(username: String, checkInDto: CheckInDTO): RegistrationCreateDTO{
+        try{
+            val user = userRepository.findByUsername(username)
+            val userId = (tokenService.getAdditionalClaims(checkInDto.qrToken, "userId")) as Int
+            val eventId = (tokenService.getAdditionalClaims(checkInDto.qrToken, "eventId")) as Int
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId.toLong())
+
+            if(existEvent === null){
+                throw EntityNotFoundException("You are not owner of this event")
+            }
+            val registration = registrationRepository.findRegistrationsByUserIdAndEventId(userId,eventId)
+
+            registration?.status = "Checked In"
+            val updatedRegistration = registrationRepository.save(registration!!)
+            return toCheckedInDto(updatedRegistration)
+        }catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        }
     }
 
     fun toCheckedInDto(registration: Registration): RegistrationCreateDTO{

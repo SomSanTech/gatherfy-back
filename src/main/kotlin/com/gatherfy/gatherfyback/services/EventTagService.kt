@@ -30,7 +30,7 @@ class EventTagService(
                 EventTag(event = event, tag = tag)
             }
 
-            val saved = eventTagRepository.saveAll(eventTags)
+            eventTagRepository.saveAll(eventTags)
         } catch (e: ResponseStatusException) {
             throw e
         } catch (e: Exception) {

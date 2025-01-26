@@ -41,27 +41,37 @@ class SecurityConfiguration(
                         "/api/v1/signup")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
+                        "/api/v1/tickets")
+                    .hasRole("Attendee")
+                    .requestMatchers(HttpMethod.GET,
                         "/api/v1/registrations",
+                        "/api/v2/registrations",
                         "/api/v1/registrations/**",
-                        "/api/v2/events/backoffice/**",
-                        "/api/v1/events/backoffice/**",
-                        "/api/v1/events/owner/**",
+                        "/api/v2/backoffice/**",
+                        "/api/v1/backoffice/**",
                         "/api/v1/feedbacks/**",
                         "/api/v2/feedbacks/**",
                         "/api/v1/answers/**")
                     .hasRole("Organization")
                     .requestMatchers(HttpMethod.POST,
+                        "/api/v2/registrations",
+                        "/api/v1/check-in/**")
+                    .hasRole("Attendee")
+                    .requestMatchers(HttpMethod.POST,
                         "/api/v1/questions",
-                        "/api/v1/events",
+                        "/api/v1/backoffice/**",
+                        "/api/v2/backoffice/**",
                         "/api/v1/files/**")
                     .hasRole("Organization")
                     .requestMatchers(HttpMethod.PUT,
                         "/api/v1/questions/**",
-                        "/api/v1/events/**",)
+                        "/api/v1/backoffice/**",
+                        "/api/v1/check-in",
+                        "/api/v2/check-in")
                     .hasRole("Organization")
                     .requestMatchers(HttpMethod.DELETE,
                         "/api/v1/questions/**",
-                        "/api/v1/events/**",
+                        "/api/v1/backoffice/**",
                         "/api/v1/files/**",
                         "/api/v1/feedbacks/**",)
                     .hasRole("Organization")

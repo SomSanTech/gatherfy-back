@@ -20,7 +20,7 @@ class TokenService(
     fun generateToken(
         userDetails: UserDetails,
         expirationDate: Date,
-        additionalClaims: Map<String, Any> = emptyMap()
+        additionalClaims: Map<String, String?> = emptyMap()
     ): String = Jwts.builder()
         .claims()
         .subject(userDetails.username)

@@ -22,13 +22,10 @@ class UserService(private val userRepository: UserRepository) {
         try{
             val existingUsername = userRepository.findByUsername(userDto.username)
             val existingEmail = userRepository.findByEmail(userDto.email)
-            println("on create user")
             if(existingUsername != null){
-                println("Username already taken")
                 throw ResponseStatusException(HttpStatus.CONFLICT, "Username already taken")
             }
             else if (existingEmail != null){
-                println("Email already taken")
                 throw ResponseStatusException(HttpStatus.CONFLICT, "Email already taken")
             }
             else {
@@ -50,7 +47,7 @@ class UserService(private val userRepository: UserRepository) {
                         users_gender = userDto.gender,
                         users_email = userDto.email,
                         users_phone = userDto.phone,
-                        users_image = userDto.image,
+                        users_image = null,
                         users_role = userDto.role,
                         users_birthday = userDto.birthday,
                         users_age = null,
@@ -113,7 +110,7 @@ class UserService(private val userRepository: UserRepository) {
         try {
             val user = userRepository.findByUsername(username)
             if(user != null){
-                user.users_image = getImageUrl("profiles",user.users_image)
+                user.users_image = getImageUrl("profiles",user.users_image!!)
             }
             return user
         } catch (e: Exception){
@@ -127,7 +124,7 @@ class UserService(private val userRepository: UserRepository) {
             email = user.users_email,
             phone = user.users_phone,
             role = user.users_role,
-            image = getImageUrl("profiles", user.users_image)
+//            image = getImageUrl("profiles", user.users_image!!)
         )
     }
 

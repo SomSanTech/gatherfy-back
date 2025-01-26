@@ -3,6 +3,7 @@ package com.gatherfy.gatherfyback.services
 import com.gatherfy.gatherfyback.entities.AuthRequest
 import com.gatherfy.gatherfyback.entities.AuthResponse
 import com.gatherfy.gatherfyback.properties.JwtProperties
+import com.gatherfy.gatherfyback.repositories.UserRepository
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -15,7 +16,8 @@ class AuthService(
     private val authenticationManager: AuthenticationManager,
     private val userDetailsService: CustomUserDetailsService,
     private val tokenService: TokenService,
-    private val jwtProperties: JwtProperties
+    private val jwtProperties: JwtProperties,
+    private val userRepository: UserRepository
 ) {
 
     fun authentication(authRequest: AuthRequest): AuthResponse {
@@ -27,8 +29,12 @@ class AuthService(
                 )
             )
             val user = userDetailsService.loadUserByUsername(authRequest.username)
-            val accessToken = tokenService.generateToken(user,getAccessTokenExpiration())
-            val refreshToken = tokenService.generateToken(user,getRefreshTokenExpiration())
+            val users = userRepository.findByUsername(user.username)
+            val additionalClaims = mapOf(
+                "role" to users?.users_role
+            )
+            val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
+            val refreshToken = tokenService.generateToken(user,getRefreshTokenExpiration(),additionalClaims)
             return AuthResponse(accessToken, refreshToken)
         } catch (e: ResponseStatusException ){
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED)

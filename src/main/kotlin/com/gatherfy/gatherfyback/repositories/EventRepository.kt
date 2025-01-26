@@ -20,6 +20,12 @@ interface EventRepository: JpaRepository<Event, Long> {
     @Query("from events where event_name LIKE %:keyword%")
     fun findEventByKeyword(@Param("keyword") keyword: String) : List<Event>
 
+    @Query("from events where event_name = :eventName")
+    fun findDuplicateEventName(@Param("eventName") eventName: String) : Event?
+
+    @Query("from events where event_slug = :slug")
+    fun findDuplicateSlug(@Param("slug") slug: String) : Event?
+
     @Query("select e from events e join event_tag et on et.event.event_id=e.event_id join tags t on et.tag.tag_id=t.tag_id where t.tag_title in :tags")
     fun findEventsByTags(@Param("tags") tags: List<String>) : List<Event>
 
@@ -43,4 +49,7 @@ interface EventRepository: JpaRepository<Event, Long> {
 
     @Query("SELECT v.eventId as eventId , SUM(v.view_count) AS totalViews FROM views v GROUP BY v.eventId ORDER BY totalViews DESC")
     fun findTopEvents(limit: Pageable): List<RecommendEvent>
+
+    @Query("from events where event_owner = :ownerId and event_id = :eventId")
+    fun findEventByEventOwnerAndEventId(@Param("ownerId") ownerId: Long?, @Param("eventId") eventId: Long?) : Event?
 }

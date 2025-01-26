@@ -12,11 +12,11 @@ interface RegistrationRepository: JpaRepository<Registration,Long> {
     fun findRegistrationsByEventId(eventId : Long) : List<Registration>
 
     @Query("SELECT r FROM registrations r JOIN r.event e WHERE e.event_owner = :eventOwner")
-    fun findRegistrationsByEventOwner(@Param("eventOwner") eventOwner: Long): List<Registration>
+    fun findRegistrationsByEventOwner(@Param("eventOwner") eventOwner: Long): List<Registration>?
 
     fun findByEventIdAndUserId(eventId: Long, userId: Long): Registration?
 
     fun findRegistrationsByUserId(userId: Long): List<Registration>
 
-    fun findRegistrationsByUserIdAndEventId(userId: Int, eventId: Int): Registration
+    fun findRegistrationsByUserIdAndEventId(userId: Int, eventId: Int): Registration?
 }
