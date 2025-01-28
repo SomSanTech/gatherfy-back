@@ -12,4 +12,6 @@ interface FeedbackRepository : JpaRepository<Feedback, Long> {
 
     @Query("SELECT f FROM feedbacks f JOIN events e ON f.eventId = e.event_id WHERE e.event_owner = :ownerId")
     fun findFeedbacksByOwnerId(ownerId: Long): List<Feedback>
+
+    fun findFeedbackByUserId(userId: Long):Feedback?
 }

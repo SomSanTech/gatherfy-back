@@ -81,4 +81,17 @@ class CustomExceptionHandle {
         )
     }
 
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDenied(e: AccessDeniedException): ResponseEntity<ErrorResponse> {
+        val status = HttpStatus.FORBIDDEN
+        return ResponseEntity(
+            ErrorResponse(
+                status.value(),
+                "Forbidden",
+                e.message!!,
+            ),
+            status
+        )
+    }
+
 }

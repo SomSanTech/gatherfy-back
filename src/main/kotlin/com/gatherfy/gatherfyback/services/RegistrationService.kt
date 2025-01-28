@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.services
 
+import com.gatherfy.gatherfyback.Exception.AccessDeniedException
 import com.gatherfy.gatherfyback.Exception.ConflictException
 import com.gatherfy.gatherfyback.dtos.CheckInDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationCreateDTO
@@ -247,15 +248,15 @@ class RegistrationService(
             val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId.toLong())
 
             if(existEvent === null){
-                throw EntityNotFoundException("You are not owner of this event")
+                throw AccessDeniedException("You are not owner of this event")
             }
             val registration = registrationRepository.findRegistrationsByUserIdAndEventId(userId,eventId)
 
             registration?.status = "Checked In"
             val updatedRegistration = registrationRepository.save(registration!!)
             return toCheckedInDto(updatedRegistration)
-        }catch (e: EntityNotFoundException){
-            throw EntityNotFoundException(e.message)
+        }catch (e: AccessDeniedException){
+            throw AccessDeniedException(e.message!!)
         }
     }
 

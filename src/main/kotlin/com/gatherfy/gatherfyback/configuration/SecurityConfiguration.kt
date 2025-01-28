@@ -57,7 +57,9 @@ class SecurityConfiguration(
                     .hasRole("Organization")
                     .requestMatchers(HttpMethod.POST,
                         "/api/v2/registrations",
-                        "/api/v1/check-in/**")
+                        "/api/v1/check-in/**",
+                        "/api/v1/answers",
+                        "/api/v2/feedbacks")
                     .hasRole("Attendee")
                     .requestMatchers(HttpMethod.POST,
                         "/api/v1/questions",

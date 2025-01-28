@@ -1,31 +1,41 @@
 package com.gatherfy.gatherfyback.controllers
 
+import com.gatherfy.gatherfyback.dtos.CreateFeedbackDTO
 import com.gatherfy.gatherfyback.dtos.FeedbackCountDTO
 import com.gatherfy.gatherfyback.dtos.FeedbackDTO
 import com.gatherfy.gatherfyback.entities.Feedback
 import com.gatherfy.gatherfyback.services.FeedbackService
+import com.gatherfy.gatherfyback.services.TokenService
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("api")
 @CrossOrigin(origins = ["http://cp24us1.sit.kmutt.ac.th:3000/", "http://localhost:3000/"])
-class FeedbackController(val feedbackService: FeedbackService) {
+class FeedbackController(
+    val feedbackService: FeedbackService,
+    private val tokenService: TokenService
+) {
+    // Nowhere to use
     @GetMapping("/v1/feedbacks")
     fun getAllFeedback(): List<Feedback> {
         return feedbackService.getAllFeedback()
     }
 
     @GetMapping("/v1/feedbacks/event/{eventId}")
-    fun getFeedbackByEventId(@PathVariable eventId: Long): List<FeedbackDTO> {
-        return feedbackService.getAllFeedbackByEventId(eventId)
+    fun getFeedbackByEventId(@RequestHeader("Authorization")token: String,@PathVariable eventId: Long): List<FeedbackDTO> {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return feedbackService.getAllFeedbackByEventId(username, eventId)
     }
 
     @GetMapping("/v2/feedbacks/event/{eventId}")
-    fun getFeedbackAndCountByEventId(@PathVariable eventId: Long): FeedbackCountDTO {
-        return feedbackService.getFeedbackAndCountByEventId(eventId)
+    fun getFeedbackAndCountByEventId(@RequestHeader("Authorization")token: String,@PathVariable eventId: Long): FeedbackCountDTO {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return feedbackService.getFeedbackAndCountByEventId(username, eventId)
     }
 
+    // Nowhere to use
     @GetMapping("/v1/feedbacks/owner/{ownerId}")
     fun getFeedbackByOwner(@PathVariable ownerId: Long): List<FeedbackDTO> {
         return feedbackService.getAllFeedbackByOwner(ownerId)
@@ -39,6 +49,16 @@ class FeedbackController(val feedbackService: FeedbackService) {
         return ResponseEntity.ok(createdFeedback)
     }
 
+    @PostMapping("/v2/feedbacks")
+    fun createFeedbackWithAuth(
+        @RequestHeader("Authorization")token: String,
+        @RequestBody @Valid feedback: CreateFeedbackDTO
+    ): Feedback {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return feedbackService.createFeedbackWithAuth(username,feedback)
+    }
+
+    // Nowhere to use
     @DeleteMapping("/v1/feedbacks/{feedbackId}")
     fun deleteFeedback(@PathVariable feedbackId: Long) {
         feedbackService.deleteFeedback(feedbackId)
