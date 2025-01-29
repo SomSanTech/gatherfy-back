@@ -38,10 +38,7 @@ class AnswerService(
 
     fun getAnswerByQuestionId(questionId: Long) : List<AnswerDTO> {
         val answer = answerRepository.findAnswersByQuestionId(questionId)
-        if(answer.isEmpty()){
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Answer not found")
-        }
-        return answer.map { toAnswerDTO(it) }
+        return answer!!.map { toAnswerDTO(it) }
     }
 
     fun getAnswerByQuestionIdWithAuth(username: String, questionId: Long) : List<AnswerDTO> {
@@ -55,10 +52,7 @@ class AnswerService(
                 throw AccessDeniedException("You are not owner of this event")
             }
             val answer = answerRepository.findAnswersByQuestionId(questionId)
-            if(answer.isEmpty()){
-                throw EntityNotFoundException("Answer for question id $questionId does not exist")
-            }
-            return answer.map { toAnswerDTO(it) }
+            return answer!!.map { toAnswerDTO(it) }
         } catch (e: EntityNotFoundException) {
             throw EntityNotFoundException(e.message)
         } catch (e: AccessDeniedException){
