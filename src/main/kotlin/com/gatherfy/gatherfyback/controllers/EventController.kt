@@ -35,23 +35,25 @@ class EventController(
 
 //    Use this and delete "/v1/events/backoffice/{id}", "/v2/events/backoffice/{id}"
     @GetMapping("/v1/backoffice/events/{id}")
-    fun getEvent(@PathVariable id: Long) : EventDTO {
-        return eventService.getEventById(id)
+    fun getEvent(@RequestHeader("Authorization")token: String, @PathVariable id: Long) : EventDTO {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return eventService.getEventByIdWithAuth(username, id)
     }
 
-    @GetMapping("/v1/events/backoffice/{id}")
-    fun getEventOld(@PathVariable id: Long) : EventDTO {
-        return eventService.getEventById(id)
-    }
+//    @GetMapping("/v1/events/backoffice/{id}")
+//    fun getEventOld(@PathVariable id: Long) : EventDTO {
+//        return eventService.getEventById(id)
+//    }
 
-    @GetMapping("/v2/events/backoffice/{id}")
-    fun getEventWithFullTagOld(@PathVariable id: Long) : EventFullTagDTO {
-        return eventService.getEventFullTagById(id)
-    }
+//    @GetMapping("/v2/events/backoffice/{id}")
+//    fun getEventWithFullTagOld(@PathVariable id: Long) : EventFullTagDTO {
+//        return eventService.getEventFullTagById(id)
+//    }
 
     @GetMapping("/v2/backoffice/events/{id}")
-    fun getEventWithFullTag(@PathVariable id: Long) : EventFullTagDTO {
-        return eventService.getEventFullTagById(id)
+    fun getEventWithFullTag(@RequestHeader("Authorization")token: String, @PathVariable id: Long) : EventFullTagDTO {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return eventService.getEventFullTagByIdWithAuth(username, id)
     }
 
 //    Use this instead of "/v1/backoffice/events/owner/{ownerId}", "/v1/events/owner/{ownerId}"
@@ -61,15 +63,15 @@ class EventController(
         return eventService.getEventWithAuth(username)
     }
 
-    @GetMapping("/v1/backoffice/events/owner/{ownerId}")
-    fun getOwnerEvent(@PathVariable ownerId: Long?): List<EventRegistrationDTO> {
-        return eventService.getEventByOwner(ownerId)
-    }
+//    @GetMapping("/v1/backoffice/events/owner/{ownerId}")
+//    fun getOwnerEvent(@PathVariable ownerId: Long?): List<EventRegistrationDTO> {
+//        return eventService.getEventByOwner(ownerId)
+//    }
 
-    @GetMapping("/v1/events/owner/{ownerId}")
-    fun getOwnerEventOld(@PathVariable ownerId: Long?): List<EventRegistrationDTO> {
-        return eventService.getEventByOwner(ownerId)
-    }
+//    @GetMapping("/v1/events/owner/{ownerId}")
+//    fun getOwnerEventOld(@PathVariable ownerId: Long?): List<EventRegistrationDTO> {
+//        return eventService.getEventByOwner(ownerId)
+//    }
 
     @GetMapping("/v1/events/recommended")
     fun getRecommendedEvent(@RequestParam(defaultValue = "5") limit: Int): List<EventDTO> {
@@ -93,13 +95,20 @@ class EventController(
     }
 
     @PutMapping("/v2/backoffice/events/{eventId}")
-    fun updateEventPartialField(@PathVariable eventId: Long,@RequestBody @Valid eventDTO: EditEventDTO): Event {
-        return eventService.updateEventPartialField(eventId,eventDTO)
+    fun updateEventPartialField(@RequestHeader("Authorization")token: String,@PathVariable eventId: Long,@RequestBody @Valid eventDTO: EditEventDTO): Event {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return eventService.updateEventPartialField(username, eventId,eventDTO)
     }
 
     @DeleteMapping("/v1/backoffice/events/{eventId}")
     fun deleteEvent(@PathVariable eventId: Long) {
         eventService.deleteEvent(eventId)
+    }
+
+    @DeleteMapping("/v2/backoffice/events/{eventId}")
+    fun deleteEventWithAuth(@RequestHeader("Authorization")token: String, @PathVariable eventId: Long) {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        eventService.deleteEventWithAuth(username, eventId)
     }
 
 }
