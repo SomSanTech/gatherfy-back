@@ -1,19 +1,25 @@
 package com.gatherfy.gatherfyback.services
 
+import com.gatherfy.gatherfyback.Exception.ConflictException
 import com.gatherfy.gatherfyback.dtos.CreateUserDTO
 import com.gatherfy.gatherfyback.dtos.EditUserDTO
 import com.gatherfy.gatherfyback.dtos.UserDTO
 import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.repositories.UserRepository
+import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 
 @Service
-class UserService(private val userRepository: UserRepository) {
+class UserService(
+    private val userRepository: UserRepository,
+    private val encoder: PasswordEncoder
+) {
 
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
@@ -65,44 +71,52 @@ class UserService(private val userRepository: UserRepository) {
     fun updateUser(username: String, userEdit: EditUserDTO): User {
         try{
             val userProfile = userRepository.findByUsername(username)
-            if(userProfile != null) {
-                val existingUsername = userRepository.findByUsername(userEdit.username)
-                val existingEmail = userRepository.findByEmail(userEdit.email)
-                if(existingUsername != null && existingUsername.users_id != userProfile.users_id ){
-                    throw ResponseStatusException(HttpStatus.CONFLICT, "Username already taken")
-                }
-                else if (existingEmail != null && existingEmail.users_id != userProfile.users_id ){
-                    throw ResponseStatusException(HttpStatus.CONFLICT, "Email already taken")
-                }
-                else {
-                    val encoder = BCryptPasswordEncoder(16)
-                    val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=])(?=\\S+\$).{8,}".toRegex()
-                    val emailPattern = "^[^@]+@[^@]+\\.[^@]+\$".toRegex()
-                    if(!userEdit.email.matches(emailPattern)){
-                        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Email wrong pattern")
-                    }
-                    else if (!userEdit.password.matches(passwordPattern)){
-                        throw ResponseStatusException(HttpStatus.BAD_REQUEST,"Password wrong pattern")
-                    }
-                    else {
-                        userProfile.users_firstname = userEdit.firstname
-                        userProfile.users_lastname = userEdit.lastname
-                        userProfile.username = userEdit.username
-                        userProfile.users_gender = userEdit.gender
-                        userProfile.users_email = userEdit.email
-                        userProfile.users_phone = userEdit.phone
-                        userProfile.users_image = userEdit.image
-                        userProfile.users_birthday = userEdit.birthday
-                        userProfile.password = encoder.encode(userEdit.password)
-                        val savedUser = userRepository.save(userProfile)
-                        return savedUser
-                    }
-                }
-            } else {
-                throw ResponseStatusException(HttpStatus.NOT_FOUND,"User not found")
+            if(userProfile === null){
+                throw EntityNotFoundException("User not found")
             }
-        } catch (e: ResponseStatusException){
-            throw e
+            if(!userEdit.username.isNullOrBlank()){
+                val duplicateUsername = userRepository.findByUsername(userEdit.username!!)
+                if(duplicateUsername != null && duplicateUsername.users_id != userProfile.users_id ){
+                    throw ConflictException("Username already taken")
+                }
+            }
+            if(!userEdit.email.isNullOrBlank()){
+                val emailPattern = "^[^@]+@[^@]+\\.[^@]+\$".toRegex()
+                val duplicateEmail = userRepository.findByEmail(userEdit.email!!)
+                if (duplicateEmail != null && duplicateEmail.users_id != userProfile.users_id ){
+                    throw ConflictException("Email already taken")
+                }
+                else if(!userEdit.email!!.matches(emailPattern)){
+                    throw BadRequestException("Email should match pattern abc@example.com")
+                }
+            }
+            if(!userEdit.password.isNullOrBlank()){
+                val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=])(?=\\S+\$).{8,}".toRegex()
+                if (!userEdit.password!!.matches(passwordPattern)){
+                    throw BadRequestException("Password does not match pattern")
+                }
+            }
+            val encoder = BCryptPasswordEncoder(16)
+
+            val updateUser = userProfile.copy(
+                users_firstname = userEdit.firstname ?: userProfile.users_firstname,
+                users_lastname = userEdit.lastname ?: userProfile.users_lastname,
+                username = userEdit.username ?: userProfile.username,
+                users_gender = userEdit.gender ?: userProfile.users_gender,
+                users_email = userEdit.email ?: userProfile.users_email,
+                users_phone = userEdit.phone ?: userProfile.users_phone,
+                users_image = userEdit.image ?: userProfile.users_image,
+                users_birthday = userEdit.birthday ?: userProfile.users_birthday,
+                password = userEdit.password?.let { encoder.encode(it) } ?: userProfile.password
+            )
+            val updatedUser = userRepository.save(updateUser)
+            return updatedUser
+        } catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        } catch (e: ConflictException){
+            throw ConflictException(e.message!!)
+        } catch (e: BadRequestException){
+            throw BadRequestException(e.message)
         }
     }
 
@@ -114,7 +128,7 @@ class UserService(private val userRepository: UserRepository) {
             }
             return user
         } catch (e: Exception){
-            throw ResponseStatusException(HttpStatus.NOT_FOUND,"User not found")
+            throw EntityNotFoundException("User not found")
         }
     }
 

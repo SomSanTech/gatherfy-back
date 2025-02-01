@@ -33,7 +33,7 @@ class UserController(
         return userService.getUserProfile(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")))
     }
 
-    @PutMapping("/v2/profile")
+    @PutMapping("/v1/profile")
     fun editProfile(@RequestHeader("Authorization") token: String, @RequestBody userEdit: EditUserDTO): User? {
         return userService.updateUser(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")),userEdit)
     }
