@@ -14,7 +14,6 @@ import org.apache.coyote.BadRequestException
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
@@ -27,6 +26,8 @@ class EventService(
     val eventTagRepository: EventTagRepository,
     val eventTagService: EventTagService,
     val minioService: MinioService,
+    private val emailSenderService: EmailSenderService,
+    private val tagRepository: TagRepository,
 ) {
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
@@ -250,8 +251,13 @@ class EventService(
                 )
                 val savedEvent = eventRepository.save(evente)
                 if (event.tags!!.isNotEmpty()) {
-                    eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
+//                    eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
+                    // Explicitly refresh and set tags
+                    val updatedTags = tagRepository.findAllById(event.tags!!)
+                    savedEvent.tags = updatedTags.toMutableList()
+                    eventRepository.save(savedEvent) // Ensure Hibernate knows about it
                 }
+                emailSenderService.enqueueEmailNewEvent(savedEvent)
                 return savedEvent
             }
         } catch (e: ConflictException) {

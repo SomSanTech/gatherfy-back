@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
 
 @Repository
 interface EventRepository: JpaRepository<Event, Long> {
@@ -52,4 +54,8 @@ interface EventRepository: JpaRepository<Event, Long> {
 
     @Query("from events where event_owner = :ownerId and event_id = :eventId")
     fun findEventByEventOwnerAndEventId(@Param("ownerId") ownerId: Long?, @Param("eventId") eventId: Long?) : Event?
+
+    @Query("from events where event_start_date >= :startDate and event_end_date <= :nextDay")
+    fun findEventByStartDate(@Param("startDate") startDate: LocalDateTime,@Param("nextDay") nextDay: LocalDateTime): List<Event>
+
 }

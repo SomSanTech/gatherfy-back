@@ -34,6 +34,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-validation:3.4.2")
 	implementation("jakarta.validation:jakarta.validation-api:3.1.0")
+	implementation("org.springframework.boot:spring-boot-starter-mail")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	runtimeOnly("com.h2database:h2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
