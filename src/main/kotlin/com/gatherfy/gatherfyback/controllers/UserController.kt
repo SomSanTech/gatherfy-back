@@ -3,9 +3,12 @@ package com.gatherfy.gatherfyback.controllers
 import com.gatherfy.gatherfyback.dtos.CreateUserDTO
 import com.gatherfy.gatherfyback.dtos.EditUserDTO
 import com.gatherfy.gatherfyback.dtos.UserDTO
+import com.gatherfy.gatherfyback.entities.OTPVerificationRequest
+import com.gatherfy.gatherfyback.entities.ResendOTPRequest
 import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.services.TokenService
 import com.gatherfy.gatherfyback.services.UserService
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -26,6 +29,16 @@ class UserController(
     @PostMapping("/v1/signup")
     fun createUser(@RequestBody user: CreateUserDTO): UserDTO{
         return userService.createUser(user)
+    }
+
+    @PostMapping("/v1/verify-otp")
+    fun verifyOTP(@RequestBody otpVerificationRequest: OTPVerificationRequest): ResponseEntity<String> {
+        return userService.verifyOTP(otpVerificationRequest)
+    }
+
+    @PostMapping("/v1/resend-otp")
+    fun resendOTP(@RequestBody resendOTPRequest: ResendOTPRequest): ResponseEntity<String>{
+        return userService.resendOTP(resendOTPRequest)
     }
 
     @GetMapping("/v1/profile")

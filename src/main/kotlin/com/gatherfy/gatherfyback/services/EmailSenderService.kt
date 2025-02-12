@@ -389,4 +389,24 @@ class EmailSenderService(
         emailSender.send(message)
     }
 
+    @Async
+    fun sendOtpVerification(user: User) {
+        val message: MimeMessage = emailSender.createMimeMessage()
+        val helper = MimeMessageHelper(message, true)
+        helper.setSubject("${user.otp} is your Gathefy verify code")
+        helper.setTo(user.users_email)
+
+        val htmlContent = """
+            <html>
+                <body>
+                    <p>Hey ${user.username},</p>
+                    <p>${user.otp} is your Gathefy verify code.</p>
+                </body>
+            </html>
+        """.trimIndent()
+
+        helper.setText(htmlContent, true)
+        emailSender.send(message)
+    }
+
 }
