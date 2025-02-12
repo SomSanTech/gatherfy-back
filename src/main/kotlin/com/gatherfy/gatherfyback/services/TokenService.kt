@@ -31,6 +31,20 @@ class TokenService(
         .signWith(secretKey,SignatureAlgorithm.HS256)
         .compact()
 
+    fun generateRefreshToken(
+        userDetails: UserDetails,
+        expirationDate: Date,
+        additionalClaims: Map<String, String?> = emptyMap()
+    ): String = Jwts.builder()
+        .claims()
+        .subject(userDetails.username)
+        .issuedAt(Date(System.currentTimeMillis()))
+        .expiration(expirationDate)
+        .add(additionalClaims)
+        .and()
+        .signWith(secretKey,SignatureAlgorithm.HS256)
+        .compact()
+
     fun generateCheckInToken(
         username: String,
         expirationDate: Date,

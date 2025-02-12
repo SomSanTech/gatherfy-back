@@ -47,7 +47,7 @@ interface EventRepository: JpaRepository<Event, Long> {
     @Query("from events where event_owner = :ownerId")
     fun findEventsByEventOwner(@Param("ownerId") ownerId: Long?) : List<Event>
 
-    @Query("SELECT v.eventId as eventId , SUM(v.view_count) AS totalViews FROM views v GROUP BY v.eventId ORDER BY totalViews DESC")
+    @Query("SELECT v.eventId as eventId , SUM(v.viewCount) AS totalViews FROM views v GROUP BY v.eventId ORDER BY totalViews DESC")
     fun findTopEvents(limit: Pageable): List<RecommendEvent>
 
     @Query("from events where event_owner = :ownerId and event_id = :eventId")

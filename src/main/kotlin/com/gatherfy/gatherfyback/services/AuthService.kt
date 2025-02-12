@@ -34,7 +34,7 @@ class AuthService(
                 "role" to users?.users_role
             )
             val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
-            val refreshToken = tokenService.generateToken(user,getRefreshTokenExpiration(),additionalClaims)
+            val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
             return AuthResponse(accessToken, refreshToken)
         } catch (e: ResponseStatusException ){
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED)

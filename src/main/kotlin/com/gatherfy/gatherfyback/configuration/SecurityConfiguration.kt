@@ -35,12 +35,12 @@ class SecurityConfiguration(
                         "/api/v1/tags",
                         "/api/v1/views",
                         "/api/v1/questions/event/**",
-                        "/api/v1/registrations/**", // temporary
+                        "/api/v1/registrations/**",
                         )
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
                         "/api/v1/login",
-                        "/api/v1/signup")
+                        "/api/v1/signup","/api/v1/countView/**","/api/refresh")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
                         "/api/v1/tickets")
