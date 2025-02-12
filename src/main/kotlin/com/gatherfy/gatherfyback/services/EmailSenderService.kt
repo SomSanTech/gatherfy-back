@@ -14,6 +14,9 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentLinkedQueue
 
 @Service
@@ -26,11 +29,17 @@ class EmailSenderService(
 ) {
 
     private val pendingEmailsNewEvent = ConcurrentLinkedQueue<Event>()
+    private val pendingEmailsUpdatedEvent = ConcurrentLinkedQueue<Event>()
 
     fun enqueueEmailNewEvent(event: Event){
         pendingEmailsNewEvent.add(event)
         println(event)
     }
+
+//    fun enqueueEmailUpdatedEvent(event: Event){
+//        pendingEmailsUpdatedEvent.add(event)
+//        println(event)
+//    }
 
     // Runs every day at 8 AM
     @Scheduled(cron = "\${scheduler.email-new-event-notification-cron}")
@@ -44,6 +53,20 @@ class EmailSenderService(
             sendEventBatchEmails(eventsToSend)
         }
     }
+
+//    // Runs every day at 8 AM
+//    @Scheduled(cron = "\${scheduler.email-new-event-notification-cron}")
+//    fun processQueuedEmailsUpdatedEvents() {
+//        if (pendingEmailsUpdatedEvent.isEmpty()) return
+//        val eventsToSend = mutableListOf<Event>()
+//        while (pendingEmailsUpdatedEvent.isNotEmpty()) {
+//            eventsToSend.add(pendingEmailsUpdatedEvent.poll()) // Retrieve and remove from queue
+//        }
+//        if (eventsToSend.isNotEmpty()) {
+//            sendUpdatedEventBatchEmails(eventsToSend)
+//        }
+//        println("processQueuedEmailsUpdatedEvents working")
+//    }
 
     fun sendEventBatchEmails(events: List<Event>){
         val userEmailMap = mutableMapOf<String, MutableList<Event>>()
@@ -67,6 +90,14 @@ class EmailSenderService(
             buildEmailNewEvent(eventList, email)
         }
         println(userEmailMap)
+    }
+
+    @Async
+    fun sendUpdatedEventBatchEmails(event: Event, changes: String){
+        val participants = registrationRepository.findRegistrationsByEventId(event.event_id!!)
+        for(attendee in participants){
+            buildUpdatedEventEmail(event,changes, attendee.user)
+        }
     }
 
 
@@ -200,7 +231,7 @@ class EmailSenderService(
         val localDate = LocalDate.now()
         val tomorrow = localDate.plusDays(1).atStartOfDay() // 2025-02-13T00:00:00
         val nextDay = localDate.plusDays(2).atStartOfDay() // 2025-02-14T00:00:00
-        val upcomingEvents = eventRepository.findEventByStartDate(tomorrow, nextDay)
+        val upcomingEvents = eventRepository.findEventsStartingOn(tomorrow,nextDay)
         for (event in upcomingEvents){
             val participants = registrationRepository.findRegistrationsByEventId(event.event_id!!)
             for(attendee in participants){
@@ -221,6 +252,42 @@ class EmailSenderService(
                 <p>Hey ${user.username},</p>
                 <p>Just a reminder that the event <b>${event.event_name}</b> starts on ${event.event_start_date}!</p>
                 <p>Don't forget to check the details and prepare yourself.</p>
+            </body>
+        </html>
+    """.trimIndent()
+
+        helper.setText(htmlContent, true)
+        emailSender.send(message)
+    }
+
+    @Scheduled(cron = "\${scheduler.email-countdown-notification-cron}")
+    fun sendHourReminderEmails(){
+        val now = LocalDateTime.now()
+        val oneHourLater = now.plusHours(1).truncatedTo(ChronoUnit.MINUTES)
+
+        val upcomingEvents = eventRepository.findEventByStartingBetween(now, oneHourLater)
+        println(upcomingEvents)
+        for (event in upcomingEvents){
+            val participants = registrationRepository.findRegistrationsByEventId(event.event_id!!)
+            for(attendee in participants){
+                buildHourReminderEmail(event,attendee.user)
+            }
+        }
+    }
+
+    fun buildHourReminderEmail(event: Event, user: User) {
+        val message: MimeMessage = emailSender.createMimeMessage()
+        val helper = MimeMessageHelper(message, true)
+        helper.setSubject("&#128226; Reminder: ${event.event_name} starts soon!")
+        helper.setTo(user.users_email)
+
+        val time = event.event_start_date.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
+        val htmlContent = """
+        <html>
+            <body>
+                <p>Hey ${user.username},</p>
+                <p>Just a reminder that the event <b>${event.event_name}</b> starts at <b>$time!</b> </p>
+                <p>Be ready and check all details before the event starts.</p>
             </body>
         </html>
     """.trimIndent()
@@ -296,47 +363,30 @@ class EmailSenderService(
         emailSender.send(message)
     }
 
-    fun sendEmailUpdateEvent( // Notice only ticket and event date changed
-        event: String,
-        username: String,
-        targetEmail: String
-    ) {
+    fun buildUpdatedEventEmail(event: Event,changes: String ,user: User) {
         val message: MimeMessage = emailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true)
-        helper.setSubject("[Gatherfy news] ⚠ EVENT UPDATE DETECTED: [$event]")
-        helper.setTo(targetEmail)
+        helper.setSubject("📢 EVENT UPDATE DETECTED")
+        helper.setTo(user.users_email)
 
+        val time = event.event_start_date.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
         val htmlContent = """
-        <!DOCTYPE html>
         <html>
-            <head>
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Oooh+Baby&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
-    
-                <style>
-                    body { font-family: 'Poppins', Arial, sans-serif; }
-                    .container { padding: 20px; background-color: #f4f4f4; max-width:600px; }
-                    .content { background: white; padding: 20px; border-radius: 8px; }
-                    .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-                </style>
-            </head>
             <body>
-                <div class="container">
-                    <div class="content">
-                        <p>Hey ${username},</p>
-                        <p>Heads up! [$event] has been updated. Here’s what’s new:</p>
-                        <p>🔹 Updated Details:</p>
-                        <p>Don’t miss out—check out the latest details!</p>
-                        <p>🔗 [Browse Events]</p>
-                        <p>Stay tuned for more updates!</p>
-                        <p style="font-family: 'Oooh Baby';font-size: 24px;"><span style="color:#D71515">G</span>atherfy</p>
-                    </div>
-                </div>
+                <p>Hey ${user.username},</p>
+                <p>🛠 SYSTEM UPDATE: Changes detected in an event you register.</p>
+                <p><b>EVENT : ${event.event_name}</b></p>
+                <p><b>🔹 Updated Details:</b></p>
+                <ul>
+                    ${changes.split("\n").joinToString("") { "<li>$it</li>" }}
+                </ul>
+                <p>Stay connected. Stay informed. 🚀</p>
             </body>
         </html>
     """.trimIndent()
-        helper.setText(htmlContent,true)
+
+        helper.setText(htmlContent, true)
         emailSender.send(message)
     }
+
 }

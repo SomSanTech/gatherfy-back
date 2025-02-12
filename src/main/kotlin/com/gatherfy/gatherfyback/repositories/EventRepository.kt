@@ -55,7 +55,13 @@ interface EventRepository: JpaRepository<Event, Long> {
     @Query("from events where event_owner = :ownerId and event_id = :eventId")
     fun findEventByEventOwnerAndEventId(@Param("ownerId") ownerId: Long?, @Param("eventId") eventId: Long?) : Event?
 
-    @Query("from events where event_start_date >= :startDate and event_end_date <= :nextDay")
-    fun findEventByStartDate(@Param("startDate") startDate: LocalDateTime,@Param("nextDay") nextDay: LocalDateTime): List<Event>
+    @Query("from events where event_start_date >= :startDate and event_start_date <= :nextDay")
+    fun findEventsStartingOn(@Param("startDate") startDate: LocalDateTime,@Param("nextDay") nextDay: LocalDateTime): List<Event>
+
+    @Query("SELECT e FROM events e LEFT JOIN FETCH e.tags WHERE e.event_start_date BETWEEN :startTime AND :nextHour")
+    fun findEventByStartingBetween(
+        @Param("startTime") startTime: LocalDateTime,
+        @Param("nextHour") nextHour: LocalDateTime
+    ): List<Event>
 
 }

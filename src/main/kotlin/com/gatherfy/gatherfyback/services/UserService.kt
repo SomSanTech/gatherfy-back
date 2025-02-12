@@ -29,10 +29,10 @@ class UserService(
             val existingUsername = userRepository.findByUsername(userDto.username)
             val existingEmail = userRepository.findByEmail(userDto.email)
             if(existingUsername != null){
-                throw ResponseStatusException(HttpStatus.CONFLICT, "Username already taken")
+                throw ConflictException("Username already taken")
             }
             else if (existingEmail != null){
-                throw ResponseStatusException(HttpStatus.CONFLICT, "Email already taken")
+                throw ConflictException("Email already taken")
             }
             else {
                 val encoder = BCryptPasswordEncoder(16)
@@ -65,6 +65,10 @@ class UserService(
             }
         } catch (e: ResponseStatusException){
             throw e
+        } catch (e: BadRequestException){
+            throw BadRequestException(e.message)
+        } catch (e: ConflictException){
+            throw ConflictException(e.message!!)
         }
     }
 
