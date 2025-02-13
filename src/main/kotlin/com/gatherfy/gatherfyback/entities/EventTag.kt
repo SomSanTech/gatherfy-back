@@ -7,10 +7,10 @@ import jakarta.persistence.*
 data class EventTag(
     @Id
     @ManyToOne
-    @JoinColumn(name = "event_id")
+    @JoinColumn(name = "event_id", referencedColumnName = "event_id", nullable = false)
     var event: Event,
     @Id
     @ManyToOne
-    @JoinColumn(name = "tag_id")
+    @JoinColumn(name = "tag_id", referencedColumnName = "tag_id", nullable = false)
     var tag: Tag
 )

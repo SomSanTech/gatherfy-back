@@ -1,8 +1,9 @@
 package com.gatherfy.gatherfyback.dtos
 
+import com.gatherfy.gatherfyback.entities.Tag
 import java.time.LocalDateTime
 
-data class EventDTO(
+class EventFullTagDTO (
     var eventId: Long?,
     var name: String,
     var description: String,
@@ -19,5 +20,5 @@ data class EventDTO(
     var slug: String,
     var image: String,
     var owner: String,
-    var tags: List<String>?
+    var tags: List<Tag>?
 )
