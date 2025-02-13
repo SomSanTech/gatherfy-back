@@ -94,4 +94,17 @@ class CustomExceptionHandle {
         )
     }
 
+    @ExceptionHandler(CustomUnauthorizedException::class)
+    fun handleUnauthorized(e: CustomUnauthorizedException): ResponseEntity<ErrorResponse> {
+        val status = HttpStatus.UNAUTHORIZED
+        return ResponseEntity(
+            ErrorResponse(
+                status.value(),
+                "Unauthorized",
+                e.message!!,
+            ),
+            status
+        )
+    }
+
 }

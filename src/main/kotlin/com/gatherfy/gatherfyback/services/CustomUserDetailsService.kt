@@ -14,7 +14,7 @@ typealias ApplicationUser = com.gatherfy.gatherfyback.entities.User
 class CustomUserDetailsService(private val userRepository: UserRepository) : UserDetailsService {
     override fun loadUserByUsername(username: String): UserDetails =
         userRepository.findByUsername(username)?.mapToUserDetails()
-            ?: throw UsernameNotFoundException("Not found!!")
+            ?: throw UsernameNotFoundException("Username does not exist")
 
 
     fun ApplicationUser.mapToUserDetails(): UserDetails =

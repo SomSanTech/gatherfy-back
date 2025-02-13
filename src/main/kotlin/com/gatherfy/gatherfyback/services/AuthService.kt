@@ -1,14 +1,13 @@
 package com.gatherfy.gatherfyback.services
 
+import com.gatherfy.gatherfyback.Exception.CustomUnauthorizedException
 import com.gatherfy.gatherfyback.entities.AuthRequest
 import com.gatherfy.gatherfyback.entities.AuthResponse
 import com.gatherfy.gatherfyback.properties.JwtProperties
 import com.gatherfy.gatherfyback.repositories.UserRepository
-import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
 import java.util.Date
 
 @Service
@@ -22,22 +21,25 @@ class AuthService(
 
     fun authentication(authRequest: AuthRequest): AuthResponse {
         try{
+            val users = userRepository.findUserByUsernameOrEmail(authRequest.username)
+                ?: throw CustomUnauthorizedException("Username or email incorrect")
+            val user = userDetailsService.loadUserByUsername(users.username)
+
             authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken(
-                    authRequest.username,
+                    users.username,
                     authRequest.password
                 )
             )
-            val user = userDetailsService.loadUserByUsername(authRequest.username)
-            val users = userRepository.findByUsername(user.username)
+
             val additionalClaims = mapOf(
-                "role" to users?.users_role
+                "role" to users.users_role
             )
             val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
             val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
             return AuthResponse(accessToken, refreshToken)
-        } catch (e: ResponseStatusException ){
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
+        } catch (e: CustomUnauthorizedException ){
+            throw CustomUnauthorizedException(e.message!!)
         }
     }
 
