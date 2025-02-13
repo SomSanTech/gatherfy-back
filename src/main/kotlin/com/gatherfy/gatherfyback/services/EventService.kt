@@ -4,6 +4,7 @@ import com.gatherfy.gatherfyback.Exception.ConflictException
 import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.Event
 import com.gatherfy.gatherfyback.entities.SortOption
+import com.gatherfy.gatherfyback.entities.Tag
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.EventTagRepository
 import com.gatherfy.gatherfyback.repositories.TagRepository
@@ -453,7 +454,15 @@ class EventService(
             slug = event.event_slug,
             image = getImageUrl("thumbnails", event.event_image),
             owner = ownerEventName,
-            tags = event.tags?.map { it.tag_title })
+            tags = event.tags?.map { toTagDTO(it) })
+    }
+
+    fun toTagDTO(tag: Tag): Tag {
+        return Tag(
+            tag_id = tag.tag_id,
+            tag_title = tag.tag_title,
+            tag_code = tag.tag_code
+        )
     }
 
     fun toEventFullTagDto(event: Event): EventFullTagDTO {

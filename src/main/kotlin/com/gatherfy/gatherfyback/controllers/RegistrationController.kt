@@ -44,6 +44,16 @@ class RegistrationController(
         return registrationService.getRegistrationById(registrationId)
     }
 
+    @GetMapping("/v2/registrations/{id}")
+    fun getRegistrationByIdWithAuth(
+        @RequestHeader("Authorization") token: String,
+        @PathVariable("id") id: String): RegistrationDTO {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        val registrationId = id.toLongOrNull()
+            ?: throw BadRequestException("Invalid registration ID format")
+        return registrationService.getRegistrationByIdWithAuth(username, registrationId)
+    }
+
     @PutMapping("/v1/registrations/{id}")
     fun updateRegistrationStatus(
         @PathVariable("id") id: String,

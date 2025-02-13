@@ -72,6 +72,23 @@ class RegistrationService(
         }
     }
 
+    fun getRegistrationByIdWithAuth(username: String,registrationId: Long): RegistrationDTO {
+        try{
+            val user = userRepository.findByUsername(username)
+            val registration = registrationRepository.findByRegistrationId(registrationId)
+                ?: throw EntityNotFoundException("Registration id $registrationId does not exist")
+            val exitingEvent = registrationRepository.findByOwnerIdAndEventId(user?.users_id!!, registration.eventId, registrationId)
+                ?: throw AccessDeniedException("You are not owner of this event")
+
+            return  toRegistrationDTO(registration)
+
+        }catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        }catch (e: AccessDeniedException){
+            throw AccessDeniedException(e.message!!)
+        }
+    }
+
     fun updateStatus(id: Long, newStatus: String): RegistrationDTO {
         try{
             val registration = registrationRepository.findById(id)
