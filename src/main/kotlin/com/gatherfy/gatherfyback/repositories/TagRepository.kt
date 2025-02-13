@@ -9,4 +9,7 @@ import org.springframework.data.repository.query.Param
 interface TagRepository: JpaRepository<Tag, Long> {
     @Query("SELECT t FROM tags t  WHERE t.tag_id IN :tags")
     fun findAllById(@Param("tags") tags: List<Long>): List<Tag>
+
+    @Query("from tags where tag_id = :tagId")
+    fun findTagByTagId(@Param("tagId") tagId: Long): Tag?
 }

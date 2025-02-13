@@ -13,4 +13,6 @@ interface UserRepository: JpaRepository<User, Long> {
      fun findByEmail(@Param("email") email: String): User?
      @Query("from users where username = :input or users_email = :input")
      fun findUserByUsernameOrEmail(@Param("input") input: String): User?
+     @Query("from users where users_id = :id")
+     fun findUserById(@Param("id") id: Long): User?
 }

@@ -4,21 +4,25 @@ import com.gatherfy.gatherfyback.Exception.ConflictException
 import com.gatherfy.gatherfyback.dtos.CreateUserDTO
 import com.gatherfy.gatherfyback.dtos.EditUserDTO
 import com.gatherfy.gatherfyback.dtos.UserDTO
+import com.gatherfy.gatherfyback.entities.OTPVerificationRequest
+import com.gatherfy.gatherfyback.entities.ResendOTPRequest
 import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.repositories.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import java.time.LocalDateTime
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val encoder: PasswordEncoder
+    private val encoder: PasswordEncoder,
+    private val emailSenderService: EmailSenderService
 ) {
 
     @Value("\${minio.domain}")
@@ -29,10 +33,10 @@ class UserService(
             val existingUsername = userRepository.findByUsername(userDto.username)
             val existingEmail = userRepository.findByEmail(userDto.email)
             if(existingUsername != null){
-                throw ResponseStatusException(HttpStatus.CONFLICT, "Username already taken")
+                throw ConflictException("Username already taken")
             }
             else if (existingEmail != null){
-                throw ResponseStatusException(HttpStatus.CONFLICT, "Email already taken")
+                throw ConflictException("Email already taken")
             }
             else {
                 val encoder = BCryptPasswordEncoder(16)
@@ -58,13 +62,68 @@ class UserService(
                         users_birthday = userDto.birthday,
                         users_age = null,
                         password = encoder.encode(userDto.password),
+                        otp = generateOTP(),
+                        is_verified = false,
+                        otp_expires_at = LocalDateTime.now().plusMinutes(5)
                     )
                     val savedUser = userRepository.save(user)
+                    emailSenderService.sendOtpVerification(savedUser)
                     return toUserDto(savedUser)
                 }
             }
         } catch (e: ResponseStatusException){
             throw e
+        } catch (e: BadRequestException){
+            throw BadRequestException(e.message)
+        } catch (e: ConflictException){
+            throw ConflictException(e.message!!)
+        }
+    }
+
+    fun generateOTP(): String {
+        return (100000..999999).random().toString()
+    }
+
+    fun resendOTP(resendOTPRequest: ResendOTPRequest): ResponseEntity<String> {
+        try{
+            val user = userRepository.findByEmail(resendOTPRequest.email) ?: throw BadRequestException("User not found")
+            // Prevent resending OTP if the user is already verified
+            if (user.is_verified) {
+                throw BadRequestException("Email is already verified. No OTP required.")
+            }
+            // Prevent too many OTP requests (e.g., only allow a new OTP every 1 minute)
+            val now = LocalDateTime.now()
+            if (user.otp_expires_at != null && user.otp_expires_at!!.isAfter(now.minusMinutes(1))) {
+                throw BadRequestException("Please wait before requesting a new OTP.")
+            }
+            user.otp = generateOTP()
+            user.otp_expires_at = LocalDateTime.now().plusMinutes(5)
+            userRepository.save(user)
+            emailSenderService.sendOtpVerification(user) // Resend new OTP
+            return ResponseEntity.ok("New OTP sent to your email.")
+        }catch (e: BadRequestException){
+            throw BadRequestException(e.message)
+        }
+    }
+
+    fun verifyOTP(otpVerificationRequest: OTPVerificationRequest): ResponseEntity<String> {
+        try{
+            val user = userRepository.findByEmail(otpVerificationRequest.email) ?: throw BadRequestException("Invalid email")
+
+            if (user.otp_expires_at!!.isBefore(LocalDateTime.now())) {
+                throw BadRequestException("OTP expired")
+            }
+            if (user.otp != otpVerificationRequest.otp) {
+                throw BadRequestException("Incorrect OTP")
+            }
+            user.is_verified = true
+            user.otp = null
+            user.otp_expires_at = null
+            userRepository.save(user)
+
+            return ResponseEntity.ok("Email verified successfully!")
+        }catch (e: BadRequestException){
+            throw BadRequestException(e.message)
         }
     }
 

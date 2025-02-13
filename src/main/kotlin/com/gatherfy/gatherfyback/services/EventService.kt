@@ -14,11 +14,11 @@ import org.apache.coyote.BadRequestException
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 class EventService(
@@ -27,6 +27,8 @@ class EventService(
     val eventTagRepository: EventTagRepository,
     val eventTagService: EventTagService,
     val minioService: MinioService,
+    private val emailSenderService: EmailSenderService,
+    private val tagRepository: TagRepository,
 ) {
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
@@ -250,8 +252,13 @@ class EventService(
                 )
                 val savedEvent = eventRepository.save(evente)
                 if (event.tags!!.isNotEmpty()) {
-                    eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
+//                    eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
+                    // Explicitly refresh and set tags
+                    val updatedTags = tagRepository.findAllById(event.tags!!)
+                    savedEvent.tags = updatedTags.toMutableList()
+                    eventRepository.save(savedEvent) // Ensure Hibernate knows about it
                 }
+                emailSenderService.enqueueEmailNewEvent(savedEvent)
                 return savedEvent
             }
         } catch (e: ConflictException) {
@@ -334,6 +341,18 @@ class EventService(
                     throw BadRequestException("Slug should match pattern example-event-slug")
                 }
             }
+            val changes = mutableListOf<String>()
+            if(updateData.event_start_date != null && exitingEvent.event_start_date != updateData.event_start_date){
+                val formatDateTime = updateData.event_start_date!!.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
+                changes.add("New Start Date/Time: $formatDateTime")
+            }
+            if(updateData.event_end_date != null &&exitingEvent.event_end_date != updateData.event_end_date){
+                val formatDateTime = updateData.event_end_date!!.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
+                changes.add("New End Date/Time: $formatDateTime")
+            }
+            if(updateData.event_location != null &&exitingEvent.event_location != updateData.event_location){
+                changes.add("New Location: ${updateData.event_location}")
+            }
             val updateEvent = exitingEvent.copy(
                 event_name = updateData.event_name ?: exitingEvent.event_name,
                 event_desc = updateData.event_desc ?: exitingEvent.event_desc,
@@ -354,6 +373,11 @@ class EventService(
 
             if (updateData.tags != null) {
                 eventTagService.updatedTag(updatedEvent.event_id!!, updateData.tags!!)
+            }
+            // If there are changes, send an email
+            if (changes.isNotEmpty()) {
+                val notificationMessage = changes.joinToString("\n") // Combine all changes
+                emailSenderService.sendUpdatedEventBatchEmails(updatedEvent, notificationMessage)
             }
             return updatedEvent
         } catch (e: ConflictException) {

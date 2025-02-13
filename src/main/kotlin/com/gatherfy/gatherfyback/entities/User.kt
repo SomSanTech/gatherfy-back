@@ -21,4 +21,7 @@ data class User(
     var users_role: String,
     var users_age: Long?,
     var users_birthday: LocalDateTime,
+    var otp: String?,
+    var is_verified: Boolean,
+    var otp_expires_at: LocalDateTime?
 )

@@ -28,7 +28,8 @@ class RegistrationService(
     val eventRepository: EventRepository,
     val userRepository: UserRepository,
     private val tokenService: TokenService,
-    @Qualifier("userDetailsService") private val userDetailsService: UserDetailsService
+    @Qualifier("userDetailsService") private val userDetailsService: UserDetailsService,
+    private val emailSenderService: EmailSenderService
 ){
     @Value("\${minio.domain}")
     private lateinit var minioDomain: String
@@ -150,6 +151,7 @@ class RegistrationService(
             )
 
             val savedRegistration = registrationRepository.save(registration)
+            emailSenderService.sendRegistrationConfirmation(event,user)
             return toRegistrationDTO(savedRegistration)
         } catch (e: EntityNotFoundException) {
             throw EntityNotFoundException(e.message)

@@ -40,7 +40,12 @@ class SecurityConfiguration(
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
                         "/api/v1/login",
-                        "/api/v1/signup","/api/v1/countView/**","/api/refresh")
+                        "/api/v1/signup",
+                        "/api/v1/countView/**",
+                        "/api/refresh",
+                        "/api/v1/signup",
+                        "/api/v1/verify-otp",
+                        "/api/v1/resend-otp")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
                         "/api/v1/tickets")
