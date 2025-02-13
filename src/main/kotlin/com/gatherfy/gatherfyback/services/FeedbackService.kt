@@ -1,33 +1,62 @@
 package com.gatherfy.gatherfyback.services
 
+import com.gatherfy.gatherfyback.dtos.CreateFeedbackDTO
 import com.gatherfy.gatherfyback.dtos.FeedbackCountDTO
 import com.gatherfy.gatherfyback.dtos.FeedbackDTO
 import com.gatherfy.gatherfyback.entities.Feedback
+import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.FeedbackRepository
+import com.gatherfy.gatherfyback.repositories.UserRepository
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import com.gatherfy.gatherfyback.Exception.AccessDeniedException
+import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 
 @Service
-class FeedbackService (
-    val feedbackRepository: FeedbackRepository
+class FeedbackService(
+    val feedbackRepository: FeedbackRepository,
+    private val userRepository: UserRepository,
+    private val eventRepository: EventRepository,
+    private val registrationRepository: RegistrationRepository
 ){
     fun getAllFeedback() : List<Feedback>{
         val feedbackList = feedbackRepository.findAll()
         return feedbackList
     }
 
-    fun getAllFeedbackByEventId(eventId: Long) : List<FeedbackDTO>{
-        val feedbackList = feedbackRepository.findFeedbacksByEventId(eventId)
-        return feedbackList.map { toFeedbackDTO(it) }
+    fun getAllFeedbackByEventId(username: String, eventId: Long) : List<FeedbackDTO>{
+        try{
+            val user = userRepository.findByUsername(username)
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
+
+            if(existEvent === null){
+                throw AccessDeniedException("You are not owner of this event")
+            }
+            val feedbackList = feedbackRepository.findFeedbacksByEventId(eventId)
+            return feedbackList.map { toFeedbackDTO(it) }
+        }catch (e: AccessDeniedException){
+            throw AccessDeniedException(e.message!!)
+        }
     }
 
-    fun getFeedbackAndCountByEventId(eventId: Long): FeedbackCountDTO {
-        val feedbackList = feedbackRepository.findFeedbacksByEventId(eventId)
-        return FeedbackCountDTO(
-            count = feedbackList.count(),
-            feedback = feedbackList
-        )
+    fun getFeedbackAndCountByEventId(username: String, eventId: Long): FeedbackCountDTO {
+        try{
+            val user = userRepository.findByUsername(username)
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
+
+            if(existEvent === null){
+                throw AccessDeniedException("You are not owner of this event")
+            }
+            val feedbackList = feedbackRepository.findFeedbacksByEventId(eventId)
+            return FeedbackCountDTO(
+                count = feedbackList.count(),
+                feedback = feedbackList
+            )
+        }catch (e: AccessDeniedException){
+            throw AccessDeniedException(e.message!!)
+        }
     }
 
     fun getAllFeedbackByOwner(ownerId: Long) : List<FeedbackDTO>{
@@ -62,10 +91,35 @@ class FeedbackService (
         }
     }
 
+    fun createFeedbackWithAuth(username: String, createFeedback: CreateFeedbackDTO): Feedback {
+        try {
+            val user = userRepository.findByUsername(username)
+            val event = eventRepository.findById(createFeedback.eventId)
+                .orElseThrow { EntityNotFoundException("Event id ${createFeedback.eventId} does not exist") }
+            val registration = registrationRepository.findRegistrationsByUserIdAndEventId(user?.users_id!!.toInt(),createFeedback.eventId.toInt())
+
+            if (registration === null){
+                throw AccessDeniedException("You are not attendee of this event")
+            }
+            val feedback = Feedback(
+                eventId = event.event_id,
+                userId = user.users_id,
+                feedbackComment = createFeedback.feedbackComment!!,
+                feedbackRating = createFeedback.feedbackRating,
+            )
+            val savedFeedback = feedbackRepository.save(feedback)
+            return savedFeedback
+        } catch (e: AccessDeniedException) {
+            throw AccessDeniedException(e.message!!)
+        } catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        }
+    }
+
     fun deleteFeedback(feedbackId: Long){
         try {
             val feedback = feedbackRepository.findById(feedbackId).orElseThrow {
-                ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found")
+                EntityNotFoundException("Feedback id $feedbackId does not exist")
             }
             feedbackRepository.delete(feedback)
         } catch (e: ResponseStatusException) {

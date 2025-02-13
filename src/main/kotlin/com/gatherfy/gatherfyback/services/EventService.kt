@@ -1,11 +1,8 @@
 package com.gatherfy.gatherfyback.services
 
-import com.gatherfy.gatherfyback.dtos.CreateEventDTO
-import com.gatherfy.gatherfyback.dtos.EventDTO
-import com.gatherfy.gatherfyback.dtos.EventFullTagDTO
-import com.gatherfy.gatherfyback.dtos.EventRegistrationDTO
+import com.gatherfy.gatherfyback.Exception.ConflictException
+import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.Event
-import com.gatherfy.gatherfyback.entities.EventTag
 import com.gatherfy.gatherfyback.entities.SortOption
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.EventTagRepository
@@ -13,9 +10,12 @@ import com.gatherfy.gatherfyback.repositories.TagRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
 import org.springframework.beans.factory.annotation.Value
 import jakarta.persistence.EntityNotFoundException
+import org.apache.coyote.BadRequestException
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -26,7 +26,6 @@ class EventService(
     private val userRepository: UserRepository,
     val eventTagRepository: EventTagRepository,
     val eventTagService: EventTagService,
-    val tagRepository: TagRepository,
     val minioService: MinioService,
 ) {
     @Value("\${minio.domain}")
@@ -36,16 +35,54 @@ class EventService(
         try {
             return toEventDto(eventRepository.findEventBySlug(slug))
         } catch (ex: Exception) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, ex.localizedMessage, ex)
+            throw EntityNotFoundException("Event slug $slug does not exist")
         }
     }
 
     fun getEventById(id: Long): EventDTO {
-        return toEventDto(eventRepository.findEventByEventId(id))
+        try{
+            return toEventDto(eventRepository.findEventByEventId(id))
+        }
+        catch (ex: Exception){
+            throw EntityNotFoundException("Event id $id does not exist")
+        }
+    }
+
+    fun getEventByIdWithAuth(username: String, id: Long): EventDTO {
+        try{
+            val user = userRepository.findByUsername(username)
+            val event = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, id)
+            if(event === null){
+                throw EntityNotFoundException("Event id $id does not exist")
+            }
+            return toEventDto(event)
+        }
+        catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        }
     }
 
     fun getEventFullTagById(id: Long): EventFullTagDTO {
-        return toEventFullTagDto(eventRepository.findEventByEventId(id))
+        try{
+            return toEventFullTagDto(eventRepository.findEventByEventId(id))
+        }
+        catch (ex: Exception){
+            throw EntityNotFoundException("Event id $id does not exist")
+        }
+    }
+
+    fun getEventFullTagByIdWithAuth(username: String, id: Long): EventFullTagDTO {
+        try{
+            val user = userRepository.findByUsername(username)
+            val event = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, id)
+            if(event === null){
+                throw EntityNotFoundException("Event id $id does not exist")
+            }
+            return toEventFullTagDto(event)
+        }
+        catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        }
     }
 
     // Search keyword, Filter tags and date, also Sort event
@@ -103,14 +140,30 @@ class EventService(
             return sortedEvents.map { event ->
                 toEventDto(event)
             }
-        } catch (e: RuntimeException) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, e.localizedMessage, e)
+        }catch (ex: Exception){
+            throw EntityNotFoundException("Events do not exist")
         }
     }
 
     fun getEventByOwner(ownerId: Long?): List<EventRegistrationDTO> {
-        val events = eventRepository.findEventsByEventOwner(ownerId)
-        return events.map { toEventRegistrationDTO(it) }
+        try {
+            val events = eventRepository.findEventsByEventOwner(ownerId)
+            return events.map { toEventRegistrationDTO(it) }
+        }
+        catch (ex: Exception){
+            throw EntityNotFoundException("User id $ownerId does not exist")
+        }
+    }
+
+    fun getEventWithAuth(username: String): List<EventRegistrationDTO> {
+        try {
+            val user = userRepository.findByUsername(username)
+            val events = eventRepository.findEventsByEventOwner(user?.users_id)
+            return events.map { toEventRegistrationDTO(it) }
+        }
+        catch (ex: Exception){
+            throw EntityNotFoundException("User $username does not exist")
+        }
     }
 
     fun getRecommendedEvent(limit: Int): List<EventDTO> {
@@ -120,7 +173,7 @@ class EventService(
         return recommend.map { item ->
             // Fetch the full Event entity using the eventId
             val event = eventRepository.findById(item.eventId).orElseThrow {
-                EntityNotFoundException("Event not found for ID ${item.eventId}")
+                EntityNotFoundException(" Event id ${item.eventId} does not exist.")
             }
             toEventDto(event)
         }
@@ -152,13 +205,77 @@ class EventService(
                 eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
             }
             return savedEvent
-        } catch (e: ResponseStatusException) {
+        } catch (e: MethodArgumentNotValidException) {
             throw e
         } catch (e: Exception) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST)
         }
     }
 
+    fun createEventWithAuth(username: String, event: CreateEventDTO): Event {
+        try {
+            val user = userRepository.findByUsername(username)
+            val duplicateEventName = eventRepository.findDuplicateEventName(event.event_name!!)
+            val duplicateSlug = eventRepository.findDuplicateSlug(event.event_slug!!)
+            val slugPattern = event.event_slug!!.matches("^[a-z0-9]+(-[a-z0-9]+)*\$".toRegex())
+
+            if(duplicateEventName != null){
+                throw ConflictException("Event name already taken")
+            }
+            else if(duplicateSlug != null){
+                throw ConflictException("Event slug already taken")
+            }
+            else if(!slugPattern){
+                throw BadRequestException("Slug should match pattern example-event-slug")
+            }
+            else{
+                val evente = Event(
+                    event_id = null,
+                    event_name = event.event_name!!,
+                    event_desc = event.event_desc!!,
+                    event_detail = event.event_detail!!,
+                    event_start_date = event.event_start_date!!,
+                    event_end_date = event.event_end_date!!,
+                    event_ticket_start_date = event.event_ticket_start_date!!,
+                    event_ticket_end_date = event.event_ticket_end_date,
+                    event_registration_goal = event.event_registration_goal,
+                    event_location = event.event_location!!,
+                    event_google_map = event.event_google_map!!,
+                    event_capacity = event.event_capacity!!,
+                    event_slug = event.event_slug!!,
+                    event_image = event.event_image!!,
+                    event_owner = user?.users_id!!,
+                    created_at = LocalDateTime.now(),
+                    event_status = "soon"
+                )
+                val savedEvent = eventRepository.save(evente)
+                if (event.tags!!.isNotEmpty()) {
+                    eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
+                }
+                return savedEvent
+            }
+        } catch (e: ConflictException) {
+            throw ConflictException(e.message!!)
+        } catch (e: BadRequestException) {
+            throw BadRequestException(e.message)
+        } catch (e: Exception) {
+            throw RuntimeException("An unexpected error occurred: ${e.message}")
+        }
+    }
+    // Helper method for additional validation
+//    private fun validateEvent(event: CreateEventDTO) {
+//        if (event.event_start_date != null && event.event_end_date != null) {
+//            if (event.event_start_date.isAfter(event.event_end_date)) {
+//                throw IllegalArgumentException("Event start date must be before the end date")
+//            }
+//        }
+//
+//        if (event.event_ticket_start_date != null && event.event_ticket_end_date != null) {
+//            if (event.event_ticket_start_date.isAfter(event.event_ticket_end_date)) {
+//                throw IllegalArgumentException("Ticket sale start date must be before the end date")
+//            }
+//        }
+//    }
     fun updateEvent(eventId: Long, updateData: CreateEventDTO): Event {
         try {
             val event = eventRepository.findById(eventId)
@@ -185,20 +302,102 @@ class EventService(
 
             val updatedEvent = eventRepository.save(event)
             return updatedEvent
-        } catch (e: ResponseStatusException) {
+        } catch (e: MethodArgumentNotValidException) {
             throw e
         } catch (e: Exception) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to update event")
         }
     }
 
+    fun updateEventPartialField(username: String, eventId: Long, updateData: EditEventDTO): Event {
+        try {
+            val user = userRepository.findByUsername(username)
+            val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
+            if(exitingEvent === null){
+                throw EntityNotFoundException("Event id $eventId does not exist")
+            }
+
+            if(!updateData.event_name.isNullOrBlank()){
+                val duplicateEventName = eventRepository.findDuplicateEventName(updateData.event_name!!)
+                if(duplicateEventName != null && duplicateEventName.event_id != eventId){
+                    throw ConflictException("Event name already taken")
+                }
+            }
+            if(!updateData.event_slug.isNullOrBlank()){
+                val duplicateSlug = eventRepository.findDuplicateSlug(updateData.event_slug!!)
+                val slugPattern = updateData.event_slug!!.matches("^[a-z0-9]+(-[a-z0-9]+)*\$".toRegex())
+
+                if(duplicateSlug != null && duplicateSlug.event_id != eventId){
+                    throw ConflictException("Event slug already taken")
+                }
+                else if(!slugPattern){
+                    throw BadRequestException("Slug should match pattern example-event-slug")
+                }
+            }
+            val updateEvent = exitingEvent.copy(
+                event_name = updateData.event_name ?: exitingEvent.event_name,
+                event_desc = updateData.event_desc ?: exitingEvent.event_desc,
+                event_detail = updateData.event_detail ?: exitingEvent.event_detail,
+                event_start_date = updateData.event_start_date ?: exitingEvent.event_start_date,
+                event_end_date = updateData.event_end_date ?: exitingEvent.event_end_date,
+                event_ticket_start_date = updateData.event_ticket_start_date ?: exitingEvent.event_ticket_start_date,
+                event_ticket_end_date = updateData.event_ticket_end_date ?: exitingEvent.event_ticket_end_date,
+                event_registration_goal = updateData.event_registration_goal ?: exitingEvent.event_registration_goal ,
+                event_location = updateData.event_location ?: exitingEvent.event_location,
+                event_google_map = updateData.event_google_map ?: exitingEvent.event_google_map,
+                event_capacity = updateData.event_capacity ?: exitingEvent.event_capacity,
+                event_slug = updateData.event_slug ?: exitingEvent.event_slug,
+                event_image = updateData.event_image ?: exitingEvent.event_image
+            )
+
+            val updatedEvent = eventRepository.save(updateEvent)
+
+            if (updateData.tags != null) {
+                eventTagService.updatedTag(updatedEvent.event_id!!, updateData.tags!!)
+            }
+            return updatedEvent
+        } catch (e: ConflictException) {
+            throw ConflictException(e.message!!)
+        } catch (e: EntityNotFoundException) {
+            throw EntityNotFoundException(e.message)
+        } catch (e: BadRequestException) {
+            throw BadRequestException(e.message)
+        } catch (e: Exception) {
+            throw RuntimeException("An unexpected error occurred: ${e.message}")
+        }
+    }
+
     fun deleteEvent(eventId: Long) {
-        val event = eventRepository.findById(eventId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found: $eventId") }
-        val existingEventTags = eventTagRepository.findAllByEvent(event)
-        eventTagRepository.deleteAll(existingEventTags)
-        minioService.deleteFile(event.event_image)
-        eventRepository.delete(event)
+        try{
+            val event = eventRepository.findById(eventId)
+                .orElseThrow { EntityNotFoundException("Event id $eventId does not exist") }
+            val existingEventTags = eventTagRepository.findAllByEvent(event)
+            eventTagRepository.deleteAll(existingEventTags)
+            minioService.deleteFile("thumbnails",event.event_image)
+            eventRepository.delete(event)
+        } catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        } catch (e: Exception) {
+            throw RuntimeException("An unexpected error occurred: ${e.message}")
+        }
+    }
+
+    fun deleteEventWithAuth(username: String, eventId: Long) {
+        try{
+            val user = userRepository.findByUsername(username)
+            val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
+            if(exitingEvent === null){
+                throw EntityNotFoundException("Event id $eventId does not exist")
+            }
+            val existingEventTags = eventTagRepository.findAllByEvent(exitingEvent)
+            eventTagRepository.deleteAll(existingEventTags)
+            minioService.deleteFile("thumbnails",exitingEvent.event_image)
+            eventRepository.delete(exitingEvent)
+        } catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        } catch (e: Exception) {
+            throw RuntimeException("An unexpected error occurred: ${e.message}")
+        }
     }
 
     private fun toEventRegistrationDTO(event: Event): EventRegistrationDTO {

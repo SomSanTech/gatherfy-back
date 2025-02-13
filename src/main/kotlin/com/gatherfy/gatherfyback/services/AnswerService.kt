@@ -3,15 +3,22 @@ package com.gatherfy.gatherfyback.services
 import com.gatherfy.gatherfyback.dtos.AnswerDTO
 import com.gatherfy.gatherfyback.dtos.CreateAnswerDTO
 import com.gatherfy.gatherfyback.entities.Answer
-import com.gatherfy.gatherfyback.repositories.AnswerRepository
-import com.gatherfy.gatherfyback.repositories.FeedbackRepository
-import com.gatherfy.gatherfyback.repositories.QuestionRepository
+import com.gatherfy.gatherfyback.repositories.*
+import jakarta.persistence.EntityNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import com.gatherfy.gatherfyback.Exception.AccessDeniedException
 
 @Service
-class AnswerService(val answerRepository: AnswerRepository,val feedbackRepository: FeedbackRepository,val questionRepository: QuestionRepository) {
+class AnswerService(
+    val answerRepository: AnswerRepository,
+    val feedbackRepository: FeedbackRepository,
+    val questionRepository: QuestionRepository,
+    private val userRepository: UserRepository,
+    private val registrationRepository: RegistrationRepository,
+    private val eventRepository: EventRepository
+) {
 
     fun getAnswerByFeedBackId(feedBackId: Long): List<AnswerDTO> {
         val answer =  answerRepository.findAnswersByFeedbackId(feedBackId)
@@ -31,32 +38,87 @@ class AnswerService(val answerRepository: AnswerRepository,val feedbackRepositor
 
     fun getAnswerByQuestionId(questionId: Long) : List<AnswerDTO> {
         val answer = answerRepository.findAnswersByQuestionId(questionId)
-        return answer.map { toAnswerDTO(it) }
+        return answer!!.map { toAnswerDTO(it) }
     }
 
-    fun createAnswer(createAnswerDTO: CreateAnswerDTO): AnswerDTO {
+    fun getAnswerByQuestionIdWithAuth(username: String, questionId: Long) : List<AnswerDTO> {
+        try{
+            val user = userRepository.findByUsername(username)
+            val question = questionRepository.findById(questionId).orElseThrow{
+                EntityNotFoundException("Question id $questionId does not exist")
+            }
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, question.eventId)
+            if(existEvent === null){
+                throw AccessDeniedException("You are not owner of this event")
+            }
+            val answer = answerRepository.findAnswersByQuestionId(questionId)
+            return answer!!.map { toAnswerDTO(it) }
+        } catch (e: EntityNotFoundException) {
+            throw EntityNotFoundException(e.message)
+        } catch (e: AccessDeniedException){
+            throw AccessDeniedException(e.message!!)
+        }
+    }
+
+//    fun createAnswer(createAnswerDTO: CreateAnswerDTO): AnswerDTO {
+//        try {
+//             val feedback = feedbackRepository.findById(createAnswerDTO.feedbackId)
+//                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found") }
+//
+//            val question = questionRepository.findById(createAnswerDTO.questionId)
+//                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found") }
+//
+//            val answer = Answer(
+//                question=question,
+//                feedback = feedback,
+//                questionId = createAnswerDTO.questionId,
+//                eventId = createAnswerDTO.eventId,
+//                answerText = createAnswerDTO.answerText,
+//                feedbackId = createAnswerDTO.feedbackId,
+//            )
+//
+//            val savedAnswer = answerRepository.save(answer)
+//            return toAnswerDTO(savedAnswer)
+//        } catch (e: ResponseStatusException) {
+//            throw e
+//        } catch (e: Exception){
+//            throw ResponseStatusException(HttpStatus.BAD_REQUEST,e.message ?: "Unknown error")
+//        }
+//    }
+
+    fun createAnswerWithAuth(username: String, createAnswerDTO: CreateAnswerDTO): AnswerDTO {
         try {
-             val feedback = feedbackRepository.findById(createAnswerDTO.feedbackId)
-                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found") }
+            val user = userRepository.findByUsername(username)
 
+            val feedback = feedbackRepository.findFeedbackByUserId(user?.users_id!!)
+            if(feedback === null){
+                throw EntityNotFoundException("User do not feedback this event yet.")
+            }
             val question = questionRepository.findById(createAnswerDTO.questionId)
-                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found") }
-
-            val answer = Answer(
-                question=question,
-                feedback = feedback,
-                questionId = createAnswerDTO.questionId,
-                eventId = createAnswerDTO.eventId,
-                answerText = createAnswerDTO.answerText,
-                feedbackId = createAnswerDTO.feedbackId,
+                .orElseThrow { EntityNotFoundException("Question id ${createAnswerDTO.questionId} does not exist") }
+            val userRegistration = registrationRepository.findRegistrationsByUserIdAndEventId(user.users_id!!.toInt(),
+                feedback.eventId!!.toInt()
             )
 
-            val savedAnswer = answerRepository.save(answer)
-            return toAnswerDTO(savedAnswer)
-        } catch (e: ResponseStatusException) {
-            throw e
-        } catch (e: Exception){
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST,e.message ?: "Unknown error")
+            if(userRegistration != null){
+                val answer = Answer(
+                    question=question,
+                    feedback = feedback,
+                    questionId = createAnswerDTO.questionId,
+                    eventId = feedback.eventId!!,
+                    answerText = createAnswerDTO.answerText,
+                    feedbackId = feedback.feedbackId!!,
+                )
+
+                val savedAnswer = answerRepository.save(answer)
+                return toAnswerDTO(savedAnswer)
+            }else {
+                throw AccessDeniedException("You are not attendee of this event")
+            }
+        } catch (e: EntityNotFoundException) {
+            throw EntityNotFoundException(e.message)
+        } catch (e: AccessDeniedException){
+            throw AccessDeniedException(e.message!!)
         }
     }
 

@@ -8,7 +8,7 @@ data class FeedbackDTO (
     var eventName: String?,
     var userId: Long?,
     var username: String?,
-    var feedbackRating: Long?,
+    var feedbackRating: Int?,
     var feedbackComment: String,
     var createdAt: LocalDateTime?=null,
 )

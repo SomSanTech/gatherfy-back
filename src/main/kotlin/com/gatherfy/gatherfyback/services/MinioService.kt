@@ -1,37 +1,50 @@
 package com.gatherfy.gatherfyback.services
 
-import io.minio.GetPresignedObjectUrlArgs
-import io.minio.MinioClient
-import io.minio.PutObjectArgs
-import io.minio.RemoveObjectArgs
+import io.minio.*
+import io.minio.errors.ErrorResponseException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import io.minio.http.Method
+import jakarta.persistence.EntityNotFoundException
 
 @Service
 class MinioService(
     private val minioClient: MinioClient,
-    @Value("\${minio.bucket}") private val bucket: String
 ) {
-    fun uploadFile(file: MultipartFile): String {
-//        val fileName = "${System.currentTimeMillis()}-${file.originalFilename}"
-        val fileName = "${file.originalFilename}"
+    fun uploadFile(bucket: String, file: MultipartFile): String {
+        try{
+//            val fileName = "${System.currentTimeMillis()}-${file.originalFilename}"
+            val fileName = "${file.originalFilename}"
+            val isBucketExist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())
+            if(!isBucketExist){
+                throw EntityNotFoundException("Bucket $bucket is not exist")
+            }
+            minioClient.putObject(
+                PutObjectArgs.builder()
+                    .bucket(bucket)
+                    .`object`(fileName)
+                    .contentType(file.contentType)
+                    .stream(file.inputStream, file.size, -1)
+                    .build()
+            )
 
-        minioClient.putObject(
-            PutObjectArgs.builder()
-                .bucket(bucket)
-                .`object`(fileName)
-                .contentType(file.contentType)
-                .stream(file.inputStream, file.size, -1)
-                .build()
-        )
-
-        return fileName
+            return fileName
+        }
+        catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        }
     }
 
-    fun deleteFile(objectName: String): Boolean {
+    fun deleteFile(bucket: String, objectName: String): Boolean {
         return try {
+            val isBucketExist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())
+            if(!isBucketExist){
+                throw EntityNotFoundException("Bucket $bucket is not exist")
+            }
+            if(!isObjectExist(bucket, objectName)){
+                throw EntityNotFoundException("File $objectName is not exist")
+            }
             minioClient.removeObject(
                 RemoveObjectArgs.builder()
                     .bucket(bucket)
@@ -39,13 +52,22 @@ class MinioService(
                     .build()
             )
             true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
+        }
+        catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
         }
     }
 
-    fun getFileUrl(fileName: String): String {
+    fun isObjectExist(bucket: String, fileName: String): Boolean{
+        try{
+            minioClient.statObject(StatObjectArgs.builder().bucket(bucket).`object`(fileName).build())
+            return true
+        }catch (e: ErrorResponseException){
+            return false
+        }
+    }
+
+    fun getFileUrl(bucket: String, fileName: String): String {
         return minioClient.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
                 .bucket(bucket)

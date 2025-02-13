@@ -14,7 +14,7 @@ data class Feedback(
     @Column(name = "user_id")
     var userId: Long?,
     @Column(name = "feedback_rating")
-    var feedbackRating: Long?,
+    var feedbackRating: Int?,
     @Column(name = "feedback_comment")
     var feedbackComment: String,
     @Column(name = "created_at", insertable = false, updatable = false)

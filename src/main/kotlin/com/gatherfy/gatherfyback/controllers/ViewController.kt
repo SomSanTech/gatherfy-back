@@ -13,4 +13,9 @@ class ViewController(val viewService: ViewService) {
         return viewService.getViewsByEventIds(eventIds)
     }
 
+
+    @PostMapping("/v1/countView/{eventId}")
+    fun countViewsByEventIds(@PathVariable("eventId") eventId: Long): String {
+        return viewService.recordEventView(eventId)
+    }
 }
