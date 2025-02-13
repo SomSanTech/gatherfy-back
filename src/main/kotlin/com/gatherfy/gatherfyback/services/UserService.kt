@@ -40,8 +40,8 @@ class UserService(
             }
             else {
                 val encoder = BCryptPasswordEncoder(16)
-                val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=])(?=\\S+\$).{8,}".toRegex()
-                val emailPattern = "^[^@]+@[^@]+\\.[^@]+\$".toRegex()
+                val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=.*])(?=\\S+\$).{8,}".toRegex()
+                val emailPattern = "^[^@]+@[^@]+\\.[^@]+(\\.[^@]+)*\$".toRegex()
                 if(!userDto.email.matches(emailPattern)){
                     throw BadRequestException("Email wrong pattern")
                 }
@@ -108,7 +108,11 @@ class UserService(
 
     fun verifyOTP(otpVerificationRequest: OTPVerificationRequest): ResponseEntity<String> {
         try{
-            val user = userRepository.findByEmail(otpVerificationRequest.email) ?: throw BadRequestException("Invalid email")
+            val user = userRepository.findByEmail(otpVerificationRequest.email) ?: throw BadRequestException("Email incorrect")
+
+            if(user.is_verified){
+                throw ConflictException("This email has already been verified")
+            }
 
             if (user.otp_expires_at!!.isBefore(LocalDateTime.now())) {
                 throw BadRequestException("OTP expired")
@@ -124,6 +128,8 @@ class UserService(
             return ResponseEntity.ok("Email verified successfully!")
         }catch (e: BadRequestException){
             throw BadRequestException(e.message)
+        }catch (e: ConflictException){
+            throw ConflictException(e.message!!)
         }
     }
 
@@ -140,7 +146,7 @@ class UserService(
                 }
             }
             if(!userEdit.email.isNullOrBlank()){
-                val emailPattern = "^[^@]+@[^@]+\\.[^@]+\$".toRegex()
+                val emailPattern = "^[^@]+@[^@]+\\.[^@]+(\\.[^@]+)*\$".toRegex()
                 val duplicateEmail = userRepository.findByEmail(userEdit.email!!)
                 if (duplicateEmail != null && duplicateEmail.users_id != userProfile.users_id ){
                     throw ConflictException("Email already taken")
@@ -150,7 +156,7 @@ class UserService(
                 }
             }
             if(!userEdit.password.isNullOrBlank()){
-                val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=])(?=\\S+\$).{8,}".toRegex()
+                val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=.*])(?=\\S+\$).{8,}".toRegex()
                 if (!userEdit.password!!.matches(passwordPattern)){
                     throw BadRequestException("Password does not match pattern")
                 }
