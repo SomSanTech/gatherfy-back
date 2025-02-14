@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.services
 
+import com.gatherfy.gatherfyback.Exception.AccessDeniedException
 import com.gatherfy.gatherfyback.Exception.ConflictException
 import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.Event
@@ -54,14 +55,19 @@ class EventService(
     fun getEventByIdWithAuth(username: String, id: Long): EventDTO {
         try{
             val user = userRepository.findByUsername(username)
-            val event = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, id)
+            val event = eventRepository.findEventByEventId(id)
             if(event === null){
                 throw EntityNotFoundException("Event id $id does not exist")
             }
+            val isOwner = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, id)
+            if(isOwner === null){
+                throw AccessDeniedException("You are  not owner of this event")
+            }
             return toEventDto(event)
-        }
-        catch (e: EntityNotFoundException){
+        } catch (e: EntityNotFoundException){
             throw EntityNotFoundException(e.message)
+        }catch (e: AccessDeniedException){
+            throw AccessDeniedException(e.message!!)
         }
     }
 
@@ -431,6 +437,7 @@ class EventService(
             eventName = event.event_name,
             eventLocation = event.event_location,
             eventStartDate = event.event_start_date,
+            eventEndDate = event.event_end_date
         )
     }
 

@@ -9,5 +9,5 @@ data class CreateAnswerDTO (
 //    var eventId: Long,
     @field:NotNull(message = "Answer is required")
     @field:NotBlank(message = "Answer must not be blank")
-    var answerText: String,
+    var answerText: String?,
 )

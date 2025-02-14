@@ -7,4 +7,5 @@ class EventRegistrationDTO(
     val eventName: String,
     val eventLocation: String,
     val eventStartDate: LocalDateTime,
+    val eventEndDate: LocalDateTime,
 )

@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
 import com.gatherfy.gatherfyback.Exception.AccessDeniedException
+import com.gatherfy.gatherfyback.Exception.ConflictException
 import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 
 @Service
@@ -101,9 +102,12 @@ class FeedbackService(
             val event = eventRepository.findById(createFeedback.eventId)
                 .orElseThrow { EntityNotFoundException("Event id ${createFeedback.eventId} does not exist") }
             val registration = registrationRepository.findRegistrationsByUserIdAndEventId(user?.users_id!!.toInt(),createFeedback.eventId.toInt())
-
             if (registration === null){
                 throw AccessDeniedException("You are not attendee of this event")
+            }
+            val isFeedbackExist = feedbackRepository.findByUserIdAndEventId(user.users_id, event.event_id)
+            if (isFeedbackExist !== null){
+                throw ConflictException("You already gave feedback for this event.")
             }
             val feedback = Feedback(
                 eventId = event.event_id,
@@ -117,6 +121,8 @@ class FeedbackService(
             throw AccessDeniedException(e.message!!)
         } catch (e: EntityNotFoundException){
             throw EntityNotFoundException(e.message)
+        } catch (e: ConflictException){
+            throw ConflictException(e.message!!)
         }
     }
 

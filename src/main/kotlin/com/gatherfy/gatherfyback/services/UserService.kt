@@ -11,11 +11,18 @@ import com.gatherfy.gatherfyback.repositories.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.MethodParameter
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.validation.BeanPropertyBindingResult
+import org.springframework.validation.BindingResult
+import org.springframework.validation.BindingResultUtils
+import org.springframework.validation.ObjectError
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.server.ResponseStatusException
+import java.lang.reflect.Method
 import java.time.LocalDateTime
 
 @Service
@@ -32,44 +39,53 @@ class UserService(
         try{
             val existingUsername = userRepository.findByUsername(userDto.username)
             val existingEmail = userRepository.findByEmail(userDto.email)
-            if(existingUsername != null){
-                throw ConflictException("Username already taken")
+
+            val bindingResult = BeanPropertyBindingResult(userDto, "userDto") // Collect validation errors
+
+            if (existingUsername != null) {
+                bindingResult.rejectValue("username", "USERNAME_INVALID", "Username already taken")
             }
-            else if (existingEmail != null){
-                throw ConflictException("Email already taken")
+            if (existingEmail != null) {
+                bindingResult.rejectValue("email", "EMAIL_INVALID", "Email already taken")
+            }
+
+            val encoder = BCryptPasswordEncoder(16)
+            val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=.*])(?=\\S+\$).{8,}".toRegex()
+            val emailPattern = "^[^@]+@[^@]+\\.[^@]+(\\.[^@]+)*\$".toRegex()
+
+            if (!userDto.email.matches(emailPattern)) {
+                bindingResult.rejectValue("email","EMAIL_INVALID", "Email wrong pattern")
+            }
+            if (!userDto.password.matches(passwordPattern)) {
+                bindingResult.rejectValue("password","PASSWORD_INVALID","Password wrong pattern")
+            }
+
+            if (bindingResult.hasErrors()) {
+                val method: Method = this::class.java.getDeclaredMethod("createUser", CreateUserDTO::class.java)
+                val methodParameter = MethodParameter(method, 0) // Create a valid MethodParameter
+                throw MethodArgumentNotValidException(methodParameter, bindingResult)
             }
             else {
-                val encoder = BCryptPasswordEncoder(16)
-                val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=.*])(?=\\S+\$).{8,}".toRegex()
-                val emailPattern = "^[^@]+@[^@]+\\.[^@]+(\\.[^@]+)*\$".toRegex()
-                if(!userDto.email.matches(emailPattern)){
-                    throw BadRequestException("Email wrong pattern")
-                }
-                else if (!userDto.password.matches(passwordPattern)){
-                    throw BadRequestException("Password wrong pattern")
-                }
-                else {
-                    val user = User(
-                        users_id = null,
-                        users_firstname = userDto.firstname,
-                        users_lastname = userDto.lastname,
-                        username = userDto.username,
-                        users_gender = userDto.gender,
-                        users_email = userDto.email,
-                        users_phone = userDto.phone,
-                        users_image = null,
-                        users_role = userDto.role,
-                        users_birthday = userDto.birthday,
-                        users_age = null,
-                        password = encoder.encode(userDto.password),
-                        otp = generateOTP(),
-                        is_verified = false,
-                        otp_expires_at = LocalDateTime.now().plusMinutes(5)
-                    )
-                    val savedUser = userRepository.save(user)
-                    emailSenderService.sendOtpVerification(savedUser)
-                    return toUserDto(savedUser)
-                }
+                val user = User(
+                    users_id = null,
+                    users_firstname = userDto.firstname,
+                    users_lastname = userDto.lastname,
+                    username = userDto.username,
+                    users_gender = userDto.gender,
+                    users_email = userDto.email,
+                    users_phone = userDto.phone,
+                    users_image = null,
+                    users_role = userDto.role,
+                    users_birthday = userDto.birthday,
+                    users_age = null,
+                    password = encoder.encode(userDto.password),
+                    otp = generateOTP(),
+                    is_verified = false,
+                    otp_expires_at = LocalDateTime.now().plusMinutes(5)
+                )
+                val savedUser = userRepository.save(user)
+                emailSenderService.sendOtpVerification(savedUser)
+                return toUserDto(savedUser)
             }
         } catch (e: ResponseStatusException){
             throw e
@@ -139,29 +155,38 @@ class UserService(
             if(userProfile === null){
                 throw EntityNotFoundException("User not found")
             }
+
+            val bindingResult = BeanPropertyBindingResult(userEdit, "userEdit") // Collect validation errors
+            val encoder = BCryptPasswordEncoder(16)
+
+            if (bindingResult.hasErrors()) {
+                val method: Method = this::class.java.getDeclaredMethod("createUser", CreateUserDTO::class.java)
+                val methodParameter = MethodParameter(method, 0) // Create a valid MethodParameter
+                throw MethodArgumentNotValidException(methodParameter, bindingResult)
+            }
+
             if(!userEdit.username.isNullOrBlank()){
                 val duplicateUsername = userRepository.findByUsername(userEdit.username!!)
                 if(duplicateUsername != null && duplicateUsername.users_id != userProfile.users_id ){
-                    throw ConflictException("Username already taken")
+                    bindingResult.rejectValue("username", "USERNAME_INVALID", "Username already taken")
                 }
             }
             if(!userEdit.email.isNullOrBlank()){
                 val emailPattern = "^[^@]+@[^@]+\\.[^@]+(\\.[^@]+)*\$".toRegex()
                 val duplicateEmail = userRepository.findByEmail(userEdit.email!!)
                 if (duplicateEmail != null && duplicateEmail.users_id != userProfile.users_id ){
-                    throw ConflictException("Email already taken")
+                    bindingResult.rejectValue("email", "EMAIL_INVALID", "Email already taken")
                 }
                 else if(!userEdit.email!!.matches(emailPattern)){
-                    throw BadRequestException("Email should match pattern abc@example.com")
+                    bindingResult.rejectValue("email","EMAIL_INVALID", "Email wrong pattern")
                 }
             }
             if(!userEdit.password.isNullOrBlank()){
                 val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=.*])(?=\\S+\$).{8,}".toRegex()
                 if (!userEdit.password!!.matches(passwordPattern)){
-                    throw BadRequestException("Password does not match pattern")
+                    bindingResult.rejectValue("password","PASSWORD_INVALID","Password wrong pattern")
                 }
             }
-            val encoder = BCryptPasswordEncoder(16)
 
             val updateUser = userProfile.copy(
                 users_firstname = userEdit.firstname ?: userProfile.users_firstname,

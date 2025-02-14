@@ -6,6 +6,7 @@ import com.gatherfy.gatherfyback.entities.SortOption
 import com.gatherfy.gatherfyback.services.EventService
 import com.gatherfy.gatherfyback.services.TokenService
 import jakarta.validation.Valid
+import org.apache.coyote.BadRequestException
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
@@ -34,8 +35,10 @@ class EventController(
     }
 
 //    Use this and delete "/v1/events/backoffice/{id}", "/v2/events/backoffice/{id}"
-    @GetMapping("/v1/backoffice/events/{id}")
-    fun getEvent(@RequestHeader("Authorization")token: String, @PathVariable id: Long) : EventDTO {
+    @GetMapping("/v1/backoffice/events/{eventId}")
+    fun getEvent(@RequestHeader("Authorization")token: String, @PathVariable eventId: String) : EventDTO {
+    val id = eventId.toLongOrNull()
+        ?: throw BadRequestException("Invalid event ID format")
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
         return eventService.getEventByIdWithAuth(username, id)
     }
@@ -50,8 +53,10 @@ class EventController(
 //        return eventService.getEventFullTagById(id)
 //    }
 
-    @GetMapping("/v2/backoffice/events/{id}")
-    fun getEventWithFullTag(@RequestHeader("Authorization")token: String, @PathVariable id: Long) : EventFullTagDTO {
+    @GetMapping("/v2/backoffice/events/{eventId}")
+    fun getEventWithFullTag(@RequestHeader("Authorization")token: String, @PathVariable eventId: String) : EventFullTagDTO {
+        val id = eventId.toLongOrNull()
+            ?: throw BadRequestException("Invalid event ID format")
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
         return eventService.getEventFullTagByIdWithAuth(username, id)
     }
