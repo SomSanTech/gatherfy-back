@@ -76,6 +76,7 @@ class SecurityConfiguration(
                     .requestMatchers(HttpMethod.PUT,
                         "/api/v1/questions/**",
                         "/api/v1/backoffice/**",
+                        "/api/v2/backoffice/**",
                         "/api/v1/check-in",
                         "/api/v2/check-in",
                         "/api/v2/registrations/**")
@@ -83,6 +84,7 @@ class SecurityConfiguration(
                     .requestMatchers(HttpMethod.DELETE,
                         "/api/v1/questions/**",
                         "/api/v1/backoffice/**",
+                        "/api/v2/backoffice/**",
                         "/api/v1/files/**",
                         "/api/v1/feedbacks/**",)
                     .hasRole("Organization")
