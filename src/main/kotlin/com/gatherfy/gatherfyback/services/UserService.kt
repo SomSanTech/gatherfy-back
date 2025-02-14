@@ -186,15 +186,14 @@ class UserService(
     }
 
     fun getUserProfile(username: String): User?{
-        try {
-            val user = userRepository.findByUsername(username)
-            if(user != null){
+        val user = userRepository.findByUsername(username)
+
+        if(user != null){
+            if(user.users_image !== null){
                 user.users_image = getImageUrl("profiles",user.users_image!!)
             }
-            return user
-        } catch (e: Exception){
-            throw EntityNotFoundException("User not found")
         }
+        return user
     }
 
     fun toUserDto(user: User): UserDTO{

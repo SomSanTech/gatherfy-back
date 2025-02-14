@@ -44,7 +44,7 @@ class EventService(
 
     fun getEventById(id: Long): EventDTO {
         try{
-            return toEventDto(eventRepository.findEventByEventId(id))
+            return toEventDto(eventRepository.findEventByEventId(id)!!)
         }
         catch (ex: Exception){
             throw EntityNotFoundException("Event id $id does not exist")
@@ -67,7 +67,7 @@ class EventService(
 
     fun getEventFullTagById(id: Long): EventFullTagDTO {
         try{
-            return toEventFullTagDto(eventRepository.findEventByEventId(id))
+            return toEventFullTagDto(eventRepository.findEventByEventId(id)!!)
         }
         catch (ex: Exception){
             throw EntityNotFoundException("Event id $id does not exist")

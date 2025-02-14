@@ -13,6 +13,7 @@ import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
+import org.checkerframework.checker.units.qual.A
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -46,7 +47,18 @@ class RegistrationService(
         }catch (e: EntityNotFoundException){
             throw EntityNotFoundException(e.message)
         }
+    }
 
+    fun getAllRegistrationsByEventIdWithAuth(username: String, eventId: Long): List<RegistrationDTO> {
+        try{
+            val user = userRepository.findByUsername(username)
+            val isOwnerEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id!!, eventId)
+                ?: throw EntityNotFoundException("Event id $eventId does not exist")
+            val registrations = registrationRepository.findRegistrationsByEventId(eventId)
+            return registrations.map { toRegistrationDTO(it) }
+        }catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        }
     }
 
     fun getAllRegistrationsByOwner(ownerId: Long): List<RegistrationDTO>? {
@@ -77,7 +89,7 @@ class RegistrationService(
             val user = userRepository.findByUsername(username)
             val registration = registrationRepository.findByRegistrationId(registrationId)
                 ?: throw EntityNotFoundException("Registration id $registrationId does not exist")
-            val exitingEvent = registrationRepository.findByOwnerIdAndEventId(user?.users_id!!, registration.eventId, registrationId)
+            val isOwnerEvent = registrationRepository.findByOwnerIdAndEventId(user?.users_id!!, registration.eventId, registrationId)
                 ?: throw AccessDeniedException("You are not owner of this event")
 
             return  toRegistrationDTO(registration)
@@ -100,6 +112,26 @@ class RegistrationService(
             return toRegistrationDTO(updatedRegistration)
         } catch (e: EntityNotFoundException){
             throw EntityNotFoundException(e.message)
+        } catch (e: Exception){
+            throw BadRequestException("Invalid status provided. Allowed values are: 'Awaiting Check-in', 'Checked in', or 'Unattended'.")
+        }
+    }
+
+    fun updateStatusWithAuth(username: String, id: Long, newStatus: String): RegistrationDTO {
+        try{
+            val user = userRepository.findByUsername(username)
+            val registration = registrationRepository.findById(id)
+                .orElseThrow {  EntityNotFoundException("Registration id $id does not exist") }
+            val isOwnerEvent = registrationRepository.findByOwnerIdAndEventId(user?.users_id!!, registration.eventId, id)
+                ?: throw AccessDeniedException("You are not owner of this event")
+            registration.status = newStatus
+            val updatedRegistration = registrationRepository.save(registration)
+
+            return toRegistrationDTO(updatedRegistration)
+        } catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
+        } catch (e: AccessDeniedException){
+            throw AccessDeniedException(e.message!!)
         } catch (e: Exception){
             throw BadRequestException("Invalid status provided. Allowed values are: 'Awaiting Check-in', 'Checked in', or 'Unattended'.")
         }

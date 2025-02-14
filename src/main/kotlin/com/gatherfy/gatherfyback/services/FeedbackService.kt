@@ -29,6 +29,8 @@ class FeedbackService(
     fun getAllFeedbackByEventId(username: String, eventId: Long) : List<FeedbackDTO>{
         try{
             val user = userRepository.findByUsername(username)
+            val isEventExist = eventRepository.findEventByEventId(eventId)
+                ?: throw EntityNotFoundException("Event id $eventId does not exist")
             val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
 
             if(existEvent === null){
@@ -38,14 +40,16 @@ class FeedbackService(
             return feedbackList.map { toFeedbackDTO(it) }
         }catch (e: AccessDeniedException){
             throw AccessDeniedException(e.message!!)
+        }catch (e: EntityNotFoundException){
+            throw EntityNotFoundException(e.message)
         }
     }
 
     fun getFeedbackAndCountByEventId(username: String, eventId: Long): FeedbackCountDTO {
         try{
             val user = userRepository.findByUsername(username)
-            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
 
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
             }

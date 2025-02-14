@@ -2,6 +2,7 @@ package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.Exception.AccessDeniedException
 import com.gatherfy.gatherfyback.dtos.CreateQuestionDTO
+import com.gatherfy.gatherfyback.dtos.EditQuestionDTO
 import com.gatherfy.gatherfyback.entities.Question
 import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.QuestionRepository
@@ -79,16 +80,13 @@ class QuestionService(
         }
     }
 
-    fun updateQuestionWithAuth(username:String, questionId: Long,updateQuestion:CreateQuestionDTO): Question {
+    fun updateQuestionWithAuth(username:String, questionId: Long,updateQuestion:EditQuestionDTO): Question {
         try {
             val user = userRepository.findByUsername(username)
             val question = questionRepository.findById(questionId).orElseThrow{
                 EntityNotFoundException("Question id $questionId does not exist")
             }
-            eventRepository.findById(updateQuestion.eventId!!).orElseThrow {
-                EntityNotFoundException("Feedback id ${updateQuestion.eventId} does not exist")
-            }
-            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, updateQuestion.eventId)
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, question.eventId)
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
             }

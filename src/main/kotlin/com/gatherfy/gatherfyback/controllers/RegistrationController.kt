@@ -64,6 +64,20 @@ class RegistrationController(
         val updatedRegistration = registrationService.updateStatus(registrationId, registrationDTO.status)
         return ResponseEntity.ok(updatedRegistration)
     }
+
+    @PutMapping("/v2/registrations/{id}")
+    fun updateRegistrationStatusWithAuth(
+        @RequestHeader("Authorization") token: String,
+        @PathVariable("id") id: String,
+        @RequestBody registrationDTO: RegistrationUpdateStatusDTO
+    ): ResponseEntity<RegistrationDTO> {
+        val registrationId = id.toLongOrNull()
+            ?: throw BadRequestException("Invalid registration ID format")
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        val updatedRegistration = registrationService.updateStatusWithAuth(username, registrationId, registrationDTO.status)
+        return ResponseEntity.ok(updatedRegistration)
+    }
+
     @PostMapping("/v1/registrations")
     fun createRegistration(
         @RequestBody registrationCreateDTO: RegistrationCreateDTO
@@ -86,6 +100,16 @@ class RegistrationController(
         val eventId = id.toLongOrNull()
             ?: throw BadRequestException("Invalid event ID format")
         return registrationService.getAllRegistrationsByEventId(eventId)
+    }
+
+    @GetMapping("/v2/registrations/event/{id}")
+    fun getRegistrationEventsWithAuth(
+        @RequestHeader("Authorization") token: String,
+        @PathVariable("id") id: String): List<RegistrationDTO> {
+        val eventId = id.toLongOrNull()
+            ?: throw BadRequestException("Invalid event ID format")
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return registrationService.getAllRegistrationsByEventIdWithAuth(username,eventId)
     }
 
     @GetMapping("/v1/tickets")

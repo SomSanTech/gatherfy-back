@@ -2,10 +2,12 @@ package com.gatherfy.gatherfyback.controllers
 
 
 import com.gatherfy.gatherfyback.dtos.CreateQuestionDTO
+import com.gatherfy.gatherfyback.dtos.EditQuestionDTO
 import com.gatherfy.gatherfyback.entities.Question
 import com.gatherfy.gatherfyback.services.QuestionService
 import com.gatherfy.gatherfyback.services.TokenService
 import jakarta.validation.Valid
+import org.apache.coyote.BadRequestException
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -33,12 +35,14 @@ class QuestionController(
 
     @PutMapping("/v2/questions/{questionId}")
     fun updateQuestion(
-        @PathVariable("questionId") questionId: Long,
+        @PathVariable("questionId") questionId: String,
         @RequestHeader("Authorization") token: String,
-        @RequestBody @Valid updateQuestion: CreateQuestionDTO,
+        @RequestBody @Valid updateQuestion: EditQuestionDTO,
     ): Question {
+        val id = questionId.toLongOrNull()
+            ?: throw BadRequestException("Invalid question ID format")
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return questionService.updateQuestionWithAuth(username, questionId, updateQuestion)
+        return questionService.updateQuestionWithAuth(username, id, updateQuestion)
     }
 
     @PostMapping("/v1/questions")
@@ -68,10 +72,12 @@ class QuestionController(
     @DeleteMapping("/v2/questions/{questionId}")
     fun deleteQuestionWithAuth(
         @RequestHeader("Authorization") token: String,
-        @PathVariable("questionId") questionId: Long,
+        @PathVariable("questionId") questionId: String,
     ){
+        val id = questionId.toLongOrNull()
+            ?: throw BadRequestException("Invalid question ID format")
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        questionService.deleteQuestionWithAuth(username, questionId)
+        questionService.deleteQuestionWithAuth(username, id)
     }
 
 }

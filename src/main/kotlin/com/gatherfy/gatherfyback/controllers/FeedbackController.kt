@@ -7,6 +7,7 @@ import com.gatherfy.gatherfyback.entities.Feedback
 import com.gatherfy.gatherfyback.services.FeedbackService
 import com.gatherfy.gatherfyback.services.TokenService
 import jakarta.validation.Valid
+import org.apache.coyote.BadRequestException
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -24,15 +25,19 @@ class FeedbackController(
     }
 
     @GetMapping("/v1/feedbacks/event/{eventId}")
-    fun getFeedbackByEventId(@RequestHeader("Authorization")token: String,@PathVariable eventId: Long): List<FeedbackDTO> {
+    fun getFeedbackByEventId(@RequestHeader("Authorization")token: String,@PathVariable eventId: String): List<FeedbackDTO> {
+        val id = eventId.toLongOrNull()
+            ?: throw BadRequestException("Invalid event ID format")
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return feedbackService.getAllFeedbackByEventId(username, eventId)
+        return feedbackService.getAllFeedbackByEventId(username, id)
     }
 
     @GetMapping("/v2/feedbacks/event/{eventId}")
-    fun getFeedbackAndCountByEventId(@RequestHeader("Authorization")token: String,@PathVariable eventId: Long): FeedbackCountDTO {
+    fun getFeedbackAndCountByEventId(@RequestHeader("Authorization")token: String,@PathVariable eventId: String): FeedbackCountDTO {
+        val id = eventId.toLongOrNull()
+            ?: throw BadRequestException("Invalid event ID format")
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return feedbackService.getFeedbackAndCountByEventId(username, eventId)
+        return feedbackService.getFeedbackAndCountByEventId(username, id)
     }
 
     // Nowhere to use
