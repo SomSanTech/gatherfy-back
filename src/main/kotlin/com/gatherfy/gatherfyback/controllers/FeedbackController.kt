@@ -69,4 +69,12 @@ class FeedbackController(
         feedbackService.deleteFeedback(feedbackId)
     }
 
+    @GetMapping("/v1/feedbacked")
+    fun getEventAlreadyFeedbacked(
+        @RequestHeader("Authorization")token: String,
+    ): Map<String, List<Long>>{
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return feedbackService.getEventAlreadyFeedbacked(username)
+    }
+
 }

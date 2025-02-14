@@ -139,6 +139,12 @@ class FeedbackService(
         }
     }
 
+    fun getEventAlreadyFeedbacked(username: String): Map<String, List<Long>>{
+        val user = userRepository.findByUsername(username)
+        val eventList = feedbackRepository.findFeedbacksByUserId(user?.users_id!!)
+        return mapOf("eventId" to eventList!!.mapNotNull { it.eventId })
+    }
+
     private fun toFeedbackDTO(feedback: Feedback): FeedbackDTO {
         return FeedbackDTO(
             feedbackId = feedback.feedbackId,

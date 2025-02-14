@@ -16,4 +16,6 @@ interface FeedbackRepository : JpaRepository<Feedback, Long> {
     fun findFeedbacksByOwnerId(ownerId: Long): List<Feedback>
 
     fun findFeedbackByUserId(userId: Long):Feedback?
+
+    fun findFeedbacksByUserId(userId: Long): List<Feedback>?
 }
