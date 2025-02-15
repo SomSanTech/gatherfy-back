@@ -90,12 +90,13 @@ class AnswerService(
         try {
             val user = userRepository.findByUsername(username)
 
-            val feedback = feedbackRepository.findFeedbackByUserId(user?.users_id!!)
+            val question = questionRepository.findById(createAnswerDTO.questionId)
+                .orElseThrow { EntityNotFoundException("Question id ${createAnswerDTO.questionId} does not exist") }
+
+            val feedback = feedbackRepository.findFeedbackByUserIdAndEventId(user?.users_id!!, question.eventId!!)
             if(feedback === null){
                 throw EntityNotFoundException("User do not feedback this event yet.")
             }
-            val question = questionRepository.findById(createAnswerDTO.questionId)
-                .orElseThrow { EntityNotFoundException("Question id ${createAnswerDTO.questionId} does not exist") }
             val userRegistration = registrationRepository.findRegistrationsByUserIdAndEventId(user.users_id!!.toInt(),
                 feedback.eventId!!.toInt()
             )
