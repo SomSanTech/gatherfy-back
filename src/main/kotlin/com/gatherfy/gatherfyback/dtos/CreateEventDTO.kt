@@ -3,15 +3,18 @@ package com.gatherfy.gatherfyback.dtos
 import jakarta.validation.constraints.Future
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
 
 data class CreateEventDTO (
     @field:NotNull(message = "Event name is required")
     @field:NotBlank(message = "Name must not be blank")
+    @field:Size(max = 150)
     var event_name: String?,
 
     @field:NotNull(message = "Event description is required")
     @field:NotBlank(message = "Description must not be blank")
+    @field:Size(max = 160)
     var event_desc: String?,
 
     @field:NotNull(message = "Event detail is required")
@@ -50,10 +53,12 @@ data class CreateEventDTO (
 
     @field:NotNull(message = "Event slug is required")
     @field:NotBlank(message = "Slug must not be blank")
+    @field:Size(max = 100)
     var event_slug: String?,
 
     @field:NotNull(message = "Event image is required")
     @field:NotBlank(message = "Image must not be blank")
+    @field:Size(max = 100)
     var event_image: String?,
     var event_owner: Long?,
 

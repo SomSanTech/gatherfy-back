@@ -106,7 +106,6 @@ class AnswerService(
                     question=question,
                     feedback = feedback,
                     questionId = createAnswerDTO.questionId,
-                    eventId = feedback.eventId!!,
                     answerText = createAnswerDTO.answerText,
                     feedbackId = feedback.feedbackId!!,
                 )
@@ -128,7 +127,6 @@ class AnswerService(
             answerId = answer.answerId,
             feedbackId = answer.feedback.feedbackId,
             questionId = answer.question.questionId,
-            eventId = answer.eventId,
             questionText = answer.question.questionText,
             answerText = answer.answerText,
         )

@@ -15,9 +15,6 @@ data class Answer(
     @Column(name = "question_id", insertable = false,updatable = false)
     var questionId: Long,
 
-    @Column(name = "event_id", nullable = false)
-    var eventId: Long,
-
     @Column(name = "answer_text")
     var answerText: String?,
 

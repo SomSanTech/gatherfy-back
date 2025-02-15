@@ -181,6 +181,10 @@ class RegistrationService(
             val event = eventRepository.findById(eventId)
                 .orElseThrow { EntityNotFoundException("Event id $eventId does not exist") }
 
+            if(registrationRepository.findRegistrationsByEventId(eventId).count() == event.event_capacity.toInt()){
+                throw ConflictException("This event has reached full capacity")
+            }
+
             // Check for existing registration to prevent duplicates
             val existingRegistration = registrationRepository.findByEventIdAndUserId(
                 eventId,
@@ -201,6 +205,9 @@ class RegistrationService(
 
             val savedRegistration = registrationRepository.save(registration)
             emailSenderService.sendRegistrationConfirmation(event,user)
+            if(registrationRepository.findRegistrationsByEventId(eventId).count() == event.event_capacity.toInt()){
+                event.event_status = "full"
+            }
             return toRegistrationDTO(savedRegistration)
         } catch (e: EntityNotFoundException) {
             throw EntityNotFoundException(e.message)

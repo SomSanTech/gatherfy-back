@@ -2,13 +2,16 @@ package com.gatherfy.gatherfyback.dtos
 
 import jakarta.validation.constraints.Future
 import jakarta.validation.constraints.Pattern
+import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
 
 data class EditEventDTO(
     @field:Pattern(regexp = "\\S.*", message = "Name must not be blank")
+    @field:Size(max = 150)
     var event_name: String?,
 
     @field:Pattern(regexp = "\\S.*",message = "Description must not be blank")
+    @field:Size(max = 160)
     var event_desc: String?,
 
     @field:Pattern(regexp = "\\S.*",message = "Detail must not be blank")
@@ -37,9 +40,11 @@ data class EditEventDTO(
     var event_capacity: Long?,
 
     @field:Pattern(regexp = "\\S.*",message = "Slug must not be blank")
+    @field:Size(max = 100)
     var event_slug: String?,
 
     @field:Pattern(regexp = "\\S.*",message = "Image must not be blank")
+    @field:Size(max = 100)
     var event_image: String?,
 
     var tags: List<Long>?,
