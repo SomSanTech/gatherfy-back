@@ -15,4 +15,6 @@ interface SubscriptionRepository: JpaRepository <Subscription, Long> {
     fun findAllByUserId(userId: Long): List<Subscription>?
 
     fun findSubscriptionsByTagIdIn(tagId: List<Long?>): List<Subscription>?
+
+    fun findSubscriptionsByUserId(userId: Long): List<Subscription>?
 }

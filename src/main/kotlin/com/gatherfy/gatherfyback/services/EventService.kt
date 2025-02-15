@@ -13,11 +13,14 @@ import com.gatherfy.gatherfyback.repositories.UserRepository
 import org.springframework.beans.factory.annotation.Value
 import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
+import org.springframework.core.MethodParameter
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.validation.BeanPropertyBindingResult
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.server.ResponseStatusException
+import java.lang.reflect.Method
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -221,47 +224,63 @@ class EventService(
         }
     }
 
-    fun createEventWithAuth(username: String, event: CreateEventDTO): Event {
+    fun createEventWithAuth(username: String, eventDto: CreateEventDTO): Event {
         try {
             val user = userRepository.findByUsername(username)
-            val duplicateEventName = eventRepository.findDuplicateEventName(event.event_name!!)
-            val duplicateSlug = eventRepository.findDuplicateSlug(event.event_slug!!)
-            val slugPattern = event.event_slug!!.matches("^[a-z0-9]+(-[a-z0-9]+)*\$".toRegex())
+            val duplicateEventName = eventRepository.findDuplicateEventName(eventDto.event_name!!)
+            val duplicateSlug = eventRepository.findDuplicateSlug(eventDto.event_slug!!)
+            val slugPattern = eventDto.event_slug!!.matches("^[a-z0-9]+(-[a-z0-9]+)*\$".toRegex())
+
+            val bindingResult = BeanPropertyBindingResult(eventDto, "eventDto") // Collect validation errors
 
             if(duplicateEventName != null){
-                throw ConflictException("Event name already taken")
+                bindingResult.rejectValue("event_name", "EVENT_NAME_INVALID", "Event name already taken")
             }
-            else if(duplicateSlug != null){
-                throw ConflictException("Event slug already taken")
+            if(duplicateSlug != null){
+                bindingResult.rejectValue("event_slug", "EVENT_SLUG_INVALID", "Event slug already taken")
             }
-            else if(!slugPattern){
-                throw BadRequestException("Slug should match pattern example-event-slug")
+            if(!slugPattern){
+                bindingResult.rejectValue("event_slug", "EVENT_SLUG_INVALID", "Event slug should match pattern example-event-slug")
+            }
+            if(eventDto.event_start_date!!.isAfter(eventDto.event_end_date)){
+                bindingResult.rejectValue("event_start_date", "START_DATE_INVALID", "Event start date must be before event end date")
+            }
+            if(eventDto.event_ticket_start_date!!.isAfter(eventDto.event_ticket_end_date)){
+                bindingResult.rejectValue("event_ticket_start_date", "TICKET_START_DATE_INVALID", "Event ticket start date must be before event ticket end date")
+            }
+            if(!eventDto.event_start_date!!.isAfter(eventDto.event_ticket_start_date) && !eventDto.event_start_date!!.isAfter(eventDto.event_ticket_end_date)){
+                bindingResult.rejectValue("event_ticket_start_date", "TICKET_START_DATE_INVALID", "Event start date must be after event ticket start-end date")
+            }
+            if (bindingResult.hasErrors()) {
+                val method: Method = this::class.java.getDeclaredMethod("createEvent", CreateEventDTO::class.java)
+                val methodParameter = MethodParameter(method, 0) // Create a valid MethodParameter
+                throw MethodArgumentNotValidException(methodParameter, bindingResult)
             }
             else{
                 val evente = Event(
                     event_id = null,
-                    event_name = event.event_name!!,
-                    event_desc = event.event_desc!!,
-                    event_detail = event.event_detail!!,
-                    event_start_date = event.event_start_date!!,
-                    event_end_date = event.event_end_date!!,
-                    event_ticket_start_date = event.event_ticket_start_date!!,
-                    event_ticket_end_date = event.event_ticket_end_date,
-                    event_registration_goal = event.event_registration_goal,
-                    event_location = event.event_location!!,
-                    event_google_map = event.event_google_map!!,
-                    event_capacity = event.event_capacity!!,
-                    event_slug = event.event_slug!!,
-                    event_image = event.event_image!!,
+                    event_name = eventDto.event_name!!,
+                    event_desc = eventDto.event_desc!!,
+                    event_detail = eventDto.event_detail!!,
+                    event_start_date = eventDto.event_start_date!!,
+                    event_end_date = eventDto.event_end_date!!,
+                    event_ticket_start_date = eventDto.event_ticket_start_date!!,
+                    event_ticket_end_date = eventDto.event_ticket_end_date,
+                    event_registration_goal = eventDto.event_registration_goal,
+                    event_location = eventDto.event_location!!,
+                    event_google_map = eventDto.event_google_map!!,
+                    event_capacity = eventDto.event_capacity!!,
+                    event_slug = eventDto.event_slug!!,
+                    event_image = eventDto.event_image!!,
                     event_owner = user?.users_id!!,
                     created_at = LocalDateTime.now(),
                     event_status = "soon"
                 )
                 val savedEvent = eventRepository.save(evente)
-                if (event.tags!!.isNotEmpty()) {
+                if (eventDto.tags!!.isNotEmpty()) {
 //                    eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
                     // Explicitly refresh and set tags
-                    val updatedTags = tagRepository.findAllById(event.tags!!)
+                    val updatedTags = tagRepository.findAllById(eventDto.tags!!)
                     savedEvent.tags = updatedTags.toMutableList()
                     eventRepository.save(savedEvent) // Ensure Hibernate knows about it
                 }
@@ -272,14 +291,12 @@ class EventService(
             throw ConflictException(e.message!!)
         } catch (e: BadRequestException) {
             throw BadRequestException(e.message)
-        } catch (e: Exception) {
-            throw RuntimeException("An unexpected error occurred: ${e.message}")
         }
     }
     // Helper method for additional validation
 //    private fun validateEvent(event: CreateEventDTO) {
 //        if (event.event_start_date != null && event.event_end_date != null) {
-//            if (event.event_start_date.isAfter(event.event_end_date)) {
+//            if (event.event_start_date!!.isAfter(event.event_end_date)) {
 //                throw IllegalArgumentException("Event start date must be before the end date")
 //            }
 //        }
@@ -330,11 +347,12 @@ class EventService(
             if(exitingEvent === null){
                 throw EntityNotFoundException("Event id $eventId does not exist")
             }
+            val bindingResult = BeanPropertyBindingResult(updateData, "updateData") // Collect validation errors
 
             if(!updateData.event_name.isNullOrBlank()){
                 val duplicateEventName = eventRepository.findDuplicateEventName(updateData.event_name!!)
                 if(duplicateEventName != null && duplicateEventName.event_id != eventId){
-                    throw ConflictException("Event name already taken")
+                    bindingResult.rejectValue("event_name", "EVENT_NAME_INVALID", "Event name already taken")
                 }
             }
             if(!updateData.event_slug.isNullOrBlank()){
@@ -342,59 +360,113 @@ class EventService(
                 val slugPattern = updateData.event_slug!!.matches("^[a-z0-9]+(-[a-z0-9]+)*\$".toRegex())
 
                 if(duplicateSlug != null && duplicateSlug.event_id != eventId){
-                    throw ConflictException("Event slug already taken")
+                    bindingResult.rejectValue("event_slug", "EVENT_SLUG_INVALID", "Event slug already taken")
                 }
                 else if(!slugPattern){
-                    throw BadRequestException("Slug should match pattern example-event-slug")
+                    bindingResult.rejectValue("event_slug", "EVENT_SLUG_INVALID", "Event slug should match pattern example-event-slug")
                 }
             }
             val changes = mutableListOf<String>()
-            if(updateData.event_start_date != null && exitingEvent.event_start_date != updateData.event_start_date){
+            if (updateData.event_start_date != null && updateData.event_end_date != null) {
+                if (updateData.event_start_date!!.isAfter(updateData.event_end_date)) {
+                    bindingResult.rejectValue(
+                        "event_start_date",
+                        "START_DATE_INVALID",
+                        "Event start date must be before event end date"
+                    )
+                }
+                if(!updateData.event_start_date!!.isAfter(exitingEvent.event_ticket_start_date) && !updateData.event_start_date!!.isAfter(exitingEvent.event_ticket_end_date)){
+                    bindingResult.rejectValue(
+                        "event_start_date",
+                        "START_DATE_INVALID",
+                        "Event start date must be after event ticket start-end date")
+                }
+            }
+            if (updateData.event_ticket_start_date != null && updateData.event_ticket_end_date != null) {
+                if (updateData.event_ticket_start_date!!.isAfter(updateData.event_ticket_end_date)) {
+                    bindingResult.rejectValue(
+                        "event_ticket_start_date",
+                        "TICKET_START_DATE_INVALID",
+                        "Event ticket start date must be before event ticket end date"
+                    )
+                }
+                if(!exitingEvent.event_start_date.isAfter(updateData.event_ticket_start_date) && !exitingEvent.event_start_date.isAfter(updateData.event_ticket_end_date)){
+                    bindingResult.rejectValue(
+                        "event_ticket_start_date",
+                        "TICKET_START_DATE_INVALID",
+                        "Event ticket start-end date must be before event start date ")
+                }
+            }
+//            if(!updateData.event_start_date!!.isAfter(updateData.event_ticket_start_date) && !updateData.event_start_date!!.isAfter(updateData.event_ticket_end_date)){
+//                bindingResult.rejectValue("event_ticket_start_date", "TICKET_START_DATE_INVALID", "Event start date must be after event ticket start-end date")
+//            }
+
+            if(updateData.event_start_date != null && updateData.event_end_date == null && exitingEvent.event_start_date != updateData.event_start_date){
+                if (updateData.event_start_date!!.isAfter(exitingEvent.event_end_date)) {
+                    bindingResult.rejectValue(
+                        "event_start_date",
+                        "START_DATE_INVALID",
+                        "Event start date must be before event end date"
+                    )
+                }
                 val formatDateTime = updateData.event_start_date!!.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
                 changes.add("New Start Date/Time: $formatDateTime")
             }
-            if(updateData.event_end_date != null &&exitingEvent.event_end_date != updateData.event_end_date){
+            if(updateData.event_end_date != null && updateData.event_start_date == null && exitingEvent.event_end_date != updateData.event_end_date){
+                if (exitingEvent.event_start_date.isAfter(updateData.event_end_date)) {
+                    bindingResult.rejectValue(
+                        "event_start_date",
+                        "START_DATE_INVALID",
+                        "Event start date must be before event end date"
+                    )
+                }
                 val formatDateTime = updateData.event_end_date!!.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
                 changes.add("New End Date/Time: $formatDateTime")
             }
             if(updateData.event_location != null &&exitingEvent.event_location != updateData.event_location){
                 changes.add("New Location: ${updateData.event_location}")
             }
-            val updateEvent = exitingEvent.copy(
-                event_name = updateData.event_name ?: exitingEvent.event_name,
-                event_desc = updateData.event_desc ?: exitingEvent.event_desc,
-                event_detail = updateData.event_detail ?: exitingEvent.event_detail,
-                event_start_date = updateData.event_start_date ?: exitingEvent.event_start_date,
-                event_end_date = updateData.event_end_date ?: exitingEvent.event_end_date,
-                event_ticket_start_date = updateData.event_ticket_start_date ?: exitingEvent.event_ticket_start_date,
-                event_ticket_end_date = updateData.event_ticket_end_date ?: exitingEvent.event_ticket_end_date,
-                event_registration_goal = updateData.event_registration_goal ?: exitingEvent.event_registration_goal ,
-                event_location = updateData.event_location ?: exitingEvent.event_location,
-                event_google_map = updateData.event_google_map ?: exitingEvent.event_google_map,
-                event_capacity = updateData.event_capacity ?: exitingEvent.event_capacity,
-                event_slug = updateData.event_slug ?: exitingEvent.event_slug,
-                event_image = updateData.event_image ?: exitingEvent.event_image
-            )
+            if (bindingResult.hasErrors()) {
+                val method: Method = this::class.java.getDeclaredMethod("updateEventPartialField",String::class.java,Long::class.java, EditEventDTO::class.java)
+                val methodParameter = MethodParameter(method, 0) // Create a valid MethodParameter
+                throw MethodArgumentNotValidException(methodParameter, bindingResult)
+            } else {
+                val updateEvent = exitingEvent.copy(
+                    event_name = updateData.event_name ?: exitingEvent.event_name,
+                    event_desc = updateData.event_desc ?: exitingEvent.event_desc,
+                    event_detail = updateData.event_detail ?: exitingEvent.event_detail,
+                    event_start_date = updateData.event_start_date ?: exitingEvent.event_start_date,
+                    event_end_date = updateData.event_end_date ?: exitingEvent.event_end_date,
+                    event_ticket_start_date = updateData.event_ticket_start_date
+                        ?: exitingEvent.event_ticket_start_date,
+                    event_ticket_end_date = updateData.event_ticket_end_date ?: exitingEvent.event_ticket_end_date,
+                    event_registration_goal = updateData.event_registration_goal
+                        ?: exitingEvent.event_registration_goal,
+                    event_location = updateData.event_location ?: exitingEvent.event_location,
+                    event_google_map = updateData.event_google_map ?: exitingEvent.event_google_map,
+                    event_capacity = updateData.event_capacity ?: exitingEvent.event_capacity,
+                    event_slug = updateData.event_slug ?: exitingEvent.event_slug,
+                    event_image = updateData.event_image ?: exitingEvent.event_image
+                )
 
-            val updatedEvent = eventRepository.save(updateEvent)
+                val updatedEvent = eventRepository.save(updateEvent)
 
-            if (updateData.tags != null) {
-                eventTagService.updatedTag(updatedEvent.event_id!!, updateData.tags!!)
+                if (updateData.tags != null) {
+                    eventTagService.updatedTag(updatedEvent.event_id!!, updateData.tags!!)
+                }
+                // If there are changes, send an email
+                if (changes.isNotEmpty()) {
+                    val notificationMessage = changes.joinToString("\n") // Combine all changes
+                    emailSenderService.sendUpdatedEventBatchEmails(updatedEvent, notificationMessage)
+                }
+                return updatedEvent
             }
-            // If there are changes, send an email
-            if (changes.isNotEmpty()) {
-                val notificationMessage = changes.joinToString("\n") // Combine all changes
-                emailSenderService.sendUpdatedEventBatchEmails(updatedEvent, notificationMessage)
-            }
-            return updatedEvent
         } catch (e: ConflictException) {
             throw ConflictException(e.message!!)
         } catch (e: EntityNotFoundException) {
             throw EntityNotFoundException(e.message)
         } catch (e: BadRequestException) {
             throw BadRequestException(e.message)
-        } catch (e: Exception) {
-            throw RuntimeException("An unexpected error occurred: ${e.message}")
         }
     }
 

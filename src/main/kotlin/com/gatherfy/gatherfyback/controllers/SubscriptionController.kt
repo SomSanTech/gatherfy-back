@@ -49,4 +49,12 @@ class SubscriptionController(
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
         return subscriptionService.deleteSubscription(username, tagId)
     }
+
+    @GetMapping("/v1/subscribed")
+    fun getTagsAlreadySubscribed(
+        @RequestHeader("Authorization")token: String
+    ): Map<String, List<Long>> {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return subscriptionService.getTagsAlreadySubscribed(username)
+    }
 }

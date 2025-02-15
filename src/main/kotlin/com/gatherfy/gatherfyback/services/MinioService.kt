@@ -42,9 +42,9 @@ class MinioService(
             if(!isBucketExist){
                 throw EntityNotFoundException("Bucket $bucket is not exist")
             }
-            if(!isObjectExist(bucket, objectName)){
-                throw EntityNotFoundException("File $objectName is not exist")
-            }
+//            if(!isObjectExist(bucket, objectName)){
+//                throw EntityNotFoundException("File $objectName is not exist")
+//            }
             minioClient.removeObject(
                 RemoveObjectArgs.builder()
                     .bucket(bucket)

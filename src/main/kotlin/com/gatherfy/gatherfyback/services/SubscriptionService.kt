@@ -67,4 +67,10 @@ class SubscriptionService(
             throw RuntimeException("An unexpected error occurred: ${e.message}")
         }
     }
+
+    fun getTagsAlreadySubscribed(username: String): Map<String, List<Long>>{
+        val user = userRepository.findByUsername(username)
+        val tagList = subscriptionRepository.findSubscriptionsByUserId(user?.users_id!!)
+        return mapOf("tagId" to tagList!!.map { it.tagId })
+    }
 }
