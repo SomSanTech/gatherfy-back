@@ -410,7 +410,7 @@ class EventService(
                     )
                 }
                 val formatDateTime = updateData.event_start_date!!.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
-                changes.add("New Start Date/Time: $formatDateTime")
+                changes.add("&#128198; New Start Date/Time: $formatDateTime")
             }
             if(updateData.event_end_date != null && updateData.event_start_date == null && exitingEvent.event_end_date != updateData.event_end_date){
                 if (exitingEvent.event_start_date.isAfter(updateData.event_end_date)) {
@@ -421,10 +421,10 @@ class EventService(
                     )
                 }
                 val formatDateTime = updateData.event_end_date!!.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
-                changes.add("New End Date/Time: $formatDateTime")
+                changes.add("&#128198; New End Date/Time: $formatDateTime")
             }
             if(updateData.event_location != null &&exitingEvent.event_location != updateData.event_location){
-                changes.add("New Location: ${updateData.event_location}")
+                changes.add("&#128205; New Location: ${updateData.event_location}")
             }
             if (bindingResult.hasErrors()) {
                 val method: Method = this::class.java.getDeclaredMethod("updateEventPartialField",String::class.java,Long::class.java, EditEventDTO::class.java)
