@@ -492,6 +492,7 @@ class EventService(
             if(exitingEvent === null){
                 throw EntityNotFoundException("Event id $eventId does not exist")
             }
+            emailSenderService.dequeueEmailNewEvent(exitingEvent)
             val existingEventTags = eventTagRepository.findAllByEvent(exitingEvent)
             eventTagRepository.deleteAll(existingEventTags)
             minioService.deleteFile("thumbnails",exitingEvent.event_image)

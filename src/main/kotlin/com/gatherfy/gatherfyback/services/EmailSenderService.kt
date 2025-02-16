@@ -33,7 +33,10 @@ class EmailSenderService(
 
     fun enqueueEmailNewEvent(event: Event){
         pendingEmailsNewEvent.add(event)
-        println(event)
+    }
+
+    fun dequeueEmailNewEvent(event: Event){
+        pendingEmailsNewEvent.remove(event)
     }
 
 //    fun enqueueEmailUpdatedEvent(event: Event){
@@ -41,7 +44,7 @@ class EmailSenderService(
 //        println(event)
 //    }
 
-    // Runs every day at 8 AM
+    // Runs every day at 12 AM
     @Scheduled(cron = "\${scheduler.email-new-event-notification-cron}")
     fun processQueuedEmailsNewEvents() {
         if (pendingEmailsNewEvent.isEmpty()) return
@@ -88,8 +91,8 @@ class EmailSenderService(
         // Send emails
         for ((email, eventList) in userEmailMap) {
             buildEmailNewEvent(eventList, email)
+            println(email)
         }
-        println(userEmailMap)
     }
 
     @Async

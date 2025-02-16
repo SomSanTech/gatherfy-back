@@ -37,8 +37,8 @@ class UserService(
 
     fun createUser(userDto: CreateUserDTO): UserDTO {
         try{
-            val existingUsername = userRepository.findByUsername(userDto.username)
-            val existingEmail = userRepository.findByEmail(userDto.email)
+            val existingUsername = userRepository.findByUsername(userDto.username!!)
+            val existingEmail = userRepository.findByEmail(userDto.email!!)
 
             val bindingResult = BeanPropertyBindingResult(userDto, "userDto") // Collect validation errors
 
@@ -53,10 +53,10 @@ class UserService(
             val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=.*])(?=\\S+\$).{8,}".toRegex()
             val emailPattern = "^[^@]+@[^@]+\\.[^@]+(\\.[^@]+)*\$".toRegex()
 
-            if (!userDto.email.matches(emailPattern)) {
+            if (!userDto.email!!.matches(emailPattern)) {
                 bindingResult.rejectValue("email","EMAIL_INVALID", "Email wrong pattern")
             }
-            if (!userDto.password.matches(passwordPattern)) {
+            if (!userDto.password!!.matches(passwordPattern)) {
                 bindingResult.rejectValue("password","PASSWORD_INVALID","Password wrong pattern")
             }
 
@@ -68,15 +68,15 @@ class UserService(
             else {
                 val user = User(
                     users_id = null,
-                    users_firstname = userDto.firstname,
-                    users_lastname = userDto.lastname,
-                    username = userDto.username,
-                    users_gender = userDto.gender,
-                    users_email = userDto.email,
-                    users_phone = userDto.phone,
+                    users_firstname = userDto.firstname!!,
+                    users_lastname = userDto.lastname!!,
+                    username = userDto.username!!,
+                    users_gender = userDto.gender!!,
+                    users_email = userDto.email!!,
+                    users_phone = userDto.phone!!,
                     users_image = null,
-                    users_role = userDto.role,
-                    users_birthday = userDto.birthday,
+                    users_role = userDto.role!!,
+                    users_birthday = userDto.birthday!!,
                     users_age = null,
                     password = encoder.encode(userDto.password),
                     otp = generateOTP(),

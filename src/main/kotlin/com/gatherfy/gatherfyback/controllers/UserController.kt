@@ -8,6 +8,7 @@ import com.gatherfy.gatherfyback.entities.ResendOTPRequest
 import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.services.TokenService
 import com.gatherfy.gatherfyback.services.UserService
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
@@ -27,7 +28,7 @@ class UserController(
 ) {
 
     @PostMapping("/v1/signup")
-    fun createUser(@RequestBody user: CreateUserDTO): UserDTO{
+    fun createUser(@Valid @RequestBody user: CreateUserDTO): UserDTO{
         return userService.createUser(user)
     }
 
@@ -47,7 +48,7 @@ class UserController(
     }
 
     @PutMapping("/v1/profile")
-    fun editProfile(@RequestHeader("Authorization") token: String, @RequestBody userEdit: EditUserDTO): User? {
+    fun editProfile(@RequestHeader("Authorization") token: String,@Valid @RequestBody userEdit: EditUserDTO): User? {
         return userService.updateUser(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")),userEdit)
     }
 }

@@ -32,7 +32,6 @@ class ViewService(private val viewRepository: ViewRepository) {
 
     @Transactional
     fun recordEventView(eventId: Long): String {
-        println(eventId)
         val today = LocalDate.now()
         val result: Optional<View> = viewRepository.findByEventIdAndViewDate(eventId, today)
 

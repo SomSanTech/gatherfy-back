@@ -2,6 +2,7 @@ package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.Exception.AccessDeniedException
 import com.gatherfy.gatherfyback.Exception.ConflictException
+import com.gatherfy.gatherfyback.Exception.CustomUnauthorizedException
 import com.gatherfy.gatherfyback.dtos.CheckInDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationCreateDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationDTO
@@ -275,13 +276,17 @@ class RegistrationService(
 
     fun getCheckInToken(username: String, eventId: Long): RegistrationCheckin{
         try{
+            val user = userRepository.findByUsername(username)
             val isEventExist = eventRepository.findById(eventId)
             if(isEventExist.isEmpty){
                 throw EntityNotFoundException("Event id $eventId does not exist")
             }
-            val user = userRepository.findByUsername(username)
+            val isRegistration = registrationRepository.findRegistrationsByUserIdAndEventId(user?.users_id!!.toInt(), eventId.toInt())
+            if(isRegistration === null){
+                throw EntityNotFoundException("User not register to this event")
+            }
             val additionalClaims = mapOf(
-                "userId" to user!!.users_id,
+                "userId" to user.users_id,
                 "eventId" to eventId
             )
             val expirationDate = Date(System.currentTimeMillis() + 600000)
@@ -293,6 +298,10 @@ class RegistrationService(
     }
 
     fun CheckedInAttendee(token: String): RegistrationCreateDTO{
+        val isTokenExpired = tokenService.isTokenExpired(token)
+        if (isTokenExpired) {
+            throw CustomUnauthorizedException("Check-in token has expired. Please generate a new token.")
+        }
         val userId = (tokenService.getAdditionalClaims(token, "userId")) as Int
         val eventId = (tokenService.getAdditionalClaims(token, "eventId")) as Int
         val registration = registrationRepository.findRegistrationsByUserIdAndEventId(userId,eventId)
