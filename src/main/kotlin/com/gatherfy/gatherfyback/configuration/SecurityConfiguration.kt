@@ -47,9 +47,6 @@ class SecurityConfiguration(
                         "/api/v1/resend-otp")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
-                        "/api/v1/tickets")
-                    .hasRole("Attendee")
-                    .requestMatchers(HttpMethod.GET,
                         "/api/v1/registrations",
                         "/api/v2/registrations",
                         "/api/v1/registrations/**",
@@ -60,12 +57,6 @@ class SecurityConfiguration(
                         "/api/v2/feedbacks/**",
                         "/api/v1/answers/**")
                     .hasRole("Organization")
-                    .requestMatchers(HttpMethod.POST,
-                        "/api/v2/registrations",
-                        "/api/v1/check-in/**",
-                        "/api/v1/answers",
-                        "/api/v2/feedbacks")
-                    .hasRole("Attendee")
                     .requestMatchers(HttpMethod.POST,
                         "/api/v1/questions",
                         "/api/v2/questions",
