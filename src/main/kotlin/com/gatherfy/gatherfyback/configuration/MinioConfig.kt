@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class MinioConfig {
-    @Value("\${minio.url}")
-    private lateinit var minioUrl: String
+//    @Value("\${minio.url}")
+//    private lateinit var minioUrl: String
 
     @Value("\${minio.accessKey}")
     private lateinit var accessKey: String
@@ -16,11 +16,11 @@ class MinioConfig {
     @Value("\${minio.secretKey}")
     private lateinit var secretKey: String
 
-    @Bean
-    fun minioClient(): MinioClient {
-        return MinioClient.builder()
-            .endpoint(minioUrl)
-            .credentials(accessKey, secretKey)
-            .build()
-    }
+//    @Bean
+//    fun minioClient(): MinioClient {
+//        return MinioClient.builder()
+//            .endpoint(minioUrl)
+//            .credentials(accessKey, secretKey)
+//            .build()
+//    }
 }

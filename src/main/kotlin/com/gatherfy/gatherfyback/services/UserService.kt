@@ -232,7 +232,7 @@ class UserService(
     }
 
     fun getImageUrl(bucketName: String, objectName: String): String {
-        return "$minioDomain/$bucketName/$objectName"
+        return "$minioDomain/us1/minio/$bucketName/$objectName"
     }
 }
 
