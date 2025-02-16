@@ -15,7 +15,7 @@ class CorsConfiguration : WebMvcConfigurer {
         val configuration = org.springframework.web.cors.CorsConfiguration()
 
         // อนุญาตเฉพาะ origin ที่กำหนด
-        configuration.allowedOrigins = listOf("http://localhost:3000","https://capstone24.sit.kmutt.ac.th/us1") // เปลี่ยนเป็น origin จริงเมื่ออยู่ใน production
+        configuration.allowedOrigins = listOf("http://localhost:3000","https://capstone24.sit.kmutt.ac.th") // เปลี่ยนเป็น origin จริงเมื่ออยู่ใน production
 
         // อนุญาต credentials (สำหรับส่งคุกกี้, authorization headers, เป็นต้น)
         configuration.allowCredentials = true
