@@ -271,7 +271,7 @@ class RegistrationService(
         )
     }
     fun getImageUrl(bucketName: String, objectName: String): String {
-        return "$minioDomain/us1/minio/$bucketName/$objectName"
+        return "$minioDomain/$bucketName/$objectName"
     }
 
     fun getCheckInToken(username: String, eventId: Long): RegistrationCheckin{
