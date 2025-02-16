@@ -397,9 +397,6 @@ class EventService(
                         "Event ticket start-end date must be before event start date ")
                 }
             }
-//            if(!updateData.event_start_date!!.isAfter(updateData.event_ticket_start_date) && !updateData.event_start_date!!.isAfter(updateData.event_ticket_end_date)){
-//                bindingResult.rejectValue("event_ticket_start_date", "TICKET_START_DATE_INVALID", "Event start date must be after event ticket start-end date")
-//            }
 
             if(updateData.event_start_date != null && updateData.event_end_date == null && exitingEvent.event_start_date != updateData.event_start_date){
                 if (updateData.event_start_date!!.isAfter(exitingEvent.event_end_date)) {
@@ -415,13 +412,31 @@ class EventService(
             if(updateData.event_end_date != null && updateData.event_start_date == null && exitingEvent.event_end_date != updateData.event_end_date){
                 if (exitingEvent.event_start_date.isAfter(updateData.event_end_date)) {
                     bindingResult.rejectValue(
-                        "event_start_date",
+                        "event_ticket_start_date",
                         "START_DATE_INVALID",
                         "Event start date must be before event end date"
                     )
                 }
                 val formatDateTime = updateData.event_end_date!!.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
                 changes.add("&#128198; New End Date/Time: $formatDateTime")
+            }
+            if(updateData.event_ticket_start_date != null && updateData.event_ticket_end_date == null && exitingEvent.event_ticket_start_date != updateData.event_ticket_start_date){
+                if (updateData.event_ticket_start_date!!.isAfter(exitingEvent.event_ticket_end_date)) {
+                    bindingResult.rejectValue(
+                        "event_ticket_end_date",
+                        "TICKET_END_DATE_INVALID",
+                        "Event ticket start date must be after ticket end date"
+                    )
+                }
+            }
+            if(updateData.event_ticket_end_date != null && updateData.event_ticket_start_date == null && exitingEvent.event_ticket_end_date != updateData.event_ticket_end_date){
+                if (updateData.event_ticket_end_date!!.isBefore(exitingEvent.event_ticket_start_date)) {
+                    bindingResult.rejectValue(
+                        "event_end_date",
+                        "TICKET_START_DATE_INVALID",
+                        "Event ticket start date must be after ticket end date"
+                    )
+                }
             }
             if(updateData.event_location != null &&exitingEvent.event_location != updateData.event_location){
                 changes.add("&#128205; New Location: ${updateData.event_location}")
