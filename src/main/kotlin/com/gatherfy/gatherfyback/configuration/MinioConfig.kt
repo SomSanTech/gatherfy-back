@@ -19,7 +19,7 @@ class MinioConfig {
     @Bean
     fun minioClient(): MinioClient {
         return MinioClient.builder()
-            .endpoint(minioUrl)
+            .endpoint(minioUrl,9000,false)
             .credentials(accessKey, secretKey)
             .build()
     }
