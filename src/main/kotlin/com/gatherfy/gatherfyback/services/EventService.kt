@@ -586,6 +586,6 @@ class EventService(
     }
 
     fun getImageUrl(bucketName: String, objectName: String): String {
-        return "$minioDomain/us1/minio/$bucketName/$objectName"
+        return "$minioDomain/$bucketName/$objectName"
     }
 }
