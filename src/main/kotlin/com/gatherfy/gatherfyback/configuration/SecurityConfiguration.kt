@@ -9,8 +9,11 @@ import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.oauth2.jwt.JwtDecoder
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.DefaultSecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 
 @Configuration
 @EnableWebSecurity
@@ -35,6 +38,8 @@ class SecurityConfiguration(
                         "/api/v1/tags",
                         "/api/v1/views",
                         "/api/v1/questions/event/**",
+                        "/api/google",
+                        "/api/profile"
                         )
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
@@ -44,7 +49,8 @@ class SecurityConfiguration(
                         "/api/refresh",
                         "/api/v1/signup",
                         "/api/v1/verify-otp",
-                        "/api/v1/resend-otp")
+                        "/api/v1/resend-otp",
+                        )
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
                         "/api/v1/registrations",
@@ -93,4 +99,18 @@ class SecurityConfiguration(
             .addFilterBefore(jwtAuthenticationFilter,UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
     }
+//    @Bean
+//    fun customJwtAuthenticationConverter(): JwtAuthenticationConverter {
+//        val converter = JwtAuthenticationConverter()
+//        converter.setJwtGrantedAuthoritiesConverter { jwt ->
+//            val authoritiesConverter = org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter()
+//            authoritiesConverter.convert(jwt)
+//        }
+//        return converter
+//    }
+//
+//    @Bean
+//    fun jwtDecoder(): JwtDecoder {
+//        return NimbusJwtDecoder.withJwkSetUri("https://www.googleapis.com/oauth2/v3/certs").build()
+//    }
 }

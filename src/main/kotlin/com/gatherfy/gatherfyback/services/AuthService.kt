@@ -43,10 +43,58 @@ class AuthService(
         }
     }
 
+    fun authenticationGoogle(token: String): AuthResponse?{
+        try{
+            val accountEmail = tokenService.getAllClaimsFromToken(token)!!["email"]
+            val accountExist = userRepository.findByEmail(accountEmail.toString())
+            val accountUsername = userRepository.findUsernameByEmail(accountEmail.toString())
+
+
+            println("accountEmail = $accountEmail")
+            println("accountExist = $accountExist")
+            println("accountUsername = $accountUsername")
+
+            println("Before loadUserByUsername")
+            val user = userDetailsService.loadUserByUsername(accountUsername)
+            println("After loadUserByUsername")
+
+            println("user = $accountUsername")
+            println("accountExist data: $accountUsername")
+
+            val additionalClaims = mapOf(
+                "role" to accountExist!!.users_role
+            )
+            val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
+            val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
+            return AuthResponse(accessToken, refreshToken)
+        } catch (e: CustomUnauthorizedException ){
+            throw CustomUnauthorizedException(e.message!!)
+        }
+    }
+
     fun getAccessTokenExpiration():Date{
         return Date(System.currentTimeMillis() + jwtProperties.accessTokenExpiration)
     }
     fun getRefreshTokenExpiration():Date{
         return Date(System.currentTimeMillis() + jwtProperties.refreshTokenExpiration)
     }
+
+    fun identifyGoogleUser(token: String): Any?{
+        val accountEmail = tokenService.getAllClaimsFromToken(token)!!["email"]
+        val accountExist = userRepository.findByEmail(accountEmail.toString())
+        println("accountEmail = $accountEmail")
+        println("accountExist = $accountExist")
+        if(accountExist !== null){
+//            val user = userDetailsService.loadUserByUsername(accountExist.username)
+//            val additionalClaims = mapOf(
+//                "role" to accountExist.users_role
+//            )
+//            val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
+//            val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
+//            return AuthResponse(accessToken, refreshToken)
+            return accountExist.username
+        }
+        return null
+    }
+
 }

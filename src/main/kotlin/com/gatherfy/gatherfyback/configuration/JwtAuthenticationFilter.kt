@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.configuration
 
+import com.gatherfy.gatherfyback.services.AuthService
 import com.gatherfy.gatherfyback.services.TokenService
 import com.gatherfy.gatherfyback.services.CustomUserDetailsService
 import jakarta.servlet.FilterChain
@@ -15,7 +16,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthenticationFilter(
     private val tokenService: TokenService,
-    private val userDetailsService: CustomUserDetailsService
+    private val userDetailsService: CustomUserDetailsService,
+    private val authService: AuthService
 ): OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -29,7 +31,14 @@ class JwtAuthenticationFilter(
             return
         }
         val jwtToken = authHeader!!.extractTokenValue()
-        val username = tokenService.getUsernameFromToken(jwtToken)
+        val header = tokenService.getJwtHeader(jwtToken)
+        val alg = header!!["alg"] as? String
+        val username = if(alg.equals("RS256")){
+            authService.identifyGoogleUser(jwtToken).toString()
+        } else{
+            tokenService.getUsernameFromToken(jwtToken)
+        }
+
         if(username != null && SecurityContextHolder.getContext().authentication == null){
             val foundUser = userDetailsService.loadUserByUsername(username)
             if(tokenService.isValidToken(jwtToken,foundUser)){

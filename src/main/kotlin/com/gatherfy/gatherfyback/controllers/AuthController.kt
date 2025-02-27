@@ -41,6 +41,13 @@ class AuthController(
         return authResponse
     }
 
+    @PostMapping("/v1/login/google")
+    fun createAuthenticationGoogle(
+        @RequestHeader("Authorization") token: String,
+    ): AuthResponse? {
+        return authService.authenticationGoogle(token)
+    }
+
 //    @PostMapping("/v1/refresh")
 //    fun refreshToken(request: HttpServletRequest): Any {
 //        val refreshToken = request.getHeader("Authorization").replace("Bearer ", "")
