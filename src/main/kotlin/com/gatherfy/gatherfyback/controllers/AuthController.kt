@@ -44,8 +44,8 @@ class AuthController(
     @PostMapping("/v1/login/google")
     fun createAuthenticationGoogle(
         @RequestHeader("Authorization") token: String,
-    ): AuthResponse? {
-        return authService.authenticationGoogle(token)
+    ): Any {
+        return authService.authenticationGoogle(token.substringAfter("Bearer "))
     }
 
 //    @PostMapping("/v1/refresh")

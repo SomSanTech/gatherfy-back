@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import io.minio.http.Method
 import jakarta.persistence.EntityNotFoundException
+import java.net.HttpURLConnection
+import java.net.URL
 
 @Service
 class MinioService(
@@ -75,5 +77,36 @@ class MinioService(
                 .method(Method.GET)
                 .build()
         )
+    }
+
+    fun uploadImageFromUrl(bucket: String, imageUrl: String, fileNameWithoutExt: String): String{
+        val url = URL(imageUrl)
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "GET"
+
+        // ✅ Extract content type (e.g., "image/jpeg", "image/png")
+        val contentType = connection.contentType ?: "image/jpeg" // Default to JPEG if unknown
+
+        // ✅ Determine file extension based on content type
+        val fileExtension = when (contentType) {
+            "image/jpeg" -> ".jpg"
+            "image/png" -> ".png"
+            "image/webp" -> ".webp"
+            else -> ".jpg" // Default to .jpg for unknown types
+        }
+
+        val fileName = fileNameWithoutExt + fileExtension
+
+        connection.inputStream.use { inputStream ->
+            minioClient.putObject(
+                PutObjectArgs.builder()
+                    .bucket(bucket)
+                    .`object`(fileName)
+                    .contentType(contentType)
+                    .stream(inputStream, connection.contentLengthLong, -1)
+                    .build()
+            )
+        }
+        return fileName
     }
 }

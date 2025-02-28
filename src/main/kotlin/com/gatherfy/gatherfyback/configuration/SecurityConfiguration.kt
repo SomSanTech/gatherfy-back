@@ -43,13 +43,14 @@ class SecurityConfiguration(
                         )
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
-                        "/api/v1/login",
+                        "/api/v1/login/**",
                         "/api/v1/signup",
                         "/api/v1/countView/**",
                         "/api/refresh",
                         "/api/v1/signup",
                         "/api/v1/verify-otp",
                         "/api/v1/resend-otp",
+                        "/api/v1/signup/google"
                         )
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
@@ -99,18 +100,4 @@ class SecurityConfiguration(
             .addFilterBefore(jwtAuthenticationFilter,UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
     }
-//    @Bean
-//    fun customJwtAuthenticationConverter(): JwtAuthenticationConverter {
-//        val converter = JwtAuthenticationConverter()
-//        converter.setJwtGrantedAuthoritiesConverter { jwt ->
-//            val authoritiesConverter = org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter()
-//            authoritiesConverter.convert(jwt)
-//        }
-//        return converter
-//    }
-//
-//    @Bean
-//    fun jwtDecoder(): JwtDecoder {
-//        return NimbusJwtDecoder.withJwkSetUri("https://www.googleapis.com/oauth2/v3/certs").build()
-//    }
 }

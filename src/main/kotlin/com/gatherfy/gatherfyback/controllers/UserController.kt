@@ -1,6 +1,7 @@
 package com.gatherfy.gatherfyback.controllers
 
 import com.gatherfy.gatherfyback.dtos.CreateUserDTO
+import com.gatherfy.gatherfyback.dtos.CreateUserGoogleDTO
 import com.gatherfy.gatherfyback.dtos.EditUserDTO
 import com.gatherfy.gatherfyback.dtos.UserDTO
 import com.gatherfy.gatherfyback.entities.OTPVerificationRequest
@@ -50,5 +51,12 @@ class UserController(
     @PutMapping("/v1/profile")
     fun editProfile(@RequestHeader("Authorization") token: String,@Valid @RequestBody userEdit: EditUserDTO): User? {
         return userService.updateUser(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")),userEdit)
+    }
+
+    @PostMapping("/v1/signup/google")
+    fun createAuthenticationGoogle(
+        @RequestBody createUserGoogle: CreateUserGoogleDTO
+    ): UserDTO {
+        return userService.createUserFromGoogle(createUserGoogle)
     }
 }

@@ -4,7 +4,6 @@ import com.gatherfy.gatherfyback.properties.JwtProperties
 import com.gatherfy.gatherfyback.properties.MailSenderProperties
 import com.gatherfy.gatherfyback.repositories.UserRepository
 import com.gatherfy.gatherfyback.services.CustomUserDetailsService
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -19,11 +18,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.oauth2.client.registration.ClientRegistration
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
-import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository
-import org.springframework.security.oauth2.core.AuthorizationGrantType
-import org.springframework.web.client.RestTemplate
 import java.util.*
 
 
@@ -67,31 +61,4 @@ class Configuration(private val mailSenderProperties: MailSenderProperties) {
         properties["mail.smtp.starttls.enable"] = mailSenderProperties.starttlsEnable
         properties["mail.debug"] = mailSenderProperties.debug
     }
-
-//    // Google : OAuth2 setup
-//    @Value("\${spring.security.oauth2.client.registration.google.client-id}")
-//    private lateinit var clientId: String
-//
-//    @Value("\${spring.security.oauth2.client.registration.google.client-secret}")
-//    private lateinit var clientSecret: String
-//    @Bean
-//    fun clientRegistrationRepository(): ClientRegistrationRepository{
-//        val googleClientRegistration = ClientRegistration.withRegistrationId("google")
-//            .clientId(clientId)
-//            .clientSecret(clientSecret)
-//            .redirectUri("http://localhost:4040/login/oauth2/code/google")
-//            .authorizationUri("https://accounts.google.com/o/oauth2/auth")
-//            .tokenUri("https://oauth2.googleapis.com/token")
-//            .userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
-//            .userNameAttributeName("sub")
-//            .scope("openid","profile", "email", "https://www.googleapis.com/auth/user.birthday.read") // ✅ Correctly formatted
-//            .clientName("Google")
-//            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-//            .build()
-//        return InMemoryClientRegistrationRepository(googleClientRegistration)
-//    }
-//    @Bean
-//    fun restTemplate(): RestTemplate {
-//        return RestTemplate()
-//    }
 }

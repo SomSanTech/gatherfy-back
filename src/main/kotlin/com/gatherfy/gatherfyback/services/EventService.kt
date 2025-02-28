@@ -549,7 +549,7 @@ class EventService(
             slug = event.event_slug,
             image = getImageUrl("thumbnails", event.event_image),
             owner = ownerEventName,
-            tags = event.tags?.map { toTagDTO(it) })
+            tags = event.tags.map { toTagDTO(it) })
     }
 
     fun toTagDTO(tag: Tag): Tag {

@@ -16,10 +16,18 @@ class MinioConfig {
     @Value("\${minio.secretKey}")
     private lateinit var secretKey: String
 
+//    @Bean
+//    fun minioClient(): MinioClient {
+//        return MinioClient.builder()
+//            .endpoint(minioUrl,9000,false)
+//            .credentials(accessKey, secretKey)
+//            .build()
+//    }
+
     @Bean
     fun minioClient(): MinioClient {
         return MinioClient.builder()
-            .endpoint(minioUrl,9000,false)
+            .endpoint(minioUrl)
             .credentials(accessKey, secretKey)
             .build()
     }

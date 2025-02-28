@@ -1,5 +1,7 @@
 package com.gatherfy.gatherfyback.configuration
 
+import com.gatherfy.gatherfyback.Exception.CustomUnauthorizedException
+import com.gatherfy.gatherfyback.repositories.UserRepository
 import com.gatherfy.gatherfyback.services.AuthService
 import com.gatherfy.gatherfyback.services.TokenService
 import com.gatherfy.gatherfyback.services.CustomUserDetailsService
@@ -17,7 +19,8 @@ import org.springframework.web.filter.OncePerRequestFilter
 class JwtAuthenticationFilter(
     private val tokenService: TokenService,
     private val userDetailsService: CustomUserDetailsService,
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val userRepository: UserRepository
 ): OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -25,26 +28,40 @@ class JwtAuthenticationFilter(
         response: HttpServletResponse,
         chain: FilterChain
     ){
-        val authHeader: String? = request.getHeader("Authorization")
-        if (authHeader.doesNotContainBearerToken()) {
-            chain.doFilter(request, response)
-            return
-        }
-        val jwtToken = authHeader!!.extractTokenValue()
-        val header = tokenService.getJwtHeader(jwtToken)
-        val alg = header!!["alg"] as? String
-        val username = if(alg.equals("RS256")){
-            authService.identifyGoogleUser(jwtToken).toString()
-        } else{
-            tokenService.getUsernameFromToken(jwtToken)
-        }
-
-        if(username != null && SecurityContextHolder.getContext().authentication == null){
-            val foundUser = userDetailsService.loadUserByUsername(username)
-            if(tokenService.isValidToken(jwtToken,foundUser)){
-                updateContext(foundUser, request)
+        try{
+            val authHeader: String? = request.getHeader("Authorization")
+            if (authHeader.doesNotContainBearerToken()) {
+                chain.doFilter(request, response)
+                return
             }
-            chain.doFilter(request,response)
+            val jwtToken = authHeader!!.extractTokenValue()
+            val header = tokenService.getJwtHeader(jwtToken)
+
+            val alg = header!!["alg"] as? String
+            val username = if(alg.equals("RS256")){
+                authService.identifyGoogleUser(jwtToken).toString()
+            } else{
+                tokenService.getUsernameFromToken(jwtToken)
+            }
+
+            if(username != null && SecurityContextHolder.getContext().authentication == null){
+                val userExist = userRepository.findByUsername(username)
+                if(userExist == null) {
+                    // If user is not found
+                    throw CustomUnauthorizedException("User do not have an account yet")
+                }else{
+                    val foundUser = userDetailsService.loadUserByUsername(username)
+
+                    if(tokenService.isValidToken(jwtToken,foundUser)){
+                        updateContext(foundUser, request)
+                    }
+                    chain.doFilter(request,response)
+                }
+            }
+        }catch (e: CustomUnauthorizedException){
+            response.status = HttpServletResponse.SC_UNAUTHORIZED
+            response.writer.write("Unauthorized: ${e.message}")
+            response.writer.flush()
         }
     }
 

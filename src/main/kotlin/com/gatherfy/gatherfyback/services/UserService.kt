@@ -2,6 +2,7 @@ package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.Exception.ConflictException
 import com.gatherfy.gatherfyback.dtos.CreateUserDTO
+import com.gatherfy.gatherfyback.dtos.CreateUserGoogleDTO
 import com.gatherfy.gatherfyback.dtos.EditUserDTO
 import com.gatherfy.gatherfyback.dtos.UserDTO
 import com.gatherfy.gatherfyback.entities.OTPVerificationRequest
@@ -17,9 +18,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.validation.BeanPropertyBindingResult
-import org.springframework.validation.BindingResult
-import org.springframework.validation.BindingResultUtils
-import org.springframework.validation.ObjectError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.server.ResponseStatusException
 import java.lang.reflect.Method
@@ -29,7 +27,9 @@ import java.time.LocalDateTime
 class UserService(
     private val userRepository: UserRepository,
     private val encoder: PasswordEncoder,
-    private val emailSenderService: EmailSenderService
+    private val emailSenderService: EmailSenderService,
+    private val tokenService: TokenService,
+    private val minioService: MinioService
 ) {
 
     @Value("\${minio.domain}")
@@ -87,6 +87,40 @@ class UserService(
                 emailSenderService.sendOtpVerification(savedUser)
                 return toUserDto(savedUser)
             }
+        } catch (e: ResponseStatusException){
+            throw e
+        } catch (e: BadRequestException){
+            throw BadRequestException(e.message)
+        } catch (e: ConflictException){
+            throw ConflictException(e.message!!)
+        }
+    }
+
+    fun createUserFromGoogle(createUserGoogle: CreateUserGoogleDTO): UserDTO {
+        try{
+            val accountDetail = tokenService.getAllClaimsFromToken(createUserGoogle.token)
+
+            val profilePicture = minioService.uploadImageFromUrl("profiles", accountDetail!!["picture"].toString(),accountDetail["name"].toString())
+
+            val user = User(
+                users_id = null,
+                users_firstname = accountDetail["given_name"].toString(),
+                users_lastname = accountDetail["family_name"].toString(),
+                username = accountDetail["name"].toString(),
+                users_gender = null,
+                users_email = accountDetail["email"].toString(),
+                users_phone = null,
+                users_image = profilePicture,
+                users_role = createUserGoogle.role,
+                users_birthday = null,
+                users_age = null,
+                password = null,
+                otp = null,
+                is_verified = true,
+                otp_expires_at = null
+            )
+            val savedUser = userRepository.save(user)
+            return toUserDto(savedUser)
         } catch (e: ResponseStatusException){
             throw e
         } catch (e: BadRequestException){

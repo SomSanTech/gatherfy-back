@@ -9,11 +9,11 @@ class RegistrationDTO(
     val firstName: String,
     val lastName: String,
     val username: String,
-    val gender: String,
-    val dateOfBirth: LocalDateTime,
+    val gender: String?,
+    val dateOfBirth: LocalDateTime?,
     val age: Long?,
     val email: String,
-    val phone: String,
+    val phone: String?,
     val status: String,
     val createdAt: ZonedDateTime
 )

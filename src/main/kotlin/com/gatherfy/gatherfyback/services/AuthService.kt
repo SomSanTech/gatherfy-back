@@ -16,7 +16,7 @@ class AuthService(
     private val userDetailsService: CustomUserDetailsService,
     private val tokenService: TokenService,
     private val jwtProperties: JwtProperties,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
 
     fun authentication(authRequest: AuthRequest): AuthResponse {
@@ -43,30 +43,25 @@ class AuthService(
         }
     }
 
-    fun authenticationGoogle(token: String): AuthResponse?{
+    fun authenticationGoogle(token: String): Any {
         try{
             val accountEmail = tokenService.getAllClaimsFromToken(token)!!["email"]
             val accountExist = userRepository.findByEmail(accountEmail.toString())
-            val accountUsername = userRepository.findUsernameByEmail(accountEmail.toString())
 
+            if(accountExist !== null){
+                val user = userDetailsService.loadUserByUsername(accountExist.username)
 
-            println("accountEmail = $accountEmail")
-            println("accountExist = $accountExist")
-            println("accountUsername = $accountUsername")
+                println("user = ${accountExist.username}")
 
-            println("Before loadUserByUsername")
-            val user = userDetailsService.loadUserByUsername(accountUsername)
-            println("After loadUserByUsername")
-
-            println("user = $accountUsername")
-            println("accountExist data: $accountUsername")
-
-            val additionalClaims = mapOf(
-                "role" to accountExist!!.users_role
-            )
-            val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
-            val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
-            return AuthResponse(accessToken, refreshToken)
+                val additionalClaims = mapOf(
+                    "role" to accountExist.users_role
+                )
+                val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
+                val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
+                return AuthResponse(accessToken, refreshToken)
+            } else{
+                throw CustomUnauthorizedException("User do not have an account yet")
+            }
         } catch (e: CustomUnauthorizedException ){
             throw CustomUnauthorizedException(e.message!!)
         }
@@ -82,16 +77,7 @@ class AuthService(
     fun identifyGoogleUser(token: String): Any?{
         val accountEmail = tokenService.getAllClaimsFromToken(token)!!["email"]
         val accountExist = userRepository.findByEmail(accountEmail.toString())
-        println("accountEmail = $accountEmail")
-        println("accountExist = $accountExist")
         if(accountExist !== null){
-//            val user = userDetailsService.loadUserByUsername(accountExist.username)
-//            val additionalClaims = mapOf(
-//                "role" to accountExist.users_role
-//            )
-//            val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
-//            val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
-//            return AuthResponse(accessToken, refreshToken)
             return accountExist.username
         }
         return null
