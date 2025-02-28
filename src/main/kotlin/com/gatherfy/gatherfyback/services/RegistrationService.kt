@@ -3,7 +3,7 @@ package com.gatherfy.gatherfyback.services
 import com.gatherfy.gatherfyback.Exception.AccessDeniedException
 import com.gatherfy.gatherfyback.Exception.ConflictException
 import com.gatherfy.gatherfyback.Exception.CustomUnauthorizedException
-import com.gatherfy.gatherfyback.dtos.CheckInDTO
+import com.gatherfy.gatherfyback.dtos.TokenDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationCreateDTO
 import com.gatherfy.gatherfyback.dtos.RegistrationDTO
 import com.gatherfy.gatherfyback.dtos.UserRegistrationDTO
@@ -309,11 +309,11 @@ class RegistrationService(
         return toCheckedInDto(updatedRegistration)
     }
 
-    fun CheckedInAttendeeWithAuth(username: String, checkInDto: CheckInDTO): RegistrationCreateDTO{
+    fun CheckedInAttendeeWithAuth(username: String, tokenDto: TokenDTO): RegistrationCreateDTO{
         try{
             val user = userRepository.findByUsername(username)
-            val userId = (tokenService.getAdditionalClaims(checkInDto.qrToken, "userId")) as Int
-            val eventId = (tokenService.getAdditionalClaims(checkInDto.qrToken, "eventId")) as Int
+            val userId = (tokenService.getAdditionalClaims(tokenDto.qrToken, "userId")) as Int
+            val eventId = (tokenService.getAdditionalClaims(tokenDto.qrToken, "eventId")) as Int
             val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId.toLong())
 
             if(existEvent === null){

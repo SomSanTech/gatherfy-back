@@ -1,5 +1,8 @@
 package com.gatherfy.gatherfyback.configuration
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.gatherfy.gatherfyback.properties.JwtProperties
 import com.gatherfy.gatherfyback.properties.MailSenderProperties
 import com.gatherfy.gatherfyback.repositories.UserRepository

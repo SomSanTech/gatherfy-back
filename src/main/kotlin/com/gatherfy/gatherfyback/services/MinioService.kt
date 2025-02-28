@@ -14,6 +14,9 @@ import java.net.URL
 class MinioService(
     private val minioClient: MinioClient,
 ) {
+    @Value("\${minio.domain}")
+    private lateinit var minioDomain: String
+
     fun uploadFile(bucket: String, file: MultipartFile): String {
         try{
 //            val fileName = "${System.currentTimeMillis()}-${file.originalFilename}"
@@ -108,5 +111,9 @@ class MinioService(
             )
         }
         return fileName
+    }
+
+    fun getImageUrl(bucketName: String, objectName: String): String {
+        return "$minioDomain/$bucketName/$objectName"
     }
 }

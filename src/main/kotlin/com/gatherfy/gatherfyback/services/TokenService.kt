@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
+import org.checkerframework.checker.units.qual.A
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
 import java.io.InputStreamReader
@@ -61,7 +62,7 @@ class TokenService(
     fun generateCheckInToken(
         username: String,
         expirationDate: Date,
-        additionalClaims: Map<String, Long?> = emptyMap()
+        additionalClaims: Map<String, Any?> = emptyMap()
     ): String = Jwts.builder()
         .claims()
         .subject(username)

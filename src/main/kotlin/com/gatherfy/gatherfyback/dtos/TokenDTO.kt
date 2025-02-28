@@ -1,5 +1,5 @@
 package com.gatherfy.gatherfyback.dtos
 
-data class CheckInDTO(
+data class TokenDTO(
     var qrToken: String
 )
