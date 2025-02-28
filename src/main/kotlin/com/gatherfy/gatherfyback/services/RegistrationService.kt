@@ -14,7 +14,6 @@ import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
-import org.checkerframework.checker.units.qual.A
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
