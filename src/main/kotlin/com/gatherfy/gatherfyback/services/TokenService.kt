@@ -73,10 +73,6 @@ class TokenService(
         .signWith(secretKey,SignatureAlgorithm.HS256)
         .compact()
 
-    fun getAllClaimsFromTokenHS256(token: String): Claims{
-        val parser = Jwts.parser().verifyWith(secretKey).build()
-        return parser.parseSignedClaims(token).payload
-    }
     fun getAllClaimsFromToken(token: String): Claims? {
         // Get the header to check the algorithm
         val header = getJwtHeader(token)
@@ -137,7 +133,7 @@ class TokenService(
         val json = JSONObject(response)
         val keys = json.getJSONArray("keys")
 
-        val key = keys.getJSONObject(0) // Assume first key (you may need to check `kid`)
+        val key = keys.getJSONObject(1) // Assume first key (you may need to check `kid`)
         val n = key.getString("n") // Modulus
         val e = key.getString("e") // Exponent
 

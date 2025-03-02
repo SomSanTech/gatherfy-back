@@ -2,6 +2,7 @@ package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.dtos.TokenDTO
 import com.gatherfy.gatherfyback.entities.Contact
+import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.repositories.ContactRepository
 import com.gatherfy.gatherfyback.repositories.SocialRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
@@ -49,7 +50,7 @@ class ShareContactService(
         val contactUser = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"]
         val savedContact = Contact(
             userId = user?.users_id!!,
-            saveUserId = contactUser as Int
+            saveUserId = contactUser as User
         )
         contactRepository.save(savedContact)
     }

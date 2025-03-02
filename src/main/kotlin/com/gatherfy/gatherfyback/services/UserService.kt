@@ -1,10 +1,7 @@
 package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.Exception.ConflictException
-import com.gatherfy.gatherfyback.dtos.CreateUserDTO
-import com.gatherfy.gatherfyback.dtos.CreateUserGoogleDTO
-import com.gatherfy.gatherfyback.dtos.EditUserDTO
-import com.gatherfy.gatherfyback.dtos.UserDTO
+import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.OTPVerificationRequest
 import com.gatherfy.gatherfyback.entities.ResendOTPRequest
 import com.gatherfy.gatherfyback.entities.User
@@ -267,6 +264,32 @@ class UserService(
 
     fun getImageUrl(bucketName: String, objectName: String): String {
         return "$minioDomain/$bucketName/$objectName"
+    }
+
+    fun updatePassword(username: String, editPasswordDTO: EditPasswordDTO): ResponseEntity<String>{
+        val encoder = BCryptPasswordEncoder(16)
+        val user = userRepository.findByUsername(username)
+        val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=.*])(?=\\S+\$).{8,}".toRegex()
+        if(verifyPassword(editPasswordDTO.currentPassword,user?.password!!)){
+            if(!editPasswordDTO.newPassword.matches(passwordPattern)){
+                throw BadRequestException("Password wrong pattern")
+            }
+            user.password = encoder.encode(editPasswordDTO.newPassword)
+            userRepository.save(user)
+        }
+        return ResponseEntity.ok("Password updated successfully!")
+    }
+
+    fun verifyPassword(rawPassword: String, encodedPassword: String): Boolean{
+        try{
+            val encoder = BCryptPasswordEncoder(16)
+            if(!encoder.matches(rawPassword,encodedPassword)){
+                throw BadRequestException("Password not match")
+            }
+            return true
+        }catch (e: BadRequestException){
+            throw BadRequestException(e.message)
+        }
     }
 }
 
