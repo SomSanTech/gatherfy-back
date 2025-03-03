@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface SocialRepository: JpaRepository <Social,Long> {
     fun findSocialsByUserId(userId: Long): List<Social>
+    fun findSocialBySocialId(socialId: Long): Social
 }

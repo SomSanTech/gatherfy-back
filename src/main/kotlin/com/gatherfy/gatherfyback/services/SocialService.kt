@@ -16,15 +16,27 @@ class SocialService(
         return socialRepository.findSocialsByUserId(user?.users_id!!)
     }
 
-    fun createSocialLink(username: String, createSocialDTO: CreateSocialDTO){
+    fun updateSocialLink(username: String, createSocialDTO: CreateSocialDTO){
         val user = userRepository.findByUsername(username)
-        val socials = createSocialDTO.socialLinks.map {
-            Social(
-                userId = user?.users_id!!,
-                socialPlatform = it.socialPlatform,
-                socialLink = it.socialLink
-            )
+        val existingSocials = socialRepository.findSocialsByUserId(user?.users_id!!).map { it.socialId  }
+        val deleteMissing = existingSocials.filter { it !in createSocialDTO.socialLinks.map { ex -> ex.socialId }  }
+        if(deleteMissing.isNotEmpty()){
+            socialRepository.deleteAllById(deleteMissing)
         }
-        socialRepository.saveAll(socials)
+        val socials = createSocialDTO.socialLinks.forEach {
+            if (it.socialId == null){
+                val newSocial = Social(
+                    userId = user?.users_id!!,
+                    socialPlatform = it.socialPlatform,
+                    socialLink = it.socialLink
+                )
+                socialRepository.save(newSocial)
+            } else {
+                val existSocial = socialRepository.findSocialBySocialId(it.socialId!!)
+                existSocial.socialPlatform = it.socialPlatform
+                existSocial.socialLink = it.socialLink
+                socialRepository.save(existSocial)
+            }
+        }
     }
 }
