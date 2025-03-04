@@ -9,11 +9,8 @@ import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.DefaultSecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 
 @Configuration
 @EnableWebSecurity
@@ -69,7 +66,7 @@ class SecurityConfiguration(
                         "/api/v2/questions",
                         "/api/v1/backoffice/**",
                         "/api/v2/backoffice/**",
-                        "/api/v1/files/**")
+                        )
                     .hasRole("Organization")
                     .requestMatchers(HttpMethod.PUT,
                         "/api/v1/questions/**",
@@ -83,7 +80,6 @@ class SecurityConfiguration(
                         "/api/v1/questions/**",
                         "/api/v1/backoffice/**",
                         "/api/v2/backoffice/**",
-                        "/api/v1/files/**",
                         "/api/v1/feedbacks/**",)
                     .hasRole("Organization")
                     .anyRequest()
