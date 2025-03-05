@@ -23,5 +23,6 @@ data class User(
     var users_birthday: LocalDateTime?,
     var otp: String?,
     var is_verified: Boolean,
-    var otp_expires_at: LocalDateTime?
+    var otp_expires_at: LocalDateTime?,
+    var auth_provider: String?
 )

@@ -78,7 +78,8 @@ class UserService(
                     password = encoder.encode(userDto.password),
                     otp = generateOTP(),
                     is_verified = false,
-                    otp_expires_at = LocalDateTime.now().plusMinutes(5)
+                    otp_expires_at = LocalDateTime.now().plusMinutes(5),
+                    auth_provider = "local"
                 )
                 val savedUser = userRepository.save(user)
                 emailSenderService.sendOtpVerification(savedUser)
@@ -114,7 +115,8 @@ class UserService(
                 password = null,
                 otp = null,
                 is_verified = true,
-                otp_expires_at = null
+                otp_expires_at = null,
+                auth_provider = "google"
             )
             val savedUser = userRepository.save(user)
             return toUserDto(savedUser)
@@ -258,6 +260,7 @@ class UserService(
             email = user.users_email,
             phone = user.users_phone,
             role = user.users_role,
+            authProvider = user.auth_provider!!
 //            image = getImageUrl("profiles", user.users_image!!)
         )
     }
