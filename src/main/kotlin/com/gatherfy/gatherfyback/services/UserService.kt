@@ -79,7 +79,7 @@ class UserService(
                     otp = generateOTP(),
                     is_verified = false,
                     otp_expires_at = LocalDateTime.now().plusMinutes(5),
-                    auth_provider = "local"
+                    auth_provider = "system"
                 )
                 val savedUser = userRepository.save(user)
                 emailSenderService.sendOtpVerification(savedUser)
