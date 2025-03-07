@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.controllers
 
+import com.gatherfy.gatherfyback.dtos.ContactSavedDTO
 import com.gatherfy.gatherfyback.dtos.TokenDTO
 import com.gatherfy.gatherfyback.entities.Contact
 import com.gatherfy.gatherfyback.services.ShareContactService
@@ -24,7 +25,7 @@ class ShareContactController(
 ) {
 
     @GetMapping("/v1/contacts")
-    fun getAllContacts(@RequestHeader("Authorization") token: String): List<Contact>?{
+    fun getAllContacts(@RequestHeader("Authorization") token: String): List<ContactSavedDTO>?{
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
         return shareContactService.getContacts(username)
     }

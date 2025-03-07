@@ -1,11 +1,12 @@
 package com.gatherfy.gatherfyback.services
 
+import com.gatherfy.gatherfyback.dtos.ContactSavedDTO
+import com.gatherfy.gatherfyback.dtos.MutualEvent
+import com.gatherfy.gatherfyback.dtos.Social
 import com.gatherfy.gatherfyback.dtos.TokenDTO
 import com.gatherfy.gatherfyback.entities.Contact
 import com.gatherfy.gatherfyback.entities.User
-import com.gatherfy.gatherfyback.repositories.ContactRepository
-import com.gatherfy.gatherfyback.repositories.SocialRepository
-import com.gatherfy.gatherfyback.repositories.UserRepository
+import com.gatherfy.gatherfyback.repositories.*
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
 import java.util.*
@@ -16,13 +17,40 @@ class ShareContactService(
     private val socialRepository: SocialRepository,
     private val tokenService: TokenService,
     private val minioService: MinioService,
-    private val contactRepository: ContactRepository
+    private val contactRepository: ContactRepository,
+    private val registrationRepository: RegistrationRepository,
 ) {
 
-    fun getContacts(username: String): List<Contact>? {
-        val user = userRepository.findByUsername(username)
-        val contacts = contactRepository.findContactsByUserId(user?.users_id!!)
-        return contacts
+    fun getContacts(username: String): List<ContactSavedDTO>? {
+        val user = userRepository.findByUsername(username) ?: return null
+        val contactList = contactRepository.findContactsByUserId(user.users_id!!)
+
+        return contactList?.map { contact ->
+            val socials = socialRepository.findSocialsByUserId(contact.saveUserId.users_id!!).map { socail ->
+                Social(
+                    socialPlatform = socail.socialPlatform,
+                    socialLink = socail.socialLink
+                )
+            }
+            val userRegistrations = registrationRepository.findRegistrationsByUserId(user.users_id!!).map {
+                it.event.event_name to it.event.event_slug
+            }
+            val contactRegistrations = registrationRepository.findRegistrationsByUserId(contact.saveUserId.users_id!!).map {
+                it.event.event_name to it.event.event_slug
+            }
+            val mutualEvents = userRegistrations.intersect(contactRegistrations).map { (eventName, eventSlug) ->
+                MutualEvent(
+                    eventName = eventName,
+                    eventSlug = eventSlug
+                )
+            }
+            ContactSavedDTO(
+                contactId = contact.contactId!!,
+                userProfile = contact.saveUserId,
+                userSocials = socials,
+                mutualEvents = mutualEvents
+            )
+        }
     }
 
     fun getContactToken(username: String): String{
