@@ -76,10 +76,11 @@ class ShareContactService(
 
     fun saveContact(username: String, tokenDTO: TokenDTO) {
         val user = userRepository.findByUsername(username)
-        val contactUser = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"]
+        val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Int
+        val contactUser = userRepository.findUserById(contactUserId.toLong())
         val savedContact = Contact(
             userId = user?.users_id!!,
-            saveUserId = contactUser as User
+            saveUserId = contactUser!!
         )
         contactRepository.save(savedContact)
     }
