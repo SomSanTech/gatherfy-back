@@ -44,9 +44,10 @@ class ShareContactService(
                     eventSlug = eventSlug
                 )
             }
+            val updateContactUser = contact.saveUserId.copy(users_image = minioService.getImageUrl("profiles",contact.saveUserId.users_image!!))
             ContactSavedDTO(
                 contactId = contact.contactId!!,
-                userProfile = contact.saveUserId,
+                userProfile = updateContactUser,
                 userSocials = socials,
                 mutualEvents = mutualEvents
             )
