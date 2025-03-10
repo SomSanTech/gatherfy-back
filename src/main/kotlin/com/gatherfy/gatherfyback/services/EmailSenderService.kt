@@ -13,6 +13,8 @@ import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.thymeleaf.TemplateEngine
+import org.thymeleaf.context.Context
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -21,11 +23,12 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 @Service
 class EmailSenderService(
-    private val emailSender: JavaMailSender,
+    private val javaMailSender: JavaMailSender,
     private val subscriptionRepository: SubscriptionRepository,
     private val userRepository: UserRepository,
     private val eventRepository: EventRepository,
     private val registrationRepository: RegistrationRepository,
+    val templateEngine: TemplateEngine
 ) {
 
     private val pendingEmailsNewEvent = ConcurrentLinkedQueue<Event>()
@@ -38,11 +41,6 @@ class EmailSenderService(
     fun dequeueEmailNewEvent(event: Event){
         pendingEmailsNewEvent.remove(event)
     }
-
-//    fun enqueueEmailUpdatedEvent(event: Event){
-//        pendingEmailsUpdatedEvent.add(event)
-//        println(event)
-//    }
 
     // Runs every day at 12 AM
     @Scheduled(cron = "\${scheduler.email-new-event-notification-cron}")
@@ -108,7 +106,7 @@ class EmailSenderService(
         events: List<Event>,
         targetEmail: String
     ){
-        val message: MimeMessage = emailSender.createMimeMessage()
+        val message: MimeMessage = javaMailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true, "UTF-8")
         helper.setSubject("A New Event Just Dropped! Don’t Miss Out!")
         helper.setTo(targetEmail)
@@ -146,48 +144,39 @@ class EmailSenderService(
         </html>
     """.trimIndent()
         helper.setText(htmlContent,true)
-        emailSender.send(message)
+        javaMailSender.send(message)
     }
 
+    fun sendEmail(subject: String, userEmail: String, template: String, context: Context ){
+        val message: MimeMessage = javaMailSender.createMimeMessage()
+        val helper = MimeMessageHelper(message, true,"UTF-8")
+        helper.setFrom("Gatherfy")
+        helper.setSubject(subject)
+        helper.setTo(userEmail)
 
+        val content = templateEngine.process(template, context)
+
+        helper.setText(content, true)
+        javaMailSender.send(message)
+    }
     @Async
     fun sendEmailFollowTag(tag: Tag, user: User) {
-//        val message = SimpleMailMessage()
-        val message: MimeMessage = emailSender.createMimeMessage()
-        val helper = MimeMessageHelper(message, true,"UTF-8")
-        helper.setSubject("Stay in the Loop! New Events You’ll Love Inside")
-        helper.setTo(user.users_email)
+//        val message: MimeMessage = javaMailSender.createMimeMessage()
+//        val helper = MimeMessageHelper(message, true,"UTF-8")
+//        helper.setFrom("Gatherfy")
+//        helper.setSubject("Stay in the Loop! New Events You’ll Love Inside")
+//        helper.setTo(user.users_email)
 
-        val htmlContent = """
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=Oooh+Baby&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
-    
-                <style>
-                    body { font-family: 'Poppins', Arial, sans-serif; }
-                    .container { padding: 20px; background-color: #f4f4f4; max-width:600px; }
-                    .content { background: white; padding: 20px; border-radius: 8px; }
-                    .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="content">
-                        <p>Hello ${user.username},</p>
-                        <p>You just unlocked a new world of events!  &#127881; <br>By following <strong>${tag.tag_title}</strong>, you will be the first to know when something exciting happens&#8722;whether it is a brand-new event, or an update.</p>
-                        <p>Get ready to explore, engage, and never miss out!</p>
-                        <p>&#128640; Stay tuned,</p>
-                        <p style="font-family: 'Oooh Baby';font-size: 24px;"><span style="color:#D71515">G</span>atherfy</p>
-                    </div>
-                </div>
-            </body>
-        </html>
-    """.trimIndent()
-        helper.setText(htmlContent,true)
-        emailSender.send(message)
+        val context = Context()
+        context.setVariable("username", user.username)
+        context.setVariable("tag", tag.tag_title)
+
+        val content = templateEngine.process("subscription.html", context)
+
+//        message.setText(content, true.toString())
+//        javaMailSender.send(message)
+
+        sendEmail("Stay in the Loop! New Events You’ll Love Inside", user.users_email, "subscription.html", context)
     }
 
     @Async
@@ -196,7 +185,7 @@ class EmailSenderService(
         user: User
     ) {
 //        val message = SimpleMailMessage()
-        val message: MimeMessage = emailSender.createMimeMessage()
+        val message: MimeMessage = javaMailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true,"UTF-8")
         helper.setSubject("All Set! You've Unfollowed ${tag.tag_title}")
         helper.setTo(user.users_email)
@@ -230,7 +219,7 @@ class EmailSenderService(
         </html>
     """.trimIndent()
         helper.setText(htmlContent,true)
-        emailSender.send(message)
+        javaMailSender.send(message)
     }
 
     @Scheduled(cron = "\${scheduler.email-reminder-notification-cron}")
@@ -248,7 +237,7 @@ class EmailSenderService(
     }
 
     fun buildReminderEmail(event: Event, user: User) {
-        val message: MimeMessage = emailSender.createMimeMessage()
+        val message: MimeMessage = javaMailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true,"UTF-8")
         helper.setSubject("Reminder: ${event.event_name} starts soon!")
         helper.setTo(user.users_email)
@@ -267,7 +256,7 @@ class EmailSenderService(
     """.trimIndent()
 
         helper.setText(htmlContent, true)
-        emailSender.send(message)
+        javaMailSender.send(message)
     }
 
     @Scheduled(cron = "\${scheduler.email-countdown-notification-cron}")
@@ -286,7 +275,7 @@ class EmailSenderService(
     }
 
     fun buildHourReminderEmail(event: Event, user: User) {
-        val message: MimeMessage = emailSender.createMimeMessage()
+        val message: MimeMessage = javaMailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true,"UTF-8")
         helper.setSubject("Reminder: ${event.event_name} starts soon!")
         helper.setTo(user.users_email)
@@ -303,33 +292,22 @@ class EmailSenderService(
     """.trimIndent()
 
         helper.setText(htmlContent, true)
-        emailSender.send(message)
+        javaMailSender.send(message)
     }
 
     @Async
     fun sendRegistrationConfirmation(event: Event, user: User) {
-        val message: MimeMessage = emailSender.createMimeMessage()
-        val helper = MimeMessageHelper(message, true,"UTF-8")
-        helper.setSubject("You're Registered for ${event.event_name}!")
-        helper.setTo(user.users_email)
-
         val formatStartDateTime = event.event_start_date.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
         val formatEndDateTime = event.event_end_date.format(DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm"))
 
-        val htmlContent = """
-            <html>
-                <body>
-                    <p>Hey ${user.username},</p>
-                    <p>&#127881; You've successfully registered for <b>${event.event_name}</b>!</p>
-                    <p><b>&#128198; Date:</b>  $formatStartDateTime - $formatEndDateTime</p>
-                    <p><b>&#128205; Location:</b> ${event.event_location}</p>
-                    <p>We’ll send you a reminder before the event starts.</p>
-                </body>
-            </html>
-        """.trimIndent()
+        val context = Context()
+        context.setVariable("username", user.username)
+        context.setVariable("event", event.event_name)
+        context.setVariable("formatStartDateTime",formatStartDateTime)
+        context.setVariable("formatEndDateTime",formatEndDateTime)
+        context.setVariable("location",event.event_location)
 
-        helper.setText(htmlContent, true)
-        emailSender.send(message)
+        sendEmail("You're Registered for ${event.event_name}!",user.users_email,"registration.html",context)
     }
 
     fun sendEmailCancelEvent(
@@ -337,7 +315,7 @@ class EmailSenderService(
         username: String,
         targetEmail: String
     ) {
-        val message: MimeMessage = emailSender.createMimeMessage()
+        val message: MimeMessage = javaMailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true,"UTF-8")
         helper.setSubject("[Gatherfy news] $event Has Been Cancelled")
         helper.setTo(targetEmail)
@@ -373,11 +351,11 @@ class EmailSenderService(
         </html>
     """.trimIndent()
         helper.setText(htmlContent,true)
-        emailSender.send(message)
+        javaMailSender.send(message)
     }
 
     fun buildUpdatedEventEmail(event: Event,changes: String ,user: User) {
-        val message: MimeMessage = emailSender.createMimeMessage()
+        val message: MimeMessage = javaMailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true,"UTF-8")
         helper.setSubject("Event Update Detected: ${event.event_name}")
         helper.setTo(user.users_email)
@@ -399,12 +377,12 @@ class EmailSenderService(
     """.trimIndent()
 
         helper.setText(htmlContent, true)
-        emailSender.send(message)
+        javaMailSender.send(message)
     }
 
     @Async
     fun sendOtpVerification(user: User) {
-        val message: MimeMessage = emailSender.createMimeMessage()
+        val message: MimeMessage = javaMailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true,"UTF-8")
         helper.setSubject("${user.otp} is your Gathefy verify code")
         helper.setTo(user.users_email)
@@ -419,7 +397,7 @@ class EmailSenderService(
         """.trimIndent()
 
         helper.setText(htmlContent, true)
-        emailSender.send(message)
+        javaMailSender.send(message)
     }
 
 }
