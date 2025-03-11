@@ -17,4 +17,12 @@ interface UserRepository: JpaRepository<User, Long> {
      fun findUserById(@Param("id") id: Long): User?
      @Query("SELECT u.username FROM users u WHERE u.users_email = :email")
      fun findUsernameByEmail(@Param("email") email: String): String
+     @Query("select distinct u from users u join subscriptions s on u.users_id = s.userId where s.tagId in :tagIds and u.email_new_events = true")
+     fun findFollowerByTagIdAndEnableEmailNewEvents(@Param("tagIds") tagIds: List<Long?>): List<User>
+     @Query("from users u join registrations r on u.users_id = r.userId where r.eventId = :eventId and u.email_reminders_day = true")
+     fun findParticipantsByEventIdAndEnableEmailReminderDay(@Param("eventId") eventId: Long): List<User>?
+     @Query("from users u join registrations r on u.users_id = r.userId where r.eventId = :eventId and u.email_reminders_hour = true")
+     fun findParticipantsByEventIdAndEnableEmailReminderHour(@Param("eventId") eventId: Long): List<User>?
+     @Query("from users u join registrations r on u.users_id = r.userId where r.eventId = :eventId and u.email_updated_events = true")
+     fun  findParticipantsByEventIdAndEnableEmailUpdatedEvent(@Param("eventId") eventId: Long): List<User>
 }

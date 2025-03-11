@@ -79,7 +79,11 @@ class UserService(
                     otp = generateOTP(),
                     is_verified = false,
                     otp_expires_at = LocalDateTime.now().plusMinutes(5),
-                    auth_provider = "system"
+                    auth_provider = "system",
+                    email_new_events = true,
+                    email_reminders_day = true,
+                    email_reminders_hour = true,
+                    email_updated_events = true
                 )
                 val savedUser = userRepository.save(user)
                 emailSenderService.sendOtpVerification(savedUser)
@@ -116,7 +120,11 @@ class UserService(
                 otp = null,
                 is_verified = true,
                 otp_expires_at = null,
-                auth_provider = "google"
+                auth_provider = "google",
+                email_new_events = true,
+                email_reminders_day = true,
+                email_reminders_hour = true,
+                email_updated_events = true
             )
             val savedUser = userRepository.save(user)
             return toUserDto(savedUser)
@@ -230,7 +238,11 @@ class UserService(
                 users_phone = userEdit.phone ?: userProfile.users_phone,
                 users_image = userEdit.image ?: userProfile.users_image,
                 users_birthday = userEdit.birthday ?: userProfile.users_birthday,
-                password = userEdit.password?.let { encoder.encode(it) } ?: userProfile.password
+                password = userEdit.password?.let { encoder.encode(it) } ?: userProfile.password,
+                email_new_events = userEdit.newEvents ?: userProfile.email_new_events,
+                email_reminders_day = userEdit.remindersDay ?: userProfile.email_reminders_day,
+                email_reminders_hour = userEdit.remindersHour ?: userProfile.email_reminders_hour,
+                email_updated_events = userEdit.updatedEvents ?: userProfile.email_updated_events
             )
             val updatedUser = userRepository.save(updateUser)
             return updatedUser

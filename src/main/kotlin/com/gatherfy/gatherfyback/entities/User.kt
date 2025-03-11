@@ -24,5 +24,9 @@ data class User(
     var otp: String?,
     var is_verified: Boolean,
     var otp_expires_at: LocalDateTime?,
-    var auth_provider: String?
-)
+    var auth_provider: String?,
+    var email_new_events: Boolean,
+    var email_reminders_day: Boolean,
+    var email_reminders_hour: Boolean,
+    var email_updated_events: Boolean,
+    )
