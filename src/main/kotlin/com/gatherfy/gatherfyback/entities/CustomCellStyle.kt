@@ -1,0 +1,13 @@
+package com.gatherfy.gatherfyback.entities
+
+enum class CustomCellStyle {
+    GREY_CENTERED_BOLD_ARIAL_WITH_BORDER,
+    RIGHT_ALIGNED,
+    RED_BOLD_ARIAL_WITH_BORDER,
+    RIGHT_ALIGNED_DATE_FORMAT,
+    BOLD_FONT_WITH_BACKGROUND,
+    HEADER,
+    NORMAL_ROW,
+    ALTERNATE_ROW,
+    BORDER_BOLD_CENTER
+}

@@ -263,7 +263,7 @@ class EmailSenderService(
         val now = LocalDateTime.now()
         val oneHourLater = now.plusHours(1).truncatedTo(ChronoUnit.MINUTES)
 
-        val upcomingEvents = eventRepository.findEventByStartingBetween(now, oneHourLater)
+        val upcomingEvents = eventRepository.findEventByStartingBetween(now.plusMinutes(1), oneHourLater)
         println(upcomingEvents)
         for (event in upcomingEvents){
             val notifiedParticipants = userRepository.findParticipantsByEventIdAndEnableEmailReminderHour(event.event_id!!)

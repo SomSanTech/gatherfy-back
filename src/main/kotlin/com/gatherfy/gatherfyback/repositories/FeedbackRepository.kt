@@ -18,4 +18,7 @@ interface FeedbackRepository : JpaRepository<Feedback, Long> {
     fun findFeedbackByUserIdAndEventId(userId: Long, eventId:Long):Feedback?
 
     fun findFeedbacksByUserId(userId: Long): List<Feedback>?
+
+    @Query("select COUNT(*) AS rating_count from feedbacks where eventId = :eventId group by feedbackRating order by feedbackRating desc")
+    fun countFeedbackRatingByEventId(eventId: Long): List<Long>
 }
