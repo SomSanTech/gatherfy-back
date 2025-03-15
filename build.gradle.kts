@@ -40,8 +40,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server") // ✅ Required for JWT authentication
 	implementation("com.nimbusds:nimbus-jose-jwt:9.37.2") // ✅ Supports RS256 verification
-	implementation ("org.json:json:20210307")
-	implementation("org.apache.poi:poi-ooxml:5.0.0")
+	implementation("org.json:json:20210307")
+	implementation("org.apache.poi:poi-ooxml:4.1.2")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	runtimeOnly("com.h2database:h2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
