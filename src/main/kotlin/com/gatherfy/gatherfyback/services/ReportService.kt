@@ -123,68 +123,67 @@ class ReportService(
 
         // Write data to Excel sheet (needed for the chart)
         val chartSheet = sheet // Using the same sheet
-        val lastColNum = sheet.getRow(1).lastCellNum.toInt()
+        val lastColNum = sheet.getRow(1)?.lastCellNum?.toInt()
+        if(lastColNum !== null){
+            // Collect nonzero rating data
+            val filteredRatings = mutableListOf<String>()
+            val filteredCounts = mutableListOf<Int>()
 
-        // Collect nonzero rating data
-        val filteredRatings = mutableListOf<String>()
-        val filteredCounts = mutableListOf<Int>()
-
-        val headers = listOf("Rating","Response Count")
-        headers.forEachIndexed { index, title ->
-            val row = chartSheet.getRow(startRow - 1 ) ?: chartSheet.createRow(startRow - 1)
-            row.heightInPoints = 22F
-            val cell = row.createCell(/* columnIndex = */ lastColNum + index + 1)
-            cell.setCellValue(title)
-            cell.cellStyle = style[CustomCellStyle.BORDER_BOLD_CENTER] as XSSFCellStyle?
-        }
-
-        for (i in 1..5) {
-            val row = chartSheet.getRow(startRow + i - 1) ?: chartSheet.createRow(startRow + i - 1)
-            row.heightInPoints = 22F
-            val colRating =  row.createCell(lastColNum + 1)
-            colRating.setCellValue(i.toDouble()) // Rating
-            colRating.cellStyle = style[CustomCellStyle.BORDER_CENTER] as XSSFCellStyle?
-            val colResponse = row.createCell(lastColNum + 2)
-            colResponse.setCellValue(ratingCounts[i - 1].toDouble()) // Count
-            colResponse.cellStyle = style[CustomCellStyle.BORDER_CENTER] as XSSFCellStyle?
-        }
-
-        for (row in startRow..(startRow + 4)) {
-            val rating = chartSheet.getRow(row)?.getCell(lastColNum + 1)?.numericCellValue?.toInt()
-            val count = chartSheet.getRow(row)?.getCell(lastColNum + 2)?.numericCellValue?.toInt()
-
-            if (count!! > 0) {
-                filteredRatings.add(rating.toString())
-                filteredCounts.add(count)
+            val headers = listOf("Rating","Response Count")
+            headers.forEachIndexed { index, title ->
+                val row = chartSheet.getRow(startRow - 1 ) ?: chartSheet.createRow(startRow - 1)
+                row.heightInPoints = 22F
+                val cell = row.createCell(/* columnIndex = */ lastColNum + index + 1)
+                cell.setCellValue(title)
+                cell.cellStyle = style[CustomCellStyle.BORDER_BOLD_CENTER] as XSSFCellStyle?
             }
-        }
 
-        sheet.setColumnWidth(lastColNum + 1, 256 * 20)
-        sheet.setColumnWidth(lastColNum + 2, 256 * 20)
+            for (i in 1..5) {
+                val row = chartSheet.getRow(startRow + i - 1) ?: chartSheet.createRow(startRow + i - 1)
+                row.heightInPoints = 22F
+                val colRating =  row.createCell(lastColNum + 1)
+                colRating.setCellValue(i.toDouble()) // Rating
+                colRating.cellStyle = style[CustomCellStyle.BORDER_CENTER] as XSSFCellStyle?
+                val colResponse = row.createCell(lastColNum + 2)
+                colResponse.setCellValue(ratingCounts[i - 1].toDouble()) // Count
+                colResponse.cellStyle = style[CustomCellStyle.BORDER_CENTER] as XSSFCellStyle?
+            }
 
-        val drawing = chartSheet.createDrawingPatriarch()
-        val anchor = drawing.createAnchor(0, 0, 0, 0, lastColNum + 4, startRow - 1 , lastColNum + 11, startRow + 12)
-        val chart = drawing.createChart(anchor)
-        chart.setTitleText(pieTitle)
-        chart.titleOverlay = false
+            for (row in startRow..(startRow + 4)) {
+                val rating = chartSheet.getRow(row)?.getCell(lastColNum + 1)?.numericCellValue?.toInt()
+                val count = chartSheet.getRow(row)?.getCell(lastColNum + 2)?.numericCellValue?.toInt()
 
-        // Create Data Sources from filtered data
-        val categoryDataSource = XDDFDataSourcesFactory.fromArray(filteredRatings.toTypedArray())
-        val valuesDataSource = XDDFDataSourcesFactory.fromArray(filteredCounts.toTypedArray())
+                if (count!! > 0) {
+                    filteredRatings.add(rating.toString())
+                    filteredCounts.add(count)
+                }
+            }
 
-        // Create Pie Chart Data
-        val pieChartData = chart.createData(ChartTypes.PIE, null, null)
-        val series = pieChartData.addSeries(categoryDataSource, valuesDataSource)
-        series.setShowLeaderLines(true)
-        series.setTitle("Rating", null)
+            sheet.setColumnWidth(lastColNum + 1, 256 * 20)
+            sheet.setColumnWidth(lastColNum + 2, 256 * 20)
 
-        val legend = chart.getOrAddLegend()
-        legend.position = LegendPosition.BOTTOM
-        pieChartData.setVaryColors(true)
-        try {
+            val drawing = chartSheet.createDrawingPatriarch()
+            val anchor = drawing.createAnchor(0, 0, 0, 0, lastColNum + 4, startRow - 1 , lastColNum + 11, startRow + 12)
+            val chart = drawing.createChart(anchor)
+            chart.setTitleText(pieTitle)
+            chart.titleOverlay = false
+
+            // Create Data Sources from filtered data
+            val categoryDataSource = XDDFDataSourcesFactory.fromArray(filteredRatings.toTypedArray())
+            val valuesDataSource = XDDFDataSourcesFactory.fromArray(filteredCounts.toTypedArray())
+
+            // Create Pie Chart Data
+            val pieChartData = chart.createData(ChartTypes.PIE, null, null)
+            val series = pieChartData.addSeries(categoryDataSource, valuesDataSource)
+            series.setShowLeaderLines(true)
+            series.setTitle("Rating", null)
+
+            val legend = chart.getOrAddLegend()
+            legend.position = LegendPosition.BOTTOM
+            pieChartData.setVaryColors(true)
             chart.plot(pieChartData)
-        } catch (e: Exception) {
-            println("Error plotting the pie chart: ${e.message}")
+        } else {
+            println("Feedback is empty.")
         }
     }
 
