@@ -44,7 +44,10 @@ class ShareContactService(
                     eventSlug = eventSlug
                 )
             }
-            val updateContactUser = contact.saveUserId.copy(users_image = minioService.getImageUrl("profiles",contact.saveUserId.users_image!!))
+            var updateContactUser = contact.saveUserId
+            if(contact.saveUserId.users_image !== null){
+                updateContactUser = contact.saveUserId.copy(users_image = minioService.getImageUrl("profiles",updateContactUser.users_image!!))
+            }
             ContactSavedDTO(
                 contactId = contact.contactId!!,
                 userProfile = updateContactUser,
@@ -52,6 +55,43 @@ class ShareContactService(
                 mutualEvents = mutualEvents
             )
         }
+    }
+
+    fun getContactsSortAndGroup(username: String): Map<Char, List<ContactSavedDTO>>? {
+        val user = userRepository.findByUsername(username) ?: return null
+        val contactList = contactRepository.findContactsByUserId(user.users_id!!)
+
+        return contactList?.map { contact ->
+            val socials = socialRepository.findSocialsByUserId(contact.saveUserId.users_id!!).map { socail ->
+                Social(
+                    socialPlatform = socail.socialPlatform,
+                    socialLink = socail.socialLink
+                )
+            }
+            val userRegistrations = registrationRepository.findRegistrationsByUserId(user.users_id!!).map {
+                it.event.event_name to it.event.event_slug
+            }
+            val contactRegistrations = registrationRepository.findRegistrationsByUserId(contact.saveUserId.users_id!!).map {
+                it.event.event_name to it.event.event_slug
+            }
+            val mutualEvents = userRegistrations.intersect(contactRegistrations).map { (eventName, eventSlug) ->
+                MutualEvent(
+                    eventName = eventName,
+                    eventSlug = eventSlug
+                )
+            }
+            var updateContactUser = contact.saveUserId
+            if(contact.saveUserId.users_image !== null){
+                updateContactUser = contact.saveUserId.copy(users_image = minioService.getImageUrl("profiles",updateContactUser.users_image!!))
+            }
+            ContactSavedDTO(
+                contactId = contact.contactId!!,
+                userProfile = updateContactUser,
+                userSocials = socials,
+                mutualEvents = mutualEvents
+            )
+        }?.sortedBy { it.userProfile.username }
+            ?.groupBy { it.userProfile.username.first().uppercaseChar() }
     }
 
     fun getContactToken(username: String): String{

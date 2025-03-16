@@ -29,6 +29,11 @@ class ShareContactController(
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
         return shareContactService.getContacts(username)
     }
+    @GetMapping("/v2/contacts")
+    fun getAllContactsWithSortAndGroup(@RequestHeader("Authorization") token: String): Map<Char, List<ContactSavedDTO>>? {
+        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        return shareContactService.getContactsSortAndGroup(username)
+    }
     @PostMapping("/v1/shareContact")
     fun getContactToken(@RequestHeader("Authorization") token: String): String{
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
