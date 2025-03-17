@@ -5,6 +5,7 @@ import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.OTPVerificationRequest
 import com.gatherfy.gatherfyback.entities.ResendOTPRequest
 import com.gatherfy.gatherfyback.entities.User
+import com.gatherfy.gatherfyback.repositories.SocialRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
@@ -26,7 +27,8 @@ class UserService(
     private val encoder: PasswordEncoder,
     private val emailSenderService: EmailSenderService,
     private val tokenService: TokenService,
-    private val minioService: MinioService
+    private val minioService: MinioService,
+    private val socialRepository: SocialRepository
 ) {
 
     @Value("\${minio.domain}")
@@ -264,6 +266,26 @@ class UserService(
             }
         }
         return user
+    }
+
+    fun getUserProfileWithSocials(username: String): ProfileDTO{
+        val user = userRepository.findByUsername(username)
+        val socials = socialRepository.findSocialsByUserId(user?.users_id!!).map { socail ->
+            Social(
+                socialPlatform = socail.socialPlatform,
+                socialLink = socail.socialLink
+            )
+        }
+
+        if(user != null){
+            if(user.users_image !== null){
+                user.users_image = getImageUrl("profiles",user.users_image!!)
+            }
+        }
+        return ProfileDTO(
+            userProfile = user,
+            userSocials = socials
+        )
     }
 
     fun toUserDto(user: User): UserDTO{
