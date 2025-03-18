@@ -1,11 +1,7 @@
 package com.gatherfy.gatherfyback.services
 
-import com.gatherfy.gatherfyback.dtos.ContactSavedDTO
-import com.gatherfy.gatherfyback.dtos.MutualEvent
-import com.gatherfy.gatherfyback.dtos.Social
-import com.gatherfy.gatherfyback.dtos.TokenDTO
+import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.Contact
-import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.repositories.*
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
@@ -19,6 +15,7 @@ class ShareContactService(
     private val minioService: MinioService,
     private val contactRepository: ContactRepository,
     private val registrationRepository: RegistrationRepository,
+    private val userService: UserService,
 ) {
 
     fun getContacts(username: String): List<ContactSavedDTO>? {
@@ -114,15 +111,17 @@ class ShareContactService(
         return checkInToken
     }
 
-    fun saveContact(username: String, tokenDTO: TokenDTO) {
+    fun saveContact(username: String, tokenDTO: TokenDTO): ProfileDTO {
         val user = userRepository.findByUsername(username)
         val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Int
+        val contactUsername = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["username"]
         val contactUser = userRepository.findUserById(contactUserId.toLong())
         val savedContact = Contact(
             userId = user?.users_id!!,
             saveUserId = contactUser!!
         )
         contactRepository.save(savedContact)
+        return userService.getUserProfileWithSocials(contactUsername.toString())
     }
 
     fun deleteContact(username: String, contactId: Long) {

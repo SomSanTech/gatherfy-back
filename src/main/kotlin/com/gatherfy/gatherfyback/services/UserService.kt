@@ -24,7 +24,6 @@ import java.time.LocalDateTime
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val encoder: PasswordEncoder,
     private val emailSenderService: EmailSenderService,
     private val tokenService: TokenService,
     private val minioService: MinioService,
@@ -277,10 +276,8 @@ class UserService(
             )
         }
 
-        if(user != null){
-            if(user.users_image !== null){
-                user.users_image = getImageUrl("profiles",user.users_image!!)
-            }
+        if(user.users_image !== null){
+            user.users_image = getImageUrl("profiles",user.users_image!!)
         }
         return ProfileDTO(
             userProfile = user,

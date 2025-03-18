@@ -1,10 +1,12 @@
 package com.gatherfy.gatherfyback.controllers
 
 import com.gatherfy.gatherfyback.dtos.ContactSavedDTO
+import com.gatherfy.gatherfyback.dtos.ProfileDTO
 import com.gatherfy.gatherfyback.dtos.TokenDTO
-import com.gatherfy.gatherfyback.entities.Contact
 import com.gatherfy.gatherfyback.services.ShareContactService
 import com.gatherfy.gatherfyback.services.TokenService
+import com.gatherfy.gatherfyback.services.UserService
+import org.apache.coyote.BadRequestException
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -21,7 +23,8 @@ import org.springframework.web.bind.annotation.RestController
 @CrossOrigin(origins = ["http://cp24us1.sit.kmutt.ac.th:3000/","http://localhost:3000/"])
 class ShareContactController(
     private val tokenService: TokenService,
-    private val shareContactService: ShareContactService
+    private val shareContactService: ShareContactService,
+    private val userService: UserService
 ) {
 
     @GetMapping("/v1/contacts")
@@ -44,10 +47,9 @@ class ShareContactController(
     fun saveContact(
         @RequestHeader("Authorization") token: String,
         @RequestBody tokenDTO: TokenDTO
-    ): ResponseEntity<String> {
+    ): ProfileDTO {
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        shareContactService.saveContact(username, tokenDTO)
-        return ResponseEntity.ok("Saved contact successfully")
+        return shareContactService.saveContact(username, tokenDTO)
     }
 
     @DeleteMapping("/v1/contact/{contactId}")
