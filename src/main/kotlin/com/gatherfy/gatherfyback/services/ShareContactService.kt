@@ -115,7 +115,8 @@ class ShareContactService(
         val user = userRepository.findByUsername(username)
         val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Int
         val contactUsername = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["username"]
-        val isContactExist = contactRepository.findContactByUserIdAndAndSaveUserId(user?.users_id!!, contactUserId)
+        val isContactExist = contactRepository.findContactByUserIdAndAndSaveUserId(user?.users_id!!, contactUserId.toLong()
+        )
         if(isContactExist !== null){
             return userService.getUserProfileWithSocials(contactUsername.toString())
         }
