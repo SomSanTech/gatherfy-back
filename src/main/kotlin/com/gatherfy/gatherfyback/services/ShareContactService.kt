@@ -106,7 +106,7 @@ class ShareContactService(
             "age" to user.users_age,
             "socials" to socials
         )
-        val expirationDate = Date(System.currentTimeMillis() + 600000)
+        val expirationDate = Date(System.currentTimeMillis() + 1200000)
         val checkInToken = tokenService.generateCheckInToken(username, expirationDate, additionalClaims)
         return checkInToken
     }
@@ -115,9 +115,13 @@ class ShareContactService(
         val user = userRepository.findByUsername(username)
         val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Int
         val contactUsername = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["username"]
+        val isContactExist = contactRepository.findContactByUserIdAndAndSaveUserId(user?.users_id!!, contactUserId)
+        if(isContactExist !== null){
+            return userService.getUserProfileWithSocials(contactUsername.toString())
+        }
         val contactUser = userRepository.findUserById(contactUserId.toLong())
         val savedContact = Contact(
-            userId = user?.users_id!!,
+            userId = user.users_id!!,
             saveUserId = contactUser!!
         )
         contactRepository.save(savedContact)
