@@ -87,7 +87,7 @@ class ShareContactService(
                 userSocials = socials,
                 mutualEvents = mutualEvents
             )
-        }?.sortedBy { it.userProfile.username }
+        }?.sortedBy { it.userProfile.username.lowercase() }
             ?.groupBy { it.userProfile.username.first().uppercaseChar() }
     }
 
@@ -101,7 +101,7 @@ class ShareContactService(
             "gender" to user.users_gender,
             "email" to user.users_email,
             "phone" to user.users_phone,
-            "image" to minioService.getImageUrl("profiles",user.users_image!!) ,
+            "image" to user.users_image?.let { minioService.getImageUrl("profiles", it) },
             "birthday" to user.users_birthday.toString(),
             "age" to user.users_age,
             "socials" to socials
