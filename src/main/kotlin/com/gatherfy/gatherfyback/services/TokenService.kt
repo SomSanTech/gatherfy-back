@@ -6,17 +6,11 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
-import org.checkerframework.checker.units.qual.A
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
 import java.net.URL
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.security.KeyFactory
 import java.security.interfaces.RSAPublicKey
-import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import javax.crypto.SecretKey
 import org.json.JSONObject
@@ -86,7 +80,8 @@ class TokenService(
             }
             "RS256" -> { // Use the public key for RS256
                 println("This is RS256")
-                val publicKey = fetchGooglePublicKey()  // Fetch your RS256 public key (e.g., from Google)
+                val jwtKid = header["kid"] ?: throw IllegalArgumentException("Missing 'kid' in JWT header")
+                val publicKey = fetchGooglePublicKey(jwtKid.toString())  // Fetch your RS256 public key (e.g., from Google)
                 val parser = Jwts.parser().verifyWith(publicKey).build()
                 println(parser.parseSignedClaims(token).payload)
                 return parser.parseSignedClaims(token).payload
@@ -123,29 +118,37 @@ class TokenService(
             null
         }
     }
-    private fun fetchGooglePublicKey(): RSAPublicKey {
+    private fun fetchGooglePublicKey(jwtKid: String): RSAPublicKey {
         // ดึง Public Key จาก Google (ต้องทำ cache key ไว้เพื่อไม่ให้โหลดบ่อย)
-        val key = getGooglePublicKey(googlePublicKeyUrl)
+        val key = getGooglePublicKey(googlePublicKeyUrl, jwtKid)
         return key
     }
-    fun getGooglePublicKey(url: String): RSAPublicKey {
+    fun getGooglePublicKey(url: String, jwtKid: String): RSAPublicKey {
         val response = URL(url).readText()
         val json = JSONObject(response)
         val keys = json.getJSONArray("keys")
 
-        val key = keys.getJSONObject(1) // Assume first key (you may need to check `kid`)
-        val n = key.getString("n") // Modulus
-        val e = key.getString("e") // Exponent
+        // Iterate over keys to find matching 'kid'
+        for (i in 0 until keys.length()) {
+            val key = keys.getJSONObject(i)
+            val kid = key.getString("kid")  // Get 'kid' from the key
 
-        val modulus = Base64.getUrlDecoder().decode(n)
-        val exponent = Base64.getUrlDecoder().decode(e)
+            if (kid == jwtKid) {  // Match the 'kid' with the one in the JWT header
+                val n = key.getString("n")  // Modulus
+                val e = key.getString("e")  // Exponent
 
-        val keySpec = RSAPublicKeySpec(
-            BigInteger(1, modulus), // Convert modulus to BigInteger
-            BigInteger(1, exponent) // Convert exponent to BigInteger
-        )
+                val modulus = Base64.getUrlDecoder().decode(n)
+                val exponent = Base64.getUrlDecoder().decode(e)
 
-        val keyFactory = KeyFactory.getInstance("RSA")
-        return keyFactory.generatePublic(keySpec) as RSAPublicKey
+                val keySpec = RSAPublicKeySpec(
+                    BigInteger(1, modulus),  // Convert modulus to BigInteger
+                    BigInteger(1, exponent)  // Convert exponent to BigInteger
+                )
+
+                val keyFactory = KeyFactory.getInstance("RSA")
+                return keyFactory.generatePublic(keySpec) as RSAPublicKey
+            }
+        }
+        throw IllegalArgumentException("No matching key found for kid: $jwtKid")
     }
 }
