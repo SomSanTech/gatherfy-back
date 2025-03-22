@@ -45,6 +45,11 @@ class UserController(
         return userService.getUserProfile(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")))
     }
 
+    @GetMapping("/v2/profile")
+    fun getProfileWithSocials(@RequestHeader("Authorization") token: String): ProfileDTO {
+        return userService.getUserProfileWithSocials(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")))
+    }
+
     @PutMapping("/v1/profile")
     fun editProfile(@RequestHeader("Authorization") token: String,@Valid @RequestBody userEdit: EditUserDTO): User? {
         return userService.updateUser(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")),userEdit)

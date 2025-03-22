@@ -1,11 +1,7 @@
 package com.gatherfy.gatherfyback.services
 
-import com.gatherfy.gatherfyback.dtos.ContactSavedDTO
-import com.gatherfy.gatherfyback.dtos.MutualEvent
-import com.gatherfy.gatherfyback.dtos.Social
-import com.gatherfy.gatherfyback.dtos.TokenDTO
+import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.Contact
-import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.repositories.*
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
@@ -19,6 +15,7 @@ class ShareContactService(
     private val minioService: MinioService,
     private val contactRepository: ContactRepository,
     private val registrationRepository: RegistrationRepository,
+    private val userService: UserService,
 ) {
 
     fun getContacts(username: String): List<ContactSavedDTO>? {
@@ -90,7 +87,7 @@ class ShareContactService(
                 userSocials = socials,
                 mutualEvents = mutualEvents
             )
-        }?.sortedBy { it.userProfile.username }
+        }?.sortedBy { it.userProfile.username.lowercase() }
             ?.groupBy { it.userProfile.username.first().uppercaseChar() }
     }
 
@@ -104,25 +101,32 @@ class ShareContactService(
             "gender" to user.users_gender,
             "email" to user.users_email,
             "phone" to user.users_phone,
-            "image" to minioService.getImageUrl("profiles",user.users_image!!) ,
+            "image" to user.users_image?.let { minioService.getImageUrl("profiles", it) },
             "birthday" to user.users_birthday.toString(),
             "age" to user.users_age,
             "socials" to socials
         )
-        val expirationDate = Date(System.currentTimeMillis() + 600000)
+        val expirationDate = Date(System.currentTimeMillis() + 1200000)
         val checkInToken = tokenService.generateCheckInToken(username, expirationDate, additionalClaims)
         return checkInToken
     }
 
-    fun saveContact(username: String, tokenDTO: TokenDTO) {
+    fun saveContact(username: String, tokenDTO: TokenDTO): ProfileDTO {
         val user = userRepository.findByUsername(username)
         val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Int
+        val contactUsername = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["username"]
+        val isContactExist = contactRepository.findContactByUserIdAndAndSaveUserId(user?.users_id!!, contactUserId.toLong()
+        )
+        if(isContactExist !== null){
+            return userService.getUserProfileWithSocials(contactUsername.toString())
+        }
         val contactUser = userRepository.findUserById(contactUserId.toLong())
         val savedContact = Contact(
-            userId = user?.users_id!!,
+            userId = user.users_id!!,
             saveUserId = contactUser!!
         )
         contactRepository.save(savedContact)
+        return userService.getUserProfileWithSocials(contactUsername.toString())
     }
 
     fun deleteContact(username: String, contactId: Long) {

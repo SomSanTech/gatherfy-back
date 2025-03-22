@@ -5,6 +5,7 @@ import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.OTPVerificationRequest
 import com.gatherfy.gatherfyback.entities.ResendOTPRequest
 import com.gatherfy.gatherfyback.entities.User
+import com.gatherfy.gatherfyback.repositories.SocialRepository
 import com.gatherfy.gatherfyback.repositories.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
@@ -23,10 +24,10 @@ import java.time.LocalDateTime
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val encoder: PasswordEncoder,
     private val emailSenderService: EmailSenderService,
     private val tokenService: TokenService,
-    private val minioService: MinioService
+    private val minioService: MinioService,
+    private val socialRepository: SocialRepository
 ) {
 
     @Value("\${minio.domain}")
@@ -79,7 +80,11 @@ class UserService(
                     otp = generateOTP(),
                     is_verified = false,
                     otp_expires_at = LocalDateTime.now().plusMinutes(5),
-                    auth_provider = "system"
+                    auth_provider = "system",
+                    email_new_events = true,
+                    email_reminders_day = true,
+                    email_reminders_hour = true,
+                    email_updated_events = true
                 )
                 val savedUser = userRepository.save(user)
                 emailSenderService.sendOtpVerification(savedUser)
@@ -116,7 +121,11 @@ class UserService(
                 otp = null,
                 is_verified = true,
                 otp_expires_at = null,
-                auth_provider = "google"
+                auth_provider = "google",
+                email_new_events = true,
+                email_reminders_day = true,
+                email_reminders_hour = true,
+                email_updated_events = true
             )
             val savedUser = userRepository.save(user)
             return toUserDto(savedUser)
@@ -230,7 +239,11 @@ class UserService(
                 users_phone = userEdit.phone ?: userProfile.users_phone,
                 users_image = userEdit.image ?: userProfile.users_image,
                 users_birthday = userEdit.birthday ?: userProfile.users_birthday,
-                password = userEdit.password?.let { encoder.encode(it) } ?: userProfile.password
+                password = userEdit.password?.let { encoder.encode(it) } ?: userProfile.password,
+                email_new_events = userEdit.newEvents ?: userProfile.email_new_events,
+                email_reminders_day = userEdit.remindersDay ?: userProfile.email_reminders_day,
+                email_reminders_hour = userEdit.remindersHour ?: userProfile.email_reminders_hour,
+                email_updated_events = userEdit.updatedEvents ?: userProfile.email_updated_events
             )
             val updatedUser = userRepository.save(updateUser)
             return updatedUser
@@ -252,6 +265,24 @@ class UserService(
             }
         }
         return user
+    }
+
+    fun getUserProfileWithSocials(username: String): ProfileDTO{
+        val user = userRepository.findByUsername(username)
+        val socials = socialRepository.findSocialsByUserId(user?.users_id!!).map { socail ->
+            Social(
+                socialPlatform = socail.socialPlatform,
+                socialLink = socail.socialLink
+            )
+        }
+
+        if(user.users_image !== null){
+            user.users_image = getImageUrl("profiles",user.users_image!!)
+        }
+        return ProfileDTO(
+            userProfile = user,
+            userSocials = socials
+        )
     }
 
     fun toUserDto(user: User): UserDTO{

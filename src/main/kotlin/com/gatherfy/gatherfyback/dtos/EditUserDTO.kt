@@ -33,5 +33,10 @@ data class EditUserDTO(
     var birthday: LocalDateTime?,
 
     @field:Pattern(regexp = "\\S.*", message = "Password must not be blank")
-    var password: String?
+    var password: String?,
+
+    var newEvents: Boolean?,
+    var remindersDay: Boolean?,
+    var remindersHour: Boolean?,
+    var updatedEvents: Boolean?,
 )

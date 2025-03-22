@@ -74,16 +74,13 @@ class EmailSenderService(
 
         for(event in events){
             val tagIds = event.tags.map { it.tag_id }
-            val followers = subscriptionRepository.findSubscriptionsByTagIdIn(tagIds)
-                ?.mapNotNull { it.userId }
-                ?.distinct()
-                ?: emptyList()
+            val notifiedUsers = userRepository.findFollowerByTagIdAndEnableEmailNewEvents(tagIds) // Fetch users directly
 
-
-            for (userId in followers) {
-                val user = userRepository.findUserById(userId)
-                userEmailMap.computeIfAbsent(user?.users_email!!) { mutableListOf() }
-                    .add(event)
+            if(notifiedUsers.isNotEmpty()){
+                for (user in notifiedUsers) {
+                    userEmailMap.computeIfAbsent(user.users_email) { mutableListOf() }
+                        .add(event)
+                }
             }
         }
         // Send emails
@@ -95,9 +92,11 @@ class EmailSenderService(
 
     @Async
     fun sendUpdatedEventBatchEmails(event: Event, changes: String){
-        val participants = registrationRepository.findRegistrationsByEventId(event.event_id!!)
-        for(attendee in participants){
-            buildUpdatedEventEmail(event,changes, attendee.user)
+        val notifiedParticipants = userRepository.findParticipantsByEventIdAndEnableEmailUpdatedEvent(event.event_id!!)
+        if(notifiedParticipants.isNotEmpty()){
+            for(participant in notifiedParticipants){
+                buildUpdatedEventEmail(event,changes, participant)
+            }
         }
     }
 
@@ -229,9 +228,9 @@ class EmailSenderService(
         val nextDay = localDate.plusDays(2).atStartOfDay() // 2025-02-14T00:00:00
         val upcomingEvents = eventRepository.findEventsStartingOn(tomorrow,nextDay)
         for (event in upcomingEvents){
-            val participants = registrationRepository.findRegistrationsByEventId(event.event_id!!)
-            for(attendee in participants){
-                buildReminderEmail(event,attendee.user)
+            val notifiedParticipants = userRepository.findParticipantsByEventIdAndEnableEmailReminderDay(event.event_id!!)
+            for(participant in notifiedParticipants!!){
+                buildReminderEmail(event,participant)
             }
         }
     }
@@ -267,9 +266,9 @@ class EmailSenderService(
         val upcomingEvents = eventRepository.findEventByStartingBetween(now, oneHourLater)
         println(upcomingEvents)
         for (event in upcomingEvents){
-            val participants = registrationRepository.findRegistrationsByEventId(event.event_id!!)
-            for(attendee in participants){
-                buildHourReminderEmail(event,attendee.user)
+            val notifiedParticipants = userRepository.findParticipantsByEventIdAndEnableEmailReminderHour(event.event_id!!)
+            for(participant in notifiedParticipants!!){
+                buildHourReminderEmail(event,participant)
             }
         }
     }
