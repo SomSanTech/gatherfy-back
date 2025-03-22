@@ -16,7 +16,7 @@ class AuthService(
     private val userDetailsService: CustomUserDetailsService,
     private val tokenService: TokenService,
     private val jwtProperties: JwtProperties,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) {
 
     fun authentication(authRequest: AuthRequest): AuthResponse {
@@ -43,10 +43,44 @@ class AuthService(
         }
     }
 
+    fun authenticationGoogle(token: String): Any {
+        try{
+            val accountEmail = tokenService.getAllClaimsFromToken(token)!!["email"]
+            val accountExist = userRepository.findByEmail(accountEmail.toString())
+
+            if(accountExist !== null){
+                val user = userDetailsService.loadUserByUsername(accountExist.username)
+
+                println("user = ${accountExist.username}")
+
+                val additionalClaims = mapOf(
+                    "role" to accountExist.users_role
+                )
+                val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
+                val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
+                return AuthResponse(accessToken, refreshToken)
+            } else{
+                throw CustomUnauthorizedException("User do not have an account yet")
+            }
+        } catch (e: CustomUnauthorizedException ){
+            throw CustomUnauthorizedException(e.message!!)
+        }
+    }
+
     fun getAccessTokenExpiration():Date{
         return Date(System.currentTimeMillis() + jwtProperties.accessTokenExpiration)
     }
     fun getRefreshTokenExpiration():Date{
         return Date(System.currentTimeMillis() + jwtProperties.refreshTokenExpiration)
     }
+
+    fun identifyGoogleUser(token: String): Any?{
+        val accountEmail = tokenService.getAllClaimsFromToken(token)!!["email"]
+        val accountExist = userRepository.findByEmail(accountEmail.toString())
+        if(accountExist !== null){
+            return accountExist.username
+        }
+        return null
+    }
+
 }

@@ -3,7 +3,7 @@ name: backend staging
 on:
   push:
     branches:
-      - 'test-prod'
+      - 'main'
 
 jobs:
   build:

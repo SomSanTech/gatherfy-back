@@ -131,7 +131,7 @@ class RegistrationController(
     }
 
     @PutMapping("/v2/check-in")
-    fun checkedInAttendee(@RequestHeader("Authorization") token: String, @RequestBody qrToken: CheckInDTO):RegistrationCreateDTO{
+    fun checkedInAttendee(@RequestHeader("Authorization") token: String, @RequestBody qrToken: TokenDTO):RegistrationCreateDTO{
         val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
         return registrationService.CheckedInAttendeeWithAuth(username,qrToken)
     }

@@ -35,6 +35,12 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation:3.4.2")
 	implementation("jakarta.validation:jakarta.validation-api:3.1.0")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
+	implementation("org.springframework.boot:spring-boot-starter-thymeleaf:3.4.3")
+	implementation("org.thymeleaf:thymeleaf-spring5:3.1.3.RELEASE")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server") // ✅ Required for JWT authentication
+	implementation("com.nimbusds:nimbus-jose-jwt:9.37.2") // ✅ Supports RS256 verification
+	implementation ("org.json:json:20210307")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	runtimeOnly("com.h2database:h2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

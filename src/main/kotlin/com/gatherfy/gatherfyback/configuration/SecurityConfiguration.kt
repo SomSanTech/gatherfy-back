@@ -35,20 +35,21 @@ class SecurityConfiguration(
                         "/api/v1/tags",
                         "/api/v1/views",
                         "/api/v1/questions/event/**",
+                        "/api/google",
+                        "/api/profile"
                         )
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
-                        "/api/v1/login",
+                        "/api/v1/login/**",
                         "/api/v1/signup",
                         "/api/v1/countView/**",
                         "/api/refresh",
                         "/api/v1/signup",
                         "/api/v1/verify-otp",
-                        "/api/v1/resend-otp")
+                        "/api/v1/resend-otp",
+                        "/api/v1/signup/google"
+                        )
                     .permitAll()
-                    .requestMatchers(HttpMethod.GET,
-                        "/api/v1/tickets")
-                    .hasRole("Attendee")
                     .requestMatchers(HttpMethod.GET,
                         "/api/v1/registrations",
                         "/api/v2/registrations",
@@ -61,17 +62,11 @@ class SecurityConfiguration(
                         "/api/v1/answers/**")
                     .hasRole("Organization")
                     .requestMatchers(HttpMethod.POST,
-                        "/api/v2/registrations",
-                        "/api/v1/check-in/**",
-                        "/api/v1/answers",
-                        "/api/v2/feedbacks")
-                    .hasRole("Attendee")
-                    .requestMatchers(HttpMethod.POST,
                         "/api/v1/questions",
                         "/api/v2/questions",
                         "/api/v1/backoffice/**",
                         "/api/v2/backoffice/**",
-                        "/api/v1/files/**")
+                        )
                     .hasRole("Organization")
                     .requestMatchers(HttpMethod.PUT,
                         "/api/v1/questions/**",
@@ -85,7 +80,6 @@ class SecurityConfiguration(
                         "/api/v1/questions/**",
                         "/api/v1/backoffice/**",
                         "/api/v2/backoffice/**",
-                        "/api/v1/files/**",
                         "/api/v1/feedbacks/**",)
                     .hasRole("Organization")
                     .anyRequest()

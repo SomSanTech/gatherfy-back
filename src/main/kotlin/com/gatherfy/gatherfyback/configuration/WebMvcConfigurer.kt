@@ -24,7 +24,7 @@ class CorsConfiguration : WebMvcConfigurer {
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
 
         // อนุญาต headers ที่ระบุ
-        configuration.allowedHeaders = listOf("Authorization", "Content-Type")
+        configuration.allowedHeaders = listOf("*")
 
         // ตั้งค่า headers ที่จะถูกส่งกลับใน response
         configuration.exposedHeaders = listOf("Authorization")
