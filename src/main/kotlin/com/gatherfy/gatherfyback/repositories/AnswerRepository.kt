@@ -15,4 +15,7 @@ interface AnswerRepository: JpaRepository<Answer, Long> {
     fun findAnswersByOwnerId(ownerId: Long): List<Answer>
 
     fun findAnswersByQuestionId(questionId: Long): List<Answer>?
+
+    @Query("from answers a join feedbacks f on a.feedbackId = f.feedbackId where f.eventId = :eventId")
+    fun findAnswersByEventId(eventId: Long): List<Answer>?
 }

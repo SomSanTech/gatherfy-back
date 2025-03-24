@@ -66,6 +66,7 @@ class SecurityConfiguration(
                         "/api/v2/questions",
                         "/api/v1/backoffice/**",
                         "/api/v2/backoffice/**",
+                        "/api/v1/report/**"
                         )
                     .hasRole("Organization")
                     .requestMatchers(HttpMethod.PUT,

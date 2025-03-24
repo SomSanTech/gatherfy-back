@@ -42,6 +42,7 @@ dependencies {
 	implementation("com.nimbusds:nimbus-jose-jwt:9.37.2") // ✅ Supports RS256 verification
 	implementation ("org.json:json:20210307")
 	implementation("com.github.loki4j:loki-logback-appender:1.5.1")
+	implementation("org.apache.poi:poi-ooxml:4.1.2")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	runtimeOnly("com.h2database:h2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

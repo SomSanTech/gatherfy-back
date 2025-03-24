@@ -131,4 +131,9 @@ class AnswerService(
             answerText = answer.answerText,
         )
     }
+
+    fun getAnswerByEventId(eventId: Long) : List<AnswerDTO> {
+        val answer = answerRepository.findAnswersByEventId(eventId)
+        return answer!!.map { toAnswerDTO(it) }
+    }
 }
