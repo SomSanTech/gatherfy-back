@@ -41,13 +41,13 @@ class QuestionService(
         }
     }
 
-    fun createQuestionWithAuth(username: String, createQuestionDTO: CreateQuestionDTO): Question {
+    fun createQuestionWithAuth(userId: Int, createQuestionDTO: CreateQuestionDTO): Question {
         try {
-            val user = userRepository.findByUsername(username)
+//            val user = userRepository.findByUsername(username)
             eventRepository.findById(createQuestionDTO.eventId!!).orElseThrow {
                 EntityNotFoundException("Event id ${createQuestionDTO.eventId} does not exist")
             }
-            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, createQuestionDTO.eventId)
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), createQuestionDTO.eventId)
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
             }
@@ -80,13 +80,13 @@ class QuestionService(
         }
     }
 
-    fun updateQuestionWithAuth(username:String, questionId: Long,updateQuestion:EditQuestionDTO): Question {
+    fun updateQuestionWithAuth(userId: Int, questionId: Long,updateQuestion:EditQuestionDTO): Question {
         try {
-            val user = userRepository.findByUsername(username)
+//            val user = userRepository.findByUsername(username)
             val question = questionRepository.findById(questionId).orElseThrow{
                 EntityNotFoundException("Question id $questionId does not exist")
             }
-            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, question.eventId)
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), question.eventId)
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
             }
@@ -115,13 +115,13 @@ class QuestionService(
         }
     }
 
-    fun deleteQuestionWithAuth(username: String, questionId: Long){
+    fun deleteQuestionWithAuth(userId: Int, questionId: Long){
         try {
-            val user = userRepository.findByUsername(username)
+//            val user = userRepository.findByUsername(username)
             val question = questionRepository.findById(questionId).orElseThrow{
                 EntityNotFoundException("Question id $questionId does not exist")
             }
-            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, question.eventId)
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), question.eventId)
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
             }

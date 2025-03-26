@@ -33,6 +33,7 @@ class AuthService(
             )
 
             val additionalClaims = mapOf(
+                "userId" to users.users_id,
                 "role" to users.users_role
             )
             val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
@@ -54,6 +55,7 @@ class AuthService(
                 println("user = ${accountExist.username}")
 
                 val additionalClaims = mapOf(
+                    "userId" to accountExist.users_id,
                     "role" to accountExist.users_role
                 )
                 val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)

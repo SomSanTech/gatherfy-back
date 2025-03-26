@@ -42,17 +42,17 @@ class UserController(
 
     @GetMapping("/v1/profile")
     fun getProfile(@RequestHeader("Authorization") token: String): User? {
-        return userService.getUserProfile(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")))
+        return userService.getUserProfile(tokenService.getUserIdFromToken(token.substringAfter("Bearer ")))
     }
 
     @GetMapping("/v2/profile")
     fun getProfileWithSocials(@RequestHeader("Authorization") token: String): ProfileDTO {
-        return userService.getUserProfileWithSocials(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")))
+        return userService.getUserProfileWithSocials(tokenService.getUserIdFromToken(token.substringAfter("Bearer ")))
     }
 
     @PutMapping("/v1/profile")
     fun editProfile(@RequestHeader("Authorization") token: String,@Valid @RequestBody userEdit: EditUserDTO): User? {
-        return userService.updateUser(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")),userEdit)
+        return userService.updateUser(tokenService.getUserIdFromToken(token.substringAfter("Bearer ")),userEdit)
     }
 
     @PostMapping("/v1/signup/google")
@@ -64,6 +64,6 @@ class UserController(
 
     @PutMapping("/v1/password")
     fun editPassword(@RequestHeader("Authorization") token: String,@RequestBody editPasswordDTO: EditPasswordDTO): ResponseEntity<String> {
-        return userService.updatePassword(tokenService.getUsernameFromToken(token.substringAfter("Bearer ")),editPasswordDTO)
+        return userService.updatePassword(tokenService.getUserIdFromToken(token.substringAfter("Bearer ")),editPasswordDTO)
     }
 }

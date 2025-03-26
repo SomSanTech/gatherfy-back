@@ -18,9 +18,9 @@ class ShareContactService(
     private val userService: UserService,
 ) {
 
-    fun getContacts(username: String): List<ContactSavedDTO>? {
-        val user = userRepository.findByUsername(username) ?: return null
-        val contactList = contactRepository.findContactsByUserId(user.users_id!!)
+    fun getContacts(userId: Int): List<ContactSavedDTO>? {
+//        val user = userRepository.findByUsername(username) ?: return null
+        val contactList = contactRepository.findContactsByUserId(userId.toLong())
 
         return contactList?.map { contact ->
             val socials = socialRepository.findSocialsByUserId(contact.saveUserId.users_id!!).map { socail ->
@@ -29,7 +29,7 @@ class ShareContactService(
                     socialLink = socail.socialLink
                 )
             }
-            val userRegistrations = registrationRepository.findRegistrationsByUserId(user.users_id!!).map {
+            val userRegistrations = registrationRepository.findRegistrationsByUserId(userId.toLong()).map {
                 it.event.event_name to it.event.event_slug
             }
             val contactRegistrations = registrationRepository.findRegistrationsByUserId(contact.saveUserId.users_id!!).map {
@@ -54,9 +54,9 @@ class ShareContactService(
         }
     }
 
-    fun getContactsSortAndGroup(username: String): Map<Char, List<ContactSavedDTO>>? {
-        val user = userRepository.findByUsername(username) ?: return null
-        val contactList = contactRepository.findContactsByUserId(user.users_id!!)
+    fun getContactsSortAndGroup(userId: Int): Map<Char, List<ContactSavedDTO>>? {
+//        val user = userRepository.findByUsername(username) ?: return null
+        val contactList = contactRepository.findContactsByUserId(userId.toLong())
 
         return contactList?.map { contact ->
             val socials = socialRepository.findSocialsByUserId(contact.saveUserId.users_id!!).map { socail ->
@@ -65,7 +65,7 @@ class ShareContactService(
                     socialLink = socail.socialLink
                 )
             }
-            val userRegistrations = registrationRepository.findRegistrationsByUserId(user.users_id!!).map {
+            val userRegistrations = registrationRepository.findRegistrationsByUserId(userId.toLong()).map {
                 it.event.event_name to it.event.event_slug
             }
             val contactRegistrations = registrationRepository.findRegistrationsByUserId(contact.saveUserId.users_id!!).map {
@@ -91,9 +91,10 @@ class ShareContactService(
             ?.groupBy { it.userProfile.username.first().uppercaseChar() }
     }
 
-    fun getContactToken(username: String): String{
-        val user = userRepository.findByUsername(username)
-        val socials = socialRepository.findSocialsByUserId(user?.users_id!!)
+    fun getContactToken(userId: Int): String{
+//        val user = userRepository.findByUsername(username)
+        val user = userRepository.findByUserId(userId.toLong())
+        val socials = socialRepository.findSocialsByUserId(user.users_id!!)
         val additionalClaims = mapOf(
             "userId" to user.users_id,
             "username" to user.username,
@@ -107,32 +108,33 @@ class ShareContactService(
             "socials" to socials
         )
         val expirationDate = Date(System.currentTimeMillis() + 1200000)
-        val checkInToken = tokenService.generateCheckInToken(username, expirationDate, additionalClaims)
+        val checkInToken = tokenService.generateCheckInToken(user.username, expirationDate, additionalClaims)
         return checkInToken
     }
 
-    fun saveContact(username: String, tokenDTO: TokenDTO): ProfileDTO {
-        val user = userRepository.findByUsername(username)
-        val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Int
+    fun saveContact(userId: Int, tokenDTO: TokenDTO): ProfileDTO {
+//        val user = userRepository.findByUsername(username)
+
+        val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Long
         val contactUsername = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["username"]
-        val isContactExist = contactRepository.findContactByUserIdAndAndSaveUserId(user?.users_id!!, contactUserId.toLong()
+        val isContactExist = contactRepository.findContactByUserIdAndAndSaveUserId(userId.toLong(), contactUserId
         )
         if(isContactExist !== null){
-            return userService.getUserProfileWithSocials(contactUsername.toString())
+            return userService.getUserProfileWithSocials(contactUserId.toInt())
         }
-        val contactUser = userRepository.findUserById(contactUserId.toLong())
+        val contactUser = userRepository.findUserById(contactUserId)
         val savedContact = Contact(
-            userId = user.users_id!!,
+            userId = userId.toLong(),
             saveUserId = contactUser!!
         )
         contactRepository.save(savedContact)
-        return userService.getUserProfileWithSocials(contactUsername.toString())
+        return userService.getUserProfileWithSocials(contactUserId.toInt())
     }
 
-    fun deleteContact(username: String, contactId: Long) {
+    fun deleteContact(userId: Int, contactId: Long) {
         try{
-            val user = userRepository.findByUsername(username)
-            val contactExist = contactRepository.findContactByUserIdAndContactId(user?.users_id!!, contactId)
+//            val user = userRepository.findByUsername(username)
+            val contactExist = contactRepository.findContactByUserIdAndContactId(userId.toLong(), contactId)
                 ?: throw EntityNotFoundException("Contact does not exist")
             contactRepository.delete(contactExist)
         }catch (e: EntityNotFoundException){

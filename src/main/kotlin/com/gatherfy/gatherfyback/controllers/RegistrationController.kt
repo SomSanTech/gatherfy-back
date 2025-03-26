@@ -33,8 +33,8 @@ class RegistrationController(
     }
     @GetMapping("/v2/registrations")
     fun getRegistrationsByAuth(@RequestHeader("Authorization") token: String): List<RegistrationDTO>? {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return registrationService.getAllRegistrationsByOwnerAuth(username)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return registrationService.getAllRegistrationsByOwnerAuth(userId)
     }
 
     @GetMapping("/v1/registrations/{id}")
@@ -48,10 +48,10 @@ class RegistrationController(
     fun getRegistrationByIdWithAuth(
         @RequestHeader("Authorization") token: String,
         @PathVariable("id") id: String): RegistrationDTO {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
         val registrationId = id.toLongOrNull()
             ?: throw BadRequestException("Invalid registration ID format")
-        return registrationService.getRegistrationByIdWithAuth(username, registrationId)
+        return registrationService.getRegistrationByIdWithAuth(userId, registrationId)
     }
 
     @PutMapping("/v1/registrations/{id}")
@@ -73,8 +73,8 @@ class RegistrationController(
     ): ResponseEntity<RegistrationDTO> {
         val registrationId = id.toLongOrNull()
             ?: throw BadRequestException("Invalid registration ID format")
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        val updatedRegistration = registrationService.updateStatusWithAuth(username, registrationId, registrationDTO.status)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        val updatedRegistration = registrationService.updateStatusWithAuth(userId, registrationId, registrationDTO.status)
         return ResponseEntity.ok(updatedRegistration)
     }
 
@@ -91,8 +91,8 @@ class RegistrationController(
         @RequestHeader("Authorization") token: String,
         @RequestBody createRegistrationDTO: CreateRegistrationDTO
     ): RegistrationDTO {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return registrationService.createRegistrationWithAuth(username,createRegistrationDTO.eventId)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return registrationService.createRegistrationWithAuth(userId,createRegistrationDTO.eventId)
     }
 
     @GetMapping("/v1/registrations/event/{id}")
@@ -108,20 +108,20 @@ class RegistrationController(
         @PathVariable("id") id: String): List<RegistrationDTO> {
         val eventId = id.toLongOrNull()
             ?: throw BadRequestException("Invalid event ID format")
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return registrationService.getAllRegistrationsByEventIdWithAuth(username,eventId)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return registrationService.getAllRegistrationsByEventIdWithAuth(userId,eventId)
     }
 
     @GetMapping("/v1/tickets")
     fun getRegistration(@RequestHeader("Authorization") token: String): List<UserRegistrationDTO>{
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return registrationService.getRegistrationByUser(username)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return registrationService.getRegistrationByUser(userId)
     }
 
     @PostMapping("/v1/check-in/{eventId}")
     fun getCheckInToken(@RequestHeader("Authorization") token: String, @PathVariable eventId: Long): RegistrationCheckin{
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return registrationService.getCheckInToken(username, eventId)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return registrationService.getCheckInToken(userId, eventId)
     }
 
     @PutMapping("/v1/check-in")
@@ -132,7 +132,7 @@ class RegistrationController(
 
     @PutMapping("/v2/check-in")
     fun checkedInAttendee(@RequestHeader("Authorization") token: String, @RequestBody qrToken: TokenDTO):RegistrationCreateDTO{
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return registrationService.CheckedInAttendeeWithAuth(username,qrToken)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return registrationService.CheckedInAttendeeWithAuth(userId,qrToken)
     }
 }

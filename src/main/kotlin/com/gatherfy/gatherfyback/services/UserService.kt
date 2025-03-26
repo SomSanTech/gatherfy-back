@@ -191,12 +191,10 @@ class UserService(
         }
     }
 
-    fun updateUser(username: String, userEdit: EditUserDTO): User {
+    fun updateUser(userId: Int, userEdit: EditUserDTO): User {
         try{
-            val userProfile = userRepository.findByUsername(username)
-            if(userProfile === null){
-                throw EntityNotFoundException("User not found")
-            }
+//            val userProfile = userRepository.findByUsername(username)
+            val userProfile = userRepository.findByUserId(userId.toLong())
 
             val bindingResult = BeanPropertyBindingResult(userEdit, "userEdit") // Collect validation errors
             val encoder = BCryptPasswordEncoder(16)
@@ -256,20 +254,19 @@ class UserService(
         }
     }
 
-    fun getUserProfile(username: String): User?{
-        val user = userRepository.findByUsername(username)
-
-        if(user != null){
-            if(user.users_image !== null){
-                user.users_image = getImageUrl("profiles",user.users_image!!)
-            }
+    fun getUserProfile(userId: Int): User?{
+//        val user = userRepository.findByUsername(username)
+        val user = userRepository.findByUserId(userId.toLong())
+        if(user.users_image !== null){
+            user.users_image = getImageUrl("profiles",user.users_image!!)
         }
         return user
     }
 
-    fun getUserProfileWithSocials(username: String): ProfileDTO{
-        val user = userRepository.findByUsername(username)
-        val socials = socialRepository.findSocialsByUserId(user?.users_id!!).map { socail ->
+    fun getUserProfileWithSocials(userId: Int): ProfileDTO{
+//        val user = userRepository.findByUsername(username)
+        val user = userRepository.findByUserId(userId.toLong())
+        val socials = socialRepository.findSocialsByUserId(user.users_id!!).map { socail ->
             Social(
                 socialPlatform = socail.socialPlatform,
                 socialLink = socail.socialLink
@@ -300,11 +297,13 @@ class UserService(
         return "$minioDomain/$bucketName/$objectName"
     }
 
-    fun updatePassword(username: String, editPasswordDTO: EditPasswordDTO): ResponseEntity<String>{
+    fun updatePassword(userId: Int, editPasswordDTO: EditPasswordDTO): ResponseEntity<String>{
         val encoder = BCryptPasswordEncoder(16)
-        val user = userRepository.findByUsername(username)
+//        val user = userRepository.findByUsername(username)
+        val user = userRepository.findByUserId(userId.toLong())
+
         val passwordPattern = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%^&+=.*])(?=\\S+\$).{8,}".toRegex()
-        if(verifyPassword(editPasswordDTO.currentPassword,user?.password!!)){
+        if(verifyPassword(editPasswordDTO.currentPassword,user.password!!)){
             if(!editPasswordDTO.newPassword.matches(passwordPattern)){
                 throw BadRequestException("Password wrong pattern")
             }

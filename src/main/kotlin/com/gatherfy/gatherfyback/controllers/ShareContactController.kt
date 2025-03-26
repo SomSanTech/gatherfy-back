@@ -29,18 +29,18 @@ class ShareContactController(
 
     @GetMapping("/v1/contacts")
     fun getAllContacts(@RequestHeader("Authorization") token: String): List<ContactSavedDTO>?{
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return shareContactService.getContacts(username)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return shareContactService.getContacts(userId)
     }
     @GetMapping("/v2/contacts")
     fun getAllContactsWithSortAndGroup(@RequestHeader("Authorization") token: String): Map<Char, List<ContactSavedDTO>>? {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return shareContactService.getContactsSortAndGroup(username)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return shareContactService.getContactsSortAndGroup(userId)
     }
     @PostMapping("/v1/shareContact")
     fun getContactToken(@RequestHeader("Authorization") token: String): String{
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return shareContactService.getContactToken(username)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return shareContactService.getContactToken(userId)
     }
 
     @PostMapping("/v1/saveContact")
@@ -48,8 +48,8 @@ class ShareContactController(
         @RequestHeader("Authorization") token: String,
         @RequestBody tokenDTO: TokenDTO
     ): ProfileDTO {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return shareContactService.saveContact(username, tokenDTO)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return shareContactService.saveContact(userId, tokenDTO)
     }
 
     @DeleteMapping("/v1/contact/{contactId}")
@@ -57,8 +57,8 @@ class ShareContactController(
         @RequestHeader("Authorization") token: String,
         @PathVariable contactId: Long
     ): ResponseEntity<String>{
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        shareContactService.deleteContact(username, contactId)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        shareContactService.deleteContact(userId, contactId)
         return ResponseEntity.ok("Deleted contact successfully")
     }
 }

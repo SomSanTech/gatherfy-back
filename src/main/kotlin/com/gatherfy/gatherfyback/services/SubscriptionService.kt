@@ -17,26 +17,27 @@ class SubscriptionService(
     private val tagRepository: TagRepository
 ) {
 
-    fun getSubscription(username: String): List<Subscription>?{
+    fun getSubscription(userId: Int): List<Subscription>?{
         try{
-            val user = userRepository.findByUsername(username)
-            return subscriptionRepository.findAllByUserId(user?.users_id!!)
+//            val user = userRepository.findByUsername(username)
+            return subscriptionRepository.findAllByUserId(userId.toLong())
         }catch (e: Exception){
             throw RuntimeException("An unexpected error occurred: ${e.message}")
         }
     }
 
-    fun createSubscription(username: String, newSubscribe: CreateSubscriptionDTO): Subscription{
+    fun createSubscription(userId: Int, newSubscribe: CreateSubscriptionDTO): Subscription{
         try{
-            val user = userRepository.findByUsername(username)
-            val isSubscribed = subscriptionRepository.findSubscriptionByUserAndTag(user?.users_id!!, newSubscribe.tagId)
+//            val user = userRepository.findByUsername(username)
+            val user = userRepository.findByUserId(userId.toLong())
+            val isSubscribed = subscriptionRepository.findSubscriptionByUserAndTag(userId.toLong(), newSubscribe.tagId)
             val tag = tagRepository.findTagByTagId(newSubscribe.tagId)
             if(isSubscribed != null){
                 throw ConflictException("User is already subscribe for this tag")
             }
             val subscription = Subscription(
                 subscriptionId = null,
-                userId = user.users_id!!,
+                userId = userId.toLong(),
                 tagId = newSubscribe.tagId,
             )
             val savedSubscription =  subscriptionRepository.save(subscription)
@@ -49,10 +50,11 @@ class SubscriptionService(
         }
     }
 
-    fun deleteSubscription(username: String, tagId: Long){
+    fun deleteSubscription(userId: Int, tagId: Long){
         try{
-            val user = userRepository.findByUsername(username)
-            val isSubscribed = subscriptionRepository.findSubscriptionByUserAndTag(user?.users_id!!, tagId)
+//            val user = userRepository.findByUsername(username)
+            val user = userRepository.findByUserId(userId.toLong())
+            val isSubscribed = subscriptionRepository.findSubscriptionByUserAndTag(userId.toLong(), tagId)
             val tag = tagRepository.findTagByTagId(tagId)
 
             if(isSubscribed === null){
@@ -68,9 +70,9 @@ class SubscriptionService(
         }
     }
 
-    fun getTagsAlreadySubscribed(username: String): Map<String, List<Long>>{
-        val user = userRepository.findByUsername(username)
-        val tagList = subscriptionRepository.findSubscriptionsByUserId(user?.users_id!!)
+    fun getTagsAlreadySubscribed(userId: Int): Map<String, List<Long>>{
+//        val user = userRepository.findByUsername(username)
+        val tagList = subscriptionRepository.findSubscriptionsByUserId(userId.toLong())
         return mapOf("tagId" to tagList!!.map { it.tagId })
     }
 }

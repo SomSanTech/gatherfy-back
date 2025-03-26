@@ -41,13 +41,13 @@ class AnswerService(
         return answer!!.map { toAnswerDTO(it) }
     }
 
-    fun getAnswerByQuestionIdWithAuth(username: String, questionId: Long) : List<AnswerDTO> {
+    fun getAnswerByQuestionIdWithAuth(userId: Int, questionId: Long) : List<AnswerDTO> {
         try{
-            val user = userRepository.findByUsername(username)
+//            val user = userRepository.findByUsername(username)
             val question = questionRepository.findById(questionId).orElseThrow{
                 EntityNotFoundException("Question id $questionId does not exist")
             }
-            val existEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, question.eventId)
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), question.eventId)
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
             }
@@ -86,18 +86,18 @@ class AnswerService(
 //        }
 //    }
 
-    fun createAnswerWithAuth(username: String, createAnswerDTO: CreateAnswerDTO): AnswerDTO {
+    fun createAnswerWithAuth(userId: Int, createAnswerDTO: CreateAnswerDTO): AnswerDTO {
         try {
-            val user = userRepository.findByUsername(username)
+//            val user = userRepository.findByUsername(username)
 
             val question = questionRepository.findById(createAnswerDTO.questionId)
                 .orElseThrow { EntityNotFoundException("Question id ${createAnswerDTO.questionId} does not exist") }
 
-            val feedback = feedbackRepository.findFeedbackByUserIdAndEventId(user?.users_id!!, question.eventId!!)
+            val feedback = feedbackRepository.findFeedbackByUserIdAndEventId(userId.toLong(), question.eventId!!)
             if(feedback === null){
                 throw EntityNotFoundException("User do not feedback this event yet.")
             }
-            val userRegistration = registrationRepository.findRegistrationsByUserIdAndEventId(user.users_id!!.toInt(),
+            val userRegistration = registrationRepository.findRegistrationsByUserIdAndEventId(userId.toInt(),
                 feedback.eventId!!.toInt()
             )
 

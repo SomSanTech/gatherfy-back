@@ -41,8 +41,8 @@ class QuestionController(
     ): Question {
         val id = questionId.toLongOrNull()
             ?: throw BadRequestException("Invalid question ID format")
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return questionService.updateQuestionWithAuth(username, id, updateQuestion)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return questionService.updateQuestionWithAuth(userId, id, updateQuestion)
     }
 
     @PostMapping("/v1/questions")
@@ -58,8 +58,8 @@ class QuestionController(
         @RequestHeader("Authorization") token: String,
         @RequestBody @Valid createQuestionDTO: CreateQuestionDTO
     ): Question {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return questionService.createQuestionWithAuth(username, createQuestionDTO)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return questionService.createQuestionWithAuth(userId, createQuestionDTO)
     }
 
     @DeleteMapping("/v1/questions/{questionId}")
@@ -76,8 +76,8 @@ class QuestionController(
     ){
         val id = questionId.toLongOrNull()
             ?: throw BadRequestException("Invalid question ID format")
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        questionService.deleteQuestionWithAuth(username, id)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        questionService.deleteQuestionWithAuth(userId, id)
     }
 
 }

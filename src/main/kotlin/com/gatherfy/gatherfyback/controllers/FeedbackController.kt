@@ -28,16 +28,16 @@ class FeedbackController(
     fun getFeedbackByEventId(@RequestHeader("Authorization")token: String,@PathVariable eventId: String): List<FeedbackDTO> {
         val id = eventId.toLongOrNull()
             ?: throw BadRequestException("Invalid event ID format")
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return feedbackService.getAllFeedbackByEventId(username, id)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return feedbackService.getAllFeedbackByEventId(userId, id)
     }
 
     @GetMapping("/v2/feedbacks/event/{eventId}")
     fun getFeedbackAndCountByEventId(@RequestHeader("Authorization")token: String,@PathVariable eventId: String): FeedbackCountDTO {
         val id = eventId.toLongOrNull()
             ?: throw BadRequestException("Invalid event ID format")
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return feedbackService.getFeedbackAndCountByEventId(username, id)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return feedbackService.getFeedbackAndCountByEventId(userId, id)
     }
 
     // Nowhere to use
@@ -59,8 +59,8 @@ class FeedbackController(
         @RequestHeader("Authorization")token: String,
         @RequestBody @Valid feedback: CreateFeedbackDTO
     ): Feedback {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return feedbackService.createFeedbackWithAuth(username,feedback)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return feedbackService.createFeedbackWithAuth(userId,feedback)
     }
 
     // Nowhere to use
@@ -73,8 +73,8 @@ class FeedbackController(
     fun getEventAlreadyFeedbacked(
         @RequestHeader("Authorization")token: String,
     ): Map<String, List<Long>>{
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return feedbackService.getEventAlreadyFeedbacked(username)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return feedbackService.getEventAlreadyFeedbacked(userId)
     }
 
 }

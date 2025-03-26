@@ -32,8 +32,8 @@ class AnswerController(val answerService: AnswerService, val tokenService: Token
 
     @GetMapping("/v2/answers/question/{questionId}")
     fun getAnswerByQuestionIdWithAuth(@RequestHeader("Authorization") token: String,@PathVariable("questionId") questionId: Long): List<AnswerDTO> {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return answerService.getAnswerByQuestionIdWithAuth(username,questionId)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return answerService.getAnswerByQuestionIdWithAuth(userId,questionId)
     }
 
 //    @PostMapping("/v1/answers")
@@ -49,8 +49,8 @@ class AnswerController(val answerService: AnswerService, val tokenService: Token
         @RequestHeader("Authorization") token: String,
         @RequestBody @Valid createAnswerDTO: CreateAnswerDTO
     ): AnswerDTO {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return answerService.createAnswerWithAuth(username,createAnswerDTO)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return answerService.createAnswerWithAuth(userId,createAnswerDTO)
     }
 
 }

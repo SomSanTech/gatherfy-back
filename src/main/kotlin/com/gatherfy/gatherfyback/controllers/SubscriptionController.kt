@@ -29,16 +29,16 @@ class SubscriptionController(
         @RequestHeader("Authorization")token: String,
         @RequestBody newSubscription: CreateSubscriptionDTO
     ): Subscription {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return subscriptionService.createSubscription(username, newSubscription)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return subscriptionService.createSubscription(userId, newSubscription)
     }
 
     @GetMapping("/v1/subscribe")
     fun getSubscription(
         @RequestHeader("Authorization")token: String
     ): List<Subscription>? {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return subscriptionService.getSubscription(username)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return subscriptionService.getSubscription(userId)
     }
 
     @DeleteMapping("/v1/subscribe/{tagId}")
@@ -46,15 +46,15 @@ class SubscriptionController(
         @RequestHeader("Authorization")token: String,
         @PathVariable tagId: Long
     ){
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return subscriptionService.deleteSubscription(username, tagId)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return subscriptionService.deleteSubscription(userId, tagId)
     }
 
     @GetMapping("/v1/subscribed")
     fun getTagsAlreadySubscribed(
         @RequestHeader("Authorization")token: String
     ): Map<String, List<Long>> {
-        val username = tokenService.getUsernameFromToken(token.substringAfter("Bearer "))
-        return subscriptionService.getTagsAlreadySubscribed(username)
+        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
+        return subscriptionService.getTagsAlreadySubscribed(userId)
     }
 }

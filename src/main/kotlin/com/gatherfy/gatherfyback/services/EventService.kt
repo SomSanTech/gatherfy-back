@@ -55,14 +55,14 @@ class EventService(
         }
     }
 
-    fun getEventByIdWithAuth(username: String, id: Long): EventDTO {
+    fun getEventByIdWithAuth(userId: Int, id: Long): EventDTO {
         try{
-            val user = userRepository.findByUsername(username)
+//            val user = userRepository.findByUserId(username)
             val event = eventRepository.findEventByEventId(id)
             if(event === null){
                 throw EntityNotFoundException("Event id $id does not exist")
             }
-            val isOwner = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, id)
+            val isOwner = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), id)
             if(isOwner === null){
                 throw AccessDeniedException("You are  not owner of this event")
             }
@@ -83,10 +83,10 @@ class EventService(
         }
     }
 
-    fun getEventFullTagByIdWithAuth(username: String, id: Long): EventFullTagDTO {
+    fun getEventFullTagByIdWithAuth(userId: Int, id: Long): EventFullTagDTO {
         try{
-            val user = userRepository.findByUsername(username)
-            val event = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, id)
+//            val user = userRepository.findByUsername(username)
+            val event = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), id)
             if(event === null){
                 throw EntityNotFoundException("Event id $id does not exist")
             }
@@ -167,14 +167,14 @@ class EventService(
         }
     }
 
-    fun getEventWithAuth(username: String): List<EventRegistrationDTO> {
+    fun getEventWithAuth(userId: Int): List<EventRegistrationDTO> {
         try {
-            val user = userRepository.findByUsername(username)
-            val events = eventRepository.findEventsByEventOwner(user?.users_id)
+//            val user = userRepository.findByUsername(username)
+            val events = eventRepository.findEventsByEventOwner(userId.toLong())
             return events.map { toEventRegistrationDTO(it) }
         }
         catch (ex: Exception){
-            throw EntityNotFoundException("User $username does not exist")
+            throw EntityNotFoundException("User id $userId does not exist")
         }
     }
 
@@ -224,9 +224,9 @@ class EventService(
         }
     }
 
-    fun createEventWithAuth(username: String, eventDto: CreateEventDTO): Event {
+    fun createEventWithAuth(userId: Int, eventDto: CreateEventDTO): Event {
         try {
-            val user = userRepository.findByUsername(username)
+//            val user = userRepository.findByUsername(username)
             val duplicateEventName = eventRepository.findDuplicateEventName(eventDto.event_name!!)
             val duplicateSlug = eventRepository.findDuplicateSlug(eventDto.event_slug!!)
             val slugPattern = eventDto.event_slug!!.matches("^[a-z0-9]+(-[a-z0-9]+)*\$".toRegex())
@@ -272,7 +272,7 @@ class EventService(
                     event_capacity = eventDto.event_capacity!!,
                     event_slug = eventDto.event_slug!!,
                     event_image = eventDto.event_image!!,
-                    event_owner = user?.users_id!!,
+                    event_owner = userId.toLong(),
                     created_at = LocalDateTime.now(),
                     event_status = "soon"
                 )
@@ -340,10 +340,10 @@ class EventService(
         }
     }
 
-    fun updateEventPartialField(username: String, eventId: Long, updateData: EditEventDTO): Event {
+    fun updateEventPartialField(userId: Int, eventId: Long, updateData: EditEventDTO): Event {
         try {
-            val user = userRepository.findByUsername(username)
-            val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
+//            val user = userRepository.findByUsername(username)
+            val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), eventId)
             if(exitingEvent === null){
                 throw EntityNotFoundException("Event id $eventId does not exist")
             }
@@ -500,10 +500,10 @@ class EventService(
         }
     }
 
-    fun deleteEventWithAuth(username: String, eventId: Long) {
+    fun deleteEventWithAuth(userId: Int, eventId: Long) {
         try{
-            val user = userRepository.findByUsername(username)
-            val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(user?.users_id, eventId)
+//            val user = userRepository.findByUsername(username)
+            val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), eventId)
             if(exitingEvent === null){
                 throw EntityNotFoundException("Event id $eventId does not exist")
             }

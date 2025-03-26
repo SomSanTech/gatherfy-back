@@ -8,6 +8,8 @@ import java.util.*
 
 interface UserRepository: JpaRepository<User, Long> {
      override fun findById(ownerId: Long): Optional<User>
+     @Query("from users where users_id = :userId")
+     fun findByUserId(@Param("userId") userId: Long): User
      fun findByUsername(username: String): User?
      @Query("from users where users_email = :email")
      fun findByEmail(@Param("email") email: String): User?

@@ -28,7 +28,7 @@ class TokenService(
     fun generateToken(
         userDetails: UserDetails,
         expirationDate: Date,
-        additionalClaims: Map<String, String?> = emptyMap()
+        additionalClaims: Map<String, Any?> = emptyMap()
     ): String = Jwts.builder()
         .claims()
         .subject(userDetails.username)
@@ -42,7 +42,7 @@ class TokenService(
     fun generateRefreshToken(
         userDetails: UserDetails,
         expirationDate: Date,
-        additionalClaims: Map<String, String?> = emptyMap()
+        additionalClaims: Map<String, Any?> = emptyMap()
     ): String = Jwts.builder()
         .claims()
         .subject(userDetails.username)
@@ -95,6 +95,10 @@ class TokenService(
 
     fun getUsernameFromToken(token: String): String{
         return getAllClaimsFromToken(token)!!.subject
+    }
+
+    fun getUserIdFromToken(token: String): Int{
+        return getAllClaimsFromToken(token)!!["userId"] as Int
     }
 
     fun isValidToken(token: String, userDetails: UserDetails): Boolean{
