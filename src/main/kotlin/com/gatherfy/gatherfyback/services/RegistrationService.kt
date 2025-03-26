@@ -49,10 +49,10 @@ class RegistrationService(
         }
     }
 
-    fun getAllRegistrationsByEventIdWithAuth(userId: Int, eventId: Long): List<RegistrationDTO> {
+    fun getAllRegistrationsByEventIdWithAuth(userId: Long, eventId: Long): List<RegistrationDTO> {
         try{
 //            val user = userRepository.findByUsername(username)
-            val isOwnerEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), eventId)
+            val isOwnerEvent = eventRepository.findEventByEventOwnerAndEventId(userId, eventId)
                 ?: throw EntityNotFoundException("Event id $eventId does not exist")
             val registrations = registrationRepository.findRegistrationsByEventId(eventId)
             return registrations.map { toRegistrationDTO(it) }
@@ -66,9 +66,9 @@ class RegistrationService(
         return registrations?.map { toRegistrationDTO(it) }
     }
 
-    fun getAllRegistrationsByOwnerAuth(userId: Int): List<RegistrationDTO>? {
+    fun getAllRegistrationsByOwnerAuth(userId: Long): List<RegistrationDTO>? {
 //        val user = userRepository.findByUsername(username)
-        val registrations = registrationRepository.findRegistrationsByEventOwner(userId.toLong())
+        val registrations = registrationRepository.findRegistrationsByEventOwner(userId)
         return registrations?.map { toRegistrationDTO(it) }
     }
 
@@ -84,12 +84,12 @@ class RegistrationService(
         }
     }
 
-    fun getRegistrationByIdWithAuth(userId: Int,registrationId: Long): RegistrationDTO {
+    fun getRegistrationByIdWithAuth(userId: Long,registrationId: Long): RegistrationDTO {
         try{
 //            val user = userRepository.findByUsername(username)
             val registration = registrationRepository.findByRegistrationId(registrationId)
                 ?: throw EntityNotFoundException("Registration id $registrationId does not exist")
-            val isOwnerEvent = registrationRepository.findByOwnerIdAndEventId(userId.toLong(), registration.eventId, registrationId)
+            val isOwnerEvent = registrationRepository.findByOwnerIdAndEventId(userId, registration.eventId, registrationId)
                 ?: throw AccessDeniedException("You are not owner of this event")
 
             return  toRegistrationDTO(registration)
@@ -117,12 +117,12 @@ class RegistrationService(
         }
     }
 
-    fun updateStatusWithAuth(userId: Int, id: Long, newStatus: String): RegistrationDTO {
+    fun updateStatusWithAuth(userId: Long, id: Long, newStatus: String): RegistrationDTO {
         try{
 //            val user = userRepository.findByUsername(username)
             val registration = registrationRepository.findById(id)
                 .orElseThrow {  EntityNotFoundException("Registration id $id does not exist") }
-            val isOwnerEvent = registrationRepository.findByOwnerIdAndEventId(userId.toLong(), registration.eventId, id)
+            val isOwnerEvent = registrationRepository.findByOwnerIdAndEventId(userId, registration.eventId, id)
                 ?: throw AccessDeniedException("You are not owner of this event")
             registration.status = newStatus
             val updatedRegistration = registrationRepository.save(registration)
@@ -175,10 +175,10 @@ class RegistrationService(
         }
     }
 
-    fun createRegistrationWithAuth(userId: Int, eventId: Long): RegistrationDTO {
+    fun createRegistrationWithAuth(userId: Long, eventId: Long): RegistrationDTO {
         try {
 //            val user = userRepository.findByUsername(username)
-            val user = userRepository.findByUserId(userId.toLong())
+            val user = userRepository.findByUserId(userId)
             val event = eventRepository.findById(eventId)
                 .orElseThrow { EntityNotFoundException("Event id $eventId does not exist") }
 
@@ -239,10 +239,10 @@ class RegistrationService(
         )
     }
 
-    fun getRegistrationByUser(userId: Int): List<UserRegistrationDTO>{
+    fun getRegistrationByUser(userId: Long): List<UserRegistrationDTO>{
         try{
 //            val user = userRepository.findByUsername(username)
-            val registrations = userId.let { registrationRepository.findRegistrationsByUserId(it.toLong()) }
+            val registrations = userId.let { registrationRepository.findRegistrationsByUserId(it) }
                 return registrations.map { registration -> toUserRegistrationDto(registration) }
         }
         catch (e: Exception){

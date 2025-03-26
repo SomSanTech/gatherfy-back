@@ -96,7 +96,7 @@ class FeedbackService(
         }
     }
 
-    fun createFeedbackWithAuth(userId: Int, createFeedback: CreateFeedbackDTO): Feedback {
+    fun createFeedbackWithAuth(userId: Long, createFeedback: CreateFeedbackDTO): Feedback {
         try {
 //            val user = userRepository.findByUsername(username)
             val event = eventRepository.findById(createFeedback.eventId)
@@ -105,13 +105,13 @@ class FeedbackService(
             if (registration === null){
                 throw AccessDeniedException("You are not attendee of this event")
             }
-            val isFeedbackExist = feedbackRepository.findByUserIdAndEventId(userId.toLong(), event.event_id)
+            val isFeedbackExist = feedbackRepository.findByUserIdAndEventId(userId, event.event_id)
             if (isFeedbackExist !== null){
                 throw ConflictException("You already gave feedback for this event.")
             }
             val feedback = Feedback(
                 eventId = event.event_id,
-                userId = userId.toLong(),
+                userId = userId,
                 feedbackComment = createFeedback.feedbackComment!!,
                 feedbackRating = createFeedback.feedbackRating,
             )
@@ -139,9 +139,9 @@ class FeedbackService(
         }
     }
 
-    fun getEventAlreadyFeedbacked(userId: Int): Map<String, List<Long>>{
+    fun getEventAlreadyFeedbacked(userId: Long): Map<String, List<Long>>{
 //        val user = userRepository.findByUsername(username)
-        val eventList = feedbackRepository.findFeedbacksByUserId(userId.toLong())
+        val eventList = feedbackRepository.findFeedbacksByUserId(userId)
         return mapOf("eventId" to eventList!!.mapNotNull { it.eventId })
     }
 

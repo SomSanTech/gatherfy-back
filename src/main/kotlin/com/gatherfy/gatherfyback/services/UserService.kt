@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.MethodParameter
 import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.validation.BeanPropertyBindingResult
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -191,7 +190,7 @@ class UserService(
         }
     }
 
-    fun updateUser(userId: Int, userEdit: EditUserDTO): User {
+    fun updateUser(userId: String, userEdit: EditUserDTO): User {
         try{
 //            val userProfile = userRepository.findByUsername(username)
             val userProfile = userRepository.findByUserId(userId.toLong())
@@ -254,18 +253,18 @@ class UserService(
         }
     }
 
-    fun getUserProfile(userId: Int): User?{
+    fun getUserProfile(userId: Long): User?{
 //        val user = userRepository.findByUsername(username)
-        val user = userRepository.findByUserId(userId.toLong())
+        val user = userRepository.findByUserId(userId)
         if(user.users_image !== null){
             user.users_image = getImageUrl("profiles",user.users_image!!)
         }
         return user
     }
 
-    fun getUserProfileWithSocials(userId: Int): ProfileDTO{
+    fun getUserProfileWithSocials(userId: Long): ProfileDTO{
 //        val user = userRepository.findByUsername(username)
-        val user = userRepository.findByUserId(userId.toLong())
+        val user = userRepository.findByUserId(userId)
         val socials = socialRepository.findSocialsByUserId(user.users_id!!).map { socail ->
             Social(
                 socialPlatform = socail.socialPlatform,
@@ -297,7 +296,7 @@ class UserService(
         return "$minioDomain/$bucketName/$objectName"
     }
 
-    fun updatePassword(userId: Int, editPasswordDTO: EditPasswordDTO): ResponseEntity<String>{
+    fun updatePassword(userId: String, editPasswordDTO: EditPasswordDTO): ResponseEntity<String>{
         val encoder = BCryptPasswordEncoder(16)
 //        val user = userRepository.findByUsername(username)
         val user = userRepository.findByUserId(userId.toLong())

@@ -38,19 +38,19 @@ class JwtAuthenticationFilter(
             val header = tokenService.getJwtHeader(jwtToken)
 
             val alg = header!!["alg"] as? String
-            val username = if(alg.equals("RS256")){
-                authService.identifyGoogleUser(jwtToken).toString()
+            val userId = if(alg.equals("RS256")){
+                authService.identifyGoogleUser(jwtToken)
             } else{
-                tokenService.getUsernameFromToken(jwtToken)
+                tokenService.getSubjectFromToken(jwtToken).toLong()
             }
 
-            if(username != null && SecurityContextHolder.getContext().authentication == null){
-                val userExist = userRepository.findByUsername(username)
-                if(userExist == null) {
+            if(SecurityContextHolder.getContext().authentication == null){
+                if(userId == null) {
                     // If user is not found
                     throw CustomUnauthorizedException("User do not have an account yet")
                 }else{
-                    val foundUser = userDetailsService.loadUserByUsername(username)
+                    val userExist = userRepository.findByUserId(userId)
+                    val foundUser = userDetailsService.loadUserByUsername(userExist.username)
 
                     if(tokenService.isValidToken(jwtToken,foundUser)){
                         updateContext(foundUser, request)

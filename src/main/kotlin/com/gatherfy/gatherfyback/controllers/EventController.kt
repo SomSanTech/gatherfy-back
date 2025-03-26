@@ -39,8 +39,8 @@ class EventController(
     fun getEvent(@RequestHeader("Authorization")token: String, @PathVariable eventId: String) : EventDTO {
     val id = eventId.toLongOrNull()
         ?: throw BadRequestException("Invalid event ID format")
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        return eventService.getEventByIdWithAuth(userId, id)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        return eventService.getEventByIdWithAuth(userId.toLong(), id)
     }
 
 //    @GetMapping("/v1/events/backoffice/{id}")
@@ -57,15 +57,15 @@ class EventController(
     fun getEventWithFullTag(@RequestHeader("Authorization")token: String, @PathVariable eventId: String) : EventFullTagDTO {
         val id = eventId.toLongOrNull()
             ?: throw BadRequestException("Invalid event ID format")
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        return eventService.getEventFullTagByIdWithAuth(userId, id)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        return eventService.getEventFullTagByIdWithAuth(userId.toLong(), id)
     }
 
 //    Use this instead of "/v1/backoffice/events/owner/{ownerId}", "/v1/events/owner/{ownerId}"
     @GetMapping("/v1/backoffice/events")
     fun getEventWithAuth(@RequestHeader("Authorization")token: String): List<EventRegistrationDTO> {
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        return eventService.getEventWithAuth(userId)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        return eventService.getEventWithAuth(userId.toLong())
     }
 
 //    @GetMapping("/v1/backoffice/events/owner/{ownerId}")
@@ -90,8 +90,8 @@ class EventController(
 
     @PostMapping("/v2/backoffice/events")
     fun createEvent(@RequestHeader("Authorization")token: String,@RequestBody @Valid eventDTO: CreateEventDTO): Event {
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        return eventService.createEventWithAuth(userId,eventDTO)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        return eventService.createEventWithAuth(userId.toLong(),eventDTO)
     }
 
     @PutMapping("/v1/backoffice/events/{eventId}")
@@ -103,8 +103,8 @@ class EventController(
     fun updateEventPartialField(@RequestHeader("Authorization")token: String,@PathVariable eventId: String,@RequestBody @Valid eventDTO: EditEventDTO): Event {
         val id = eventId.toLongOrNull()
             ?: throw BadRequestException("Invalid event ID format")
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        return eventService.updateEventPartialField(userId, id,eventDTO)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        return eventService.updateEventPartialField(userId.toLong(), id,eventDTO)
     }
 
     @DeleteMapping("/v1/backoffice/events/{eventId}")
@@ -116,8 +116,8 @@ class EventController(
     fun deleteEventWithAuth(@RequestHeader("Authorization")token: String, @PathVariable eventId: String) {
         val id = eventId.toLongOrNull()
             ?: throw BadRequestException("Invalid event ID format")
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        eventService.deleteEventWithAuth(userId, id)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        eventService.deleteEventWithAuth(userId.toLong(), id)
     }
 
 }

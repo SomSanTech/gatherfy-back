@@ -11,14 +11,14 @@ class SocialService(
     private val socialRepository: SocialRepository,
     private val userRepository: UserRepository,
 ) {
-    fun getSocialLinks(userId: Int): List<Social>{
+    fun getSocialLinks(userId: Long): List<Social>{
 //        val user = userRepository.findByUsername(username)
-        return socialRepository.findSocialsByUserId(userId.toLong())
+        return socialRepository.findSocialsByUserId(userId)
     }
 
-    fun updateSocialLink(userId: Int, createSocialDTO: CreateSocialDTO){
+    fun updateSocialLink(userId: Long, createSocialDTO: CreateSocialDTO){
 //        val user = userRepository.findByUsername(username)
-        val existingSocials = socialRepository.findSocialsByUserId(userId.toLong()).map { it.socialId  }
+        val existingSocials = socialRepository.findSocialsByUserId(userId).map { it.socialId  }
         val deleteMissing = existingSocials.filter { it !in createSocialDTO.socialLinks.map { ex -> ex.socialId }  }
         if(deleteMissing.isNotEmpty()){
             socialRepository.deleteAllById(deleteMissing)

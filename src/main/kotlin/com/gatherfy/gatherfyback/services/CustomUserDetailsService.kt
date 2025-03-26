@@ -19,7 +19,7 @@ class CustomUserDetailsService(private val userRepository: UserRepository) : Use
 
     fun ApplicationUser.mapToUserDetails(): UserDetails =
         User.builder()
-            .username(this.username)
+            .username(this.users_id.toString())
             .password(this.password ?: "{noop}google-auth")
             .roles(this.users_role)
             .build()

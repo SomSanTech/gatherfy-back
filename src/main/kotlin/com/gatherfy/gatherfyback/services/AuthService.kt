@@ -33,11 +33,10 @@ class AuthService(
             )
 
             val additionalClaims = mapOf(
-                "userId" to users.users_id,
                 "role" to users.users_role
             )
-            val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
-            val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
+            val accessToken = tokenService.generateToken(users.users_id,getAccessTokenExpiration(),additionalClaims)
+            val refreshToken = tokenService.generateRefreshToken(users.users_id,getRefreshTokenExpiration(),additionalClaims)
             return AuthResponse(accessToken, refreshToken)
         } catch (e: CustomUnauthorizedException ){
             throw CustomUnauthorizedException(e.message!!)
@@ -48,6 +47,7 @@ class AuthService(
         try{
             val accountEmail = tokenService.getAllClaimsFromToken(token)!!["email"]
             val accountExist = userRepository.findByEmail(accountEmail.toString())
+            println("accountExist $accountExist")
 
             if(accountExist !== null){
                 val user = userDetailsService.loadUserByUsername(accountExist.username)
@@ -55,11 +55,10 @@ class AuthService(
                 println("user = ${accountExist.username}")
 
                 val additionalClaims = mapOf(
-                    "userId" to accountExist.users_id,
                     "role" to accountExist.users_role
                 )
-                val accessToken = tokenService.generateToken(user,getAccessTokenExpiration(),additionalClaims)
-                val refreshToken = tokenService.generateRefreshToken(user,getRefreshTokenExpiration(),additionalClaims)
+                val accessToken = tokenService.generateToken(accountExist.users_id,getAccessTokenExpiration(),additionalClaims)
+                val refreshToken = tokenService.generateRefreshToken(accountExist.users_id,getRefreshTokenExpiration(),additionalClaims)
                 return AuthResponse(accessToken, refreshToken)
             } else{
                 throw CustomUnauthorizedException("User do not have an account yet")
@@ -76,11 +75,11 @@ class AuthService(
         return Date(System.currentTimeMillis() + jwtProperties.refreshTokenExpiration)
     }
 
-    fun identifyGoogleUser(token: String): Any?{
+    fun identifyGoogleUser(token: String): Long?{
         val accountEmail = tokenService.getAllClaimsFromToken(token)!!["email"]
         val accountExist = userRepository.findByEmail(accountEmail.toString())
         if(accountExist !== null){
-            return accountExist.username
+            return accountExist.users_id
         }
         return null
     }

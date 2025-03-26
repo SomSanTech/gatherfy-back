@@ -20,18 +20,18 @@ import java.security.spec.RSAPublicKeySpec
 
 @Service
 class TokenService(
-    private val jwtProperties: JwtProperties
+    private val jwtProperties: JwtProperties,
 ) {
     private val secretKey: SecretKey = Keys.hmacShaKeyFor(jwtProperties.key.toByteArray())
     private val googlePublicKeyUrl = "https://www.googleapis.com/oauth2/v3/certs"
 
     fun generateToken(
-        userDetails: UserDetails,
+        userDetails: Long?,
         expirationDate: Date,
         additionalClaims: Map<String, Any?> = emptyMap()
     ): String = Jwts.builder()
         .claims()
-        .subject(userDetails.username)
+        .subject(userDetails.toString())
         .issuedAt(Date(System.currentTimeMillis()))
         .expiration(expirationDate)
         .add(additionalClaims)
@@ -40,12 +40,12 @@ class TokenService(
         .compact()
 
     fun generateRefreshToken(
-        userDetails: UserDetails,
+        userDetails: Long?,
         expirationDate: Date,
         additionalClaims: Map<String, Any?> = emptyMap()
     ): String = Jwts.builder()
         .claims()
-        .subject(userDetails.username)
+        .subject(userDetails.toString())
         .issuedAt(Date(System.currentTimeMillis()))
         .expiration(expirationDate)
         .add(additionalClaims)
@@ -93,17 +93,13 @@ class TokenService(
         return getAllClaimsFromToken(token)!!.expiration.before(Date(System.currentTimeMillis()))
     }
 
-    fun getUsernameFromToken(token: String): String{
+    fun getSubjectFromToken(token: String): String{
         return getAllClaimsFromToken(token)!!.subject
     }
 
-    fun getUserIdFromToken(token: String): Int{
-        return getAllClaimsFromToken(token)!!["userId"] as Int
-    }
-
     fun isValidToken(token: String, userDetails: UserDetails): Boolean{
-        val username = getUsernameFromToken(token)
-        return username == userDetails.username && !isTokenExpired(token)
+        val userId = getSubjectFromToken(token)
+        return userId == userDetails.username && !isTokenExpired(token)
     }
 
     fun getAdditionalClaims(token: String, claimKey: String): Any? {

@@ -25,10 +25,10 @@ class ReportService(
     private val userRepository: UserRepository,
     private val eventRepository: EventRepository
 ) {
-    fun generateReport(userId: Int, eventId: Long): ByteArray{
+    fun generateReport(userId: Long, eventId: Long): ByteArray{
         try {
 //            val user = userRepository.findByUsername(username)
-            val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), eventId)
+            val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(userId, eventId)
             if (exitingEvent === null) {
                 throw EntityNotFoundException("Event id $eventId does not exist")
             }

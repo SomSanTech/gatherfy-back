@@ -6,7 +6,6 @@ import com.gatherfy.gatherfyback.repositories.UserRepository
 import com.gatherfy.gatherfyback.services.AuthService
 import com.gatherfy.gatherfyback.services.CustomUserDetailsService
 import com.gatherfy.gatherfyback.services.TokenService
-import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
@@ -94,16 +93,17 @@ class AuthController(
 //                    println(cookie.value)
 //                    val refreshToken = cookie.value
 
-                    val username = tokenService.getUsernameFromToken(refreshToken)
-                    val user = userDetailsService.loadUserByUsername(username)
+                    val userId = tokenService.getSubjectFromToken(refreshToken)
+                    val userExist = userRepository.findByUserId(userId.toLong())
+                    val user = userDetailsService.loadUserByUsername(userExist.username)
                     val users = userRepository.findByUsername(user.username)
                     val additionalClaims = mapOf(
                         "role" to users?.users_role
                     )
-                    val foundUser = userDetailsService.loadUserByUsername(username)
-                    if (tokenService.isValidToken(refreshToken, foundUser)) {
+//                    val foundUser = userDetailsService.loadUserByUsername(username)
+                    if (tokenService.isValidToken(refreshToken, user)) {
                         val newAccessToken: String =
-                            tokenService.generateToken(user, authService.getAccessTokenExpiration(), additionalClaims)
+                            tokenService.generateToken(userId.toLong(), authService.getAccessTokenExpiration(), additionalClaims)
                         return ResponseEntity.ok(mapOf("accessToken" to newAccessToken))
                     }
 //                }

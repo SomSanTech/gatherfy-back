@@ -41,13 +41,13 @@ class AnswerService(
         return answer!!.map { toAnswerDTO(it) }
     }
 
-    fun getAnswerByQuestionIdWithAuth(userId: Int, questionId: Long) : List<AnswerDTO> {
+    fun getAnswerByQuestionIdWithAuth(userId: Long, questionId: Long) : List<AnswerDTO> {
         try{
 //            val user = userRepository.findByUsername(username)
             val question = questionRepository.findById(questionId).orElseThrow{
                 EntityNotFoundException("Question id $questionId does not exist")
             }
-            val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), question.eventId)
+            val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId, question.eventId)
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
             }
@@ -86,14 +86,14 @@ class AnswerService(
 //        }
 //    }
 
-    fun createAnswerWithAuth(userId: Int, createAnswerDTO: CreateAnswerDTO): AnswerDTO {
+    fun createAnswerWithAuth(userId: Long, createAnswerDTO: CreateAnswerDTO): AnswerDTO {
         try {
 //            val user = userRepository.findByUsername(username)
 
             val question = questionRepository.findById(createAnswerDTO.questionId)
                 .orElseThrow { EntityNotFoundException("Question id ${createAnswerDTO.questionId} does not exist") }
 
-            val feedback = feedbackRepository.findFeedbackByUserIdAndEventId(userId.toLong(), question.eventId!!)
+            val feedback = feedbackRepository.findFeedbackByUserIdAndEventId(userId, question.eventId!!)
             if(feedback === null){
                 throw EntityNotFoundException("User do not feedback this event yet.")
             }

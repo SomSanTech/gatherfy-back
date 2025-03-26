@@ -28,8 +28,8 @@ class ReportController(
         @RequestHeader("Authorization") token: String,
         @PathVariable eventId: Long)
     : ResponseEntity<ByteArrayResource> {
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        val reportBytes = reportService.generateReport(userId,eventId)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        val reportBytes = reportService.generateReport(userId.toLong(),eventId)
         val customFileName  = eventService.getEventById(eventId).name
         val resource = ByteArrayResource(reportBytes)
         return ResponseEntity.ok()

@@ -16,8 +16,8 @@ class SocialController(
 ) {
     @GetMapping("/v1/socials")
     fun getSocialLinks(@RequestHeader("Authorization") token: String): List<Social>{
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        return socialService.getSocialLinks(userId)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        return socialService.getSocialLinks(userId.toLong())
     }
 
     @PutMapping("/v1/socials")
@@ -25,8 +25,8 @@ class SocialController(
         @RequestHeader("Authorization") token: String,
         @RequestBody createSocialDTO: CreateSocialDTO
     ): ResponseEntity<String>{
-        val userId = tokenService.getUserIdFromToken(token.substringAfter("Bearer "))
-        socialService.updateSocialLink(userId, createSocialDTO)
+        val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
+        socialService.updateSocialLink(userId.toLong(), createSocialDTO)
         return ResponseEntity.ok("Social links updated successfully")
     }
 }
