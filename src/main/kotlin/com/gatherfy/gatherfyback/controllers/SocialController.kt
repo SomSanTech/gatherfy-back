@@ -4,7 +4,7 @@ import com.gatherfy.gatherfyback.dtos.CreateSocialDTO
 import com.gatherfy.gatherfyback.entities.Social
 import com.gatherfy.gatherfyback.services.SocialService
 import com.gatherfy.gatherfyback.services.TokenService
-import org.springframework.http.ResponseEntity
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -23,10 +23,9 @@ class SocialController(
     @PutMapping("/v1/socials")
     fun createSocialLinks(
         @RequestHeader("Authorization") token: String,
-        @RequestBody createSocialDTO: CreateSocialDTO
-    ): ResponseEntity<String>{
+        @Valid @RequestBody createSocialDTO: CreateSocialDTO
+    ): List<Social>{
         val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
-        socialService.updateSocialLink(userId.toLong(), createSocialDTO)
-        return ResponseEntity.ok("Social links updated successfully")
+        return socialService.updateSocialLink(userId.toLong(), createSocialDTO)
     }
 }

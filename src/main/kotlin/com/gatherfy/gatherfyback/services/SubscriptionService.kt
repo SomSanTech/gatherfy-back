@@ -19,7 +19,6 @@ class SubscriptionService(
 
     fun getSubscription(userId: Long): List<Subscription>?{
         try{
-//            val user = userRepository.findByUsername(username)
             return subscriptionRepository.findAllByUserId(userId)
         }catch (e: Exception){
             throw RuntimeException("An unexpected error occurred: ${e.message}")
@@ -28,7 +27,6 @@ class SubscriptionService(
 
     fun createSubscription(userId: Long, newSubscribe: CreateSubscriptionDTO): Subscription{
         try{
-//            val user = userRepository.findByUsername(username)
             val user = userRepository.findByUserId(userId)
             val isSubscribed = subscriptionRepository.findSubscriptionByUserAndTag(userId, newSubscribe.tagId)
             val tag = tagRepository.findTagByTagId(newSubscribe.tagId)
@@ -52,7 +50,6 @@ class SubscriptionService(
 
     fun deleteSubscription(userId: Long, tagId: Long){
         try{
-//            val user = userRepository.findByUsername(username)
             val user = userRepository.findByUserId(userId)
             val isSubscribed = subscriptionRepository.findSubscriptionByUserAndTag(userId, tagId)
             val tag = tagRepository.findTagByTagId(tagId)
@@ -71,7 +68,6 @@ class SubscriptionService(
     }
 
     fun getTagsAlreadySubscribed(userId: Long): Map<String, List<Long>>{
-//        val user = userRepository.findByUsername(username)
         val tagList = subscriptionRepository.findSubscriptionsByUserId(userId)
         return mapOf("tagId" to tagList!!.map { it.tagId })
     }

@@ -8,7 +8,6 @@ import com.gatherfy.gatherfyback.services.QuestionService
 import com.gatherfy.gatherfyback.services.TokenService
 import jakarta.validation.Valid
 import org.apache.coyote.BadRequestException
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -24,15 +23,6 @@ class QuestionController(
         return questionService.getAllQuestionByEventId(eventId)
     }
 
-    @PutMapping("/v1/questions/{questionId}")
-    fun updateQuestion(
-        @PathVariable("questionId") questionId: Long,
-        @RequestBody updateQuestion: CreateQuestionDTO,
-    ): ResponseEntity<Question> {
-        val updatedQuestion = questionService.updateQuestion(questionId, updateQuestion)
-        return ResponseEntity.ok(updatedQuestion)
-    }
-
     @PutMapping("/v2/questions/{questionId}")
     fun updateQuestion(
         @PathVariable("questionId") questionId: String,
@@ -45,14 +35,6 @@ class QuestionController(
         return questionService.updateQuestionWithAuth(userId.toLong(), id, updateQuestion)
     }
 
-    @PostMapping("/v1/questions")
-    fun createQuestion(
-        @RequestBody createQuestionDTO: CreateQuestionDTO
-    ): ResponseEntity<Question> {
-        val createdQuestion = questionService.createQuestion(createQuestionDTO)
-        return ResponseEntity.ok(createdQuestion)
-    }
-
     @PostMapping("/v2/questions")
     fun createQuestionWithAuth(
         @RequestHeader("Authorization") token: String,
@@ -60,13 +42,6 @@ class QuestionController(
     ): Question {
         val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
         return questionService.createQuestionWithAuth(userId.toLong(), createQuestionDTO)
-    }
-
-    @DeleteMapping("/v1/questions/{questionId}")
-    fun deleteQuestion(
-        @PathVariable("questionId") questionId: Long,
-    ){
-        questionService.deleteQuestion(questionId)
     }
 
     @DeleteMapping("/v2/questions/{questionId}")

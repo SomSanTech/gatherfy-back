@@ -47,31 +47,6 @@ class AuthController(
         return authService.authenticationGoogle(token.substringAfter("Bearer "))
     }
 
-//    @PostMapping("/v1/refresh")
-//    fun refreshToken(request: HttpServletRequest): Any {
-//        val refreshToken = request.getHeader("Authorization").replace("Bearer ", "")
-//        println(refreshToken)
-//        if (refreshToken.isNullOrBlank()) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Refresh token is missing")
-//        }
-//        val username = tokenService.getUsernameFromToken(refreshToken)
-//
-//        val foundUser = userDetailsService.loadUserByUsername(username)
-//        val user = userDetailsService.loadUserByUsername(username)
-//        val users = userRepository.findByUsername(user.username)
-//        val additionalClaims = mapOf(
-//            "role" to users?.users_role
-//        )
-//        val accessToken = tokenService.generateToken(user, authService.getAccessTokenExpiration(), additionalClaims)
-//
-//        if (!tokenService.isValidToken(refreshToken, foundUser)) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token")
-//        }
-//
-//        return accessToken
-//
-//    }
-
     @PostMapping("/refresh")
     fun refresh(@CookieValue("refreshToken") refreshToken: String?,request: HttpServletRequest, response: HttpServletResponse?): ResponseEntity<*> {
         println(refreshToken)

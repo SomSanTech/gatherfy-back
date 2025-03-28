@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException
 import org.apache.coyote.BadRequestException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -46,21 +47,18 @@ class CustomExceptionHandle {
         return ResponseEntity.status(ex.statusCode).body(ex.reason)
     }
 
-//    @ExceptionHandler(MethodArgumentNotValidException::class)
-//    fun handleMethodArgumentNotValid(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
-//        val status = HttpStatus.BAD_REQUEST // 404
-//        val errors = e.bindingResult.allErrors.map {
-//            it.defaultMessage
-//        }
-//        return ResponseEntity(
-//            ErrorResponse(
-//                status.value(),
-//                "Bad Request",
-//                errors.joinToString(", "),
-//            ),
-//            status
-//        )
-//    }
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleMessageNotReadable(e: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> {
+        val status = HttpStatus.BAD_REQUEST // 404
+        return ResponseEntity(
+            ErrorResponse(
+                status.value(),
+                "Bad Request",
+                "Invalid JSON input",
+            ),
+            status
+        )
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(ex: MethodArgumentNotValidException): ResponseEntity<Map<String, Any>> {

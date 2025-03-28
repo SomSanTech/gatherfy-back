@@ -1,9 +1,7 @@
 package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.dtos.EventViewsDTO
-import com.gatherfy.gatherfyback.dtos.ViewDTO
 import com.gatherfy.gatherfyback.dtos.ViewData
-import com.gatherfy.gatherfyback.entities.User
 import com.gatherfy.gatherfyback.entities.View
 import com.gatherfy.gatherfyback.repositories.ViewRepository
 import jakarta.transaction.Transactional
@@ -50,18 +48,5 @@ class ViewService(private val viewRepository: ViewRepository) {
             viewRepository.flush()
             return "no data"
         }
-    }
-
-
-
-
-
-    private fun toViewDTO(view: View): ViewDTO {
-        return ViewDTO(
-            view_id = view.viewId,
-            event_id = view.eventId,
-            view_date = view.viewDate,
-            view_count =view.viewCount,
-        )
     }
 }

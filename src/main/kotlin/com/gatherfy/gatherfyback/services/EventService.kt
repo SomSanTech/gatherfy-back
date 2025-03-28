@@ -57,7 +57,6 @@ class EventService(
 
     fun getEventByIdWithAuth(userId: Long, id: Long): EventDTO {
         try{
-//            val user = userRepository.findByUserId(username)
             val event = eventRepository.findEventByEventId(id)
             if(event === null){
                 throw EntityNotFoundException("Event id $id does not exist")
@@ -74,18 +73,8 @@ class EventService(
         }
     }
 
-    fun getEventFullTagById(id: Long): EventFullTagDTO {
-        try{
-            return toEventFullTagDto(eventRepository.findEventByEventId(id)!!)
-        }
-        catch (ex: Exception){
-            throw EntityNotFoundException("Event id $id does not exist")
-        }
-    }
-
     fun getEventFullTagByIdWithAuth(userId: Long, id: Long): EventFullTagDTO {
         try{
-//            val user = userRepository.findByUsername(username)
             val event = eventRepository.findEventByEventOwnerAndEventId(userId, id)
             if(event === null){
                 throw EntityNotFoundException("Event id $id does not exist")
@@ -157,19 +146,8 @@ class EventService(
         }
     }
 
-    fun getEventByOwner(ownerId: Long?): List<EventRegistrationDTO> {
-        try {
-            val events = eventRepository.findEventsByEventOwner(ownerId)
-            return events.map { toEventRegistrationDTO(it) }
-        }
-        catch (ex: Exception){
-            throw EntityNotFoundException("User id $ownerId does not exist")
-        }
-    }
-
     fun getEventWithAuth(userId: Long): List<EventRegistrationDTO> {
         try {
-//            val user = userRepository.findByUsername(username)
             val events = eventRepository.findEventsByEventOwner(userId)
             return events.map { toEventRegistrationDTO(it) }
         }
@@ -191,42 +169,8 @@ class EventService(
         }
     }
 
-    fun createEvent(event: CreateEventDTO): Event {
-        try {
-            val evente = Event(
-                event_id = null,
-                event_name = event.event_name!!,
-                event_desc = event.event_desc!!,
-                event_detail = event.event_detail!!,
-                event_start_date = event.event_start_date!!,
-                event_end_date = event.event_end_date!!,
-                event_ticket_start_date = event.event_ticket_start_date!!,
-                event_ticket_end_date = event.event_ticket_end_date,
-                event_registration_goal = event.event_registration_goal,
-                event_location = event.event_location!!,
-                event_google_map = event.event_google_map!!,
-                event_capacity = event.event_capacity!!,
-                event_slug = event.event_slug!!,
-                event_image = event.event_image!!,
-                event_owner = event.event_owner!!,
-                created_at = LocalDateTime.now(),
-                event_status = "soon"
-            )
-            val savedEvent = eventRepository.save(evente)
-            if (event.tags!!.isNotEmpty()) {
-                eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
-            }
-            return savedEvent
-        } catch (e: MethodArgumentNotValidException) {
-            throw e
-        } catch (e: Exception) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST)
-        }
-    }
-
     fun createEventWithAuth(userId: Long, eventDto: CreateEventDTO): Event {
         try {
-//            val user = userRepository.findByUsername(username)
             val duplicateEventName = eventRepository.findDuplicateEventName(eventDto.event_name!!)
             val duplicateSlug = eventRepository.findDuplicateSlug(eventDto.event_slug!!)
             val slugPattern = eventDto.event_slug!!.matches("^[a-z0-9]+(-[a-z0-9]+)*\$".toRegex())
@@ -278,7 +222,6 @@ class EventService(
                 )
                 val savedEvent = eventRepository.save(evente)
                 if (eventDto.tags!!.isNotEmpty()) {
-//                    eventTagService.createEventTag(savedEvent.event_id!!, event.tags!!)
                     // Explicitly refresh and set tags
                     val updatedTags = tagRepository.findAllById(eventDto.tags!!)
                     savedEvent.tags = updatedTags.toMutableList()
@@ -293,20 +236,7 @@ class EventService(
             throw BadRequestException(e.message)
         }
     }
-    // Helper method for additional validation
-//    private fun validateEvent(event: CreateEventDTO) {
-//        if (event.event_start_date != null && event.event_end_date != null) {
-//            if (event.event_start_date!!.isAfter(event.event_end_date)) {
-//                throw IllegalArgumentException("Event start date must be before the end date")
-//            }
-//        }
-//
-//        if (event.event_ticket_start_date != null && event.event_ticket_end_date != null) {
-//            if (event.event_ticket_start_date.isAfter(event.event_ticket_end_date)) {
-//                throw IllegalArgumentException("Ticket sale start date must be before the end date")
-//            }
-//        }
-//    }
+
     fun updateEvent(eventId: Long, updateData: CreateEventDTO): Event {
         try {
             val event = eventRepository.findById(eventId)
@@ -342,7 +272,6 @@ class EventService(
 
     fun updateEventPartialField(userId: Long, eventId: Long, updateData: EditEventDTO): Event {
         try {
-//            val user = userRepository.findByUsername(username)
             val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(userId, eventId)
             if(exitingEvent === null){
                 throw EntityNotFoundException("Event id $eventId does not exist")
@@ -485,24 +414,8 @@ class EventService(
         }
     }
 
-    fun deleteEvent(eventId: Long) {
-        try{
-            val event = eventRepository.findById(eventId)
-                .orElseThrow { EntityNotFoundException("Event id $eventId does not exist") }
-            val existingEventTags = eventTagRepository.findAllByEvent(event)
-            eventTagRepository.deleteAll(existingEventTags)
-            minioService.deleteFile("thumbnails",event.event_image)
-            eventRepository.delete(event)
-        } catch (e: EntityNotFoundException){
-            throw EntityNotFoundException(e.message)
-        } catch (e: Exception) {
-            throw RuntimeException("An unexpected error occurred: ${e.message}")
-        }
-    }
-
     fun deleteEventWithAuth(userId: Long, eventId: Long) {
         try{
-//            val user = userRepository.findByUsername(username)
             val exitingEvent = eventRepository.findEventByEventOwnerAndEventId(userId, eventId)
             if(exitingEvent === null){
                 throw EntityNotFoundException("Event id $eventId does not exist")
@@ -547,7 +460,7 @@ class EventService(
             registration_goal = event.event_registration_goal!!,
             status = event.event_status,
             slug = event.event_slug,
-            image = getImageUrl("thumbnails", event.event_image),
+            image = minioService.getImageUrl("thumbnails", event.event_image),
             owner = ownerEventName,
             tags = event.tags.map { toTagDTO(it) })
     }
@@ -579,13 +492,10 @@ class EventService(
             capacity = event.event_capacity,
             status = event.event_status,
             slug = event.event_slug,
-            image = getImageUrl("thumbnails", event.event_image),
+            image = minioService.getImageUrl("thumbnails", event.event_image),
             owner = ownerEventName,
             tags = event.tags
         )
     }
 
-    fun getImageUrl(bucketName: String, objectName: String): String {
-        return "$minioDomain/$bucketName/$objectName"
-    }
 }

@@ -15,7 +15,6 @@ class AnswerService(
     val answerRepository: AnswerRepository,
     val feedbackRepository: FeedbackRepository,
     val questionRepository: QuestionRepository,
-    private val userRepository: UserRepository,
     private val registrationRepository: RegistrationRepository,
     private val eventRepository: EventRepository
 ) {
@@ -43,7 +42,6 @@ class AnswerService(
 
     fun getAnswerByQuestionIdWithAuth(userId: Long, questionId: Long) : List<AnswerDTO> {
         try{
-//            val user = userRepository.findByUsername(username)
             val question = questionRepository.findById(questionId).orElseThrow{
                 EntityNotFoundException("Question id $questionId does not exist")
             }
@@ -60,36 +58,8 @@ class AnswerService(
         }
     }
 
-//    fun createAnswer(createAnswerDTO: CreateAnswerDTO): AnswerDTO {
-//        try {
-//             val feedback = feedbackRepository.findById(createAnswerDTO.feedbackId)
-//                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Feedback not found") }
-//
-//            val question = questionRepository.findById(createAnswerDTO.questionId)
-//                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found") }
-//
-//            val answer = Answer(
-//                question=question,
-//                feedback = feedback,
-//                questionId = createAnswerDTO.questionId,
-//                eventId = createAnswerDTO.eventId,
-//                answerText = createAnswerDTO.answerText,
-//                feedbackId = createAnswerDTO.feedbackId,
-//            )
-//
-//            val savedAnswer = answerRepository.save(answer)
-//            return toAnswerDTO(savedAnswer)
-//        } catch (e: ResponseStatusException) {
-//            throw e
-//        } catch (e: Exception){
-//            throw ResponseStatusException(HttpStatus.BAD_REQUEST,e.message ?: "Unknown error")
-//        }
-//    }
-
     fun createAnswerWithAuth(userId: Long, createAnswerDTO: CreateAnswerDTO): AnswerDTO {
         try {
-//            val user = userRepository.findByUsername(username)
-
             val question = questionRepository.findById(createAnswerDTO.questionId)
                 .orElseThrow { EntityNotFoundException("Question id ${createAnswerDTO.questionId} does not exist") }
 

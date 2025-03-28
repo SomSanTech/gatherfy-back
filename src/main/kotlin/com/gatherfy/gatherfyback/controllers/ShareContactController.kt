@@ -55,10 +55,12 @@ class ShareContactController(
     @DeleteMapping("/v1/contact/{contactId}")
     fun deleteContact(
         @RequestHeader("Authorization") token: String,
-        @PathVariable contactId: Long
+        @PathVariable contactId: String
     ): ResponseEntity<String>{
+        val id = contactId.toLongOrNull()
+            ?: throw BadRequestException("Invalid contact ID format")
         val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
-        shareContactService.deleteContact(userId.toLong(), contactId)
+        shareContactService.deleteContact(userId.toLong(), id)
         return ResponseEntity.ok("Deleted contact successfully")
     }
 }

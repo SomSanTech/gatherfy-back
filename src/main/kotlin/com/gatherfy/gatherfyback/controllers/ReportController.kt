@@ -3,6 +3,7 @@ package com.gatherfy.gatherfyback.controllers
 import com.gatherfy.gatherfyback.services.EventService
 import com.gatherfy.gatherfyback.services.ReportService
 import com.gatherfy.gatherfyback.services.TokenService
+import org.apache.coyote.BadRequestException
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -26,11 +27,13 @@ class ReportController(
     @PostMapping("/v1/report/{eventId}")
     fun generateReport(
         @RequestHeader("Authorization") token: String,
-        @PathVariable eventId: Long)
+        @PathVariable eventId: String)
     : ResponseEntity<ByteArrayResource> {
+        val id = eventId.toLongOrNull()
+            ?: throw BadRequestException("Invalid contact ID format")
         val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
-        val reportBytes = reportService.generateReport(userId.toLong(),eventId)
-        val customFileName  = eventService.getEventById(eventId).name
+        val reportBytes = reportService.generateReport(userId.toLong(),id)
+        val customFileName  = eventService.getEventById(id).name
         val resource = ByteArrayResource(reportBytes)
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$customFileName Feedback Report.xlsx\"")

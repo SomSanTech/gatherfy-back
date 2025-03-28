@@ -19,7 +19,6 @@ class ShareContactService(
 ) {
 
     fun getContacts(userId: Long): List<ContactSavedDTO>? {
-//        val user = userRepository.findByUsername(username) ?: return null
         val contactList = contactRepository.findContactsByUserId(userId)
 
         return contactList?.map { contact ->
@@ -55,7 +54,6 @@ class ShareContactService(
     }
 
     fun getContactsSortAndGroup(userId: Long): Map<Char, List<ContactSavedDTO>>? {
-//        val user = userRepository.findByUsername(username) ?: return null
         val contactList = contactRepository.findContactsByUserId(userId)
 
         return contactList?.map { contact ->
@@ -113,27 +111,23 @@ class ShareContactService(
     }
 
     fun saveContact(userId: Long, tokenDTO: TokenDTO): ProfileDTO {
-//        val user = userRepository.findByUsername(username)
-
-        val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Long
+        val contactUserId = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["userId"] as Int
         val contactUsername = tokenService.getAllClaimsFromToken(tokenDTO.qrToken)!!["username"]
-        val isContactExist = contactRepository.findContactByUserIdAndAndSaveUserId(userId, contactUserId
-        )
+        val isContactExist = contactRepository.findContactByUserIdAndAndSaveUserId(userId, contactUserId.toLong())
         if(isContactExist !== null){
-            return userService.getUserProfileWithSocials(contactUserId)
+            return userService.getUserProfileWithSocials(contactUserId.toLong())
         }
-        val contactUser = userRepository.findUserById(contactUserId)
+        val contactUser = userRepository.findUserById(contactUserId.toLong())
         val savedContact = Contact(
             userId = userId,
             saveUserId = contactUser!!
         )
         contactRepository.save(savedContact)
-        return userService.getUserProfileWithSocials(contactUserId)
+        return userService.getUserProfileWithSocials(contactUserId.toLong())
     }
 
     fun deleteContact(userId: Long, contactId: Long) {
         try{
-//            val user = userRepository.findByUsername(username)
             val contactExist = contactRepository.findContactByUserIdAndContactId(userId, contactId)
                 ?: throw EntityNotFoundException("Contact does not exist")
             contactRepository.delete(contactExist)

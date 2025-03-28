@@ -26,20 +26,22 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="content">
-            <h2>Stay in the Loop! New Events You’ll Love Inside</h2>
+            <h2>Reminder: <strong th:text="${eventName}">Korn's Graduation Gathering starts soon</strong>!</h2>
             <p>Gatherfy - Effortless Event Coordination</p>
             <hr/>
             <p>Hello <strong th:text="${username}"> Harry</strong>,</p>
-            <p>You just unlocked a new world of events!<br>By following <strong th:text="${tag}">Music</strong>, you will be the first to know when something exciting happens&#8722;whether it is a brand-new event, or an update.</p>
-            <p>Get ready to explore, engage, and never miss out!</p>
-<!--            <p>&#128640; Stay tuned,</p>-->
+            <p>Just a reminder that the event <strong th:text="${eventName}">Orm Korn's Graduation Gathering</strong> starts at &#128198; <span th:text="${startTime}">12:30</span></p>
+            <p>Be ready and check all details before the event starts.</p>
             <!--        <p style="font-family: 'Oooh Baby';font-size: 24px;"><span style="color:#D71515">G</span>atherfy</p>-->
-<!--            <p>Gatherfy - Effortless Event Coordination</p>-->
         </div>
     </div>
 </body>
+
+
+
 
 </html>

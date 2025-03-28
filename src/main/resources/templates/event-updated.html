@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:p="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration Confirmation</title>
+    <title>Hello newspaper subscription</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,8 +10,7 @@
     <style>
         body {
             font-family: 'Poppins', "Kanit", sans-serif;
-            text-align: left
-        }
+            text-align: left }
         h2 {
             text-align: center;
         }
@@ -24,8 +22,13 @@
             border-radius: 1rem
         }
         .content {
+            background: white;
             padding: 20px;
             border-radius: 8px;
+        }
+        img{
+            width: 100%;
+            border-radius: 1rem;
         }
         .content .topic {
             font-weight: 500;
@@ -33,22 +36,26 @@
         hr {
             margin-bottom: 1.5rem;
         }
-
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="content">
-            <h2>You're Registered for <span th:text="${eventName}">Orm Korn's Graduation Gathering</span></h2>
+            <h2>Event Update Detected: <span th:text="${eventName}">Orm Korn's Graduation Gathering</span></h2>
             <hr/>
-            <p>Hello <strong th:text="${username}"> Harry</strong>,</p>
-            <p>You've successfully registered for <span class="topic" th:text="${eventName}">Orm Korn's Graduation Gathering</span>.</p>
-            <p>&#128198; <span class="topic">Date/Time :</span> <span th:text="${formatStartDateTime}">Mon, Feb 17 2025 12:30</span> - <span th:text="${formatEndDateTime}">Mon, Feb 17 2025 19:30</span></p>
-            <p>&#128681; <span class="topic">Location : </span> <span th:text="${location}">มหาวิทยาลัยศรีนครินทรวิโรฒ องครักษ์ อาคารกีฬา 2</span></p>
-            <p>We’ll send you a reminder before the event starts.</p>
+            <p>Hello <strong th:text="${username}">Harry</strong>, changes have been detected in an event you registered for.</p>
+            <p><span class="topic">EVENT</span> : <span th:text="${eventName}">Orm Korn's Graduation Gathering</span></p>
+            <p><span class="topic">Updated Details:</span></p>
+            <div>
+                <div th:each="changeLine : ${#strings.split(changes, '\n')}">
+                    <p th:text="${changeLine}">Example change line</p>
+                </div>
+            </div>
+            <p>Stay connected. Stay informed.</p>
         </div>
     </div>
 </body>
+
 
 </html>

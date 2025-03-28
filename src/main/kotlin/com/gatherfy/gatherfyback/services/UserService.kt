@@ -1,6 +1,7 @@
 package com.gatherfy.gatherfyback.services
 
 import com.gatherfy.gatherfyback.Exception.ConflictException
+import com.gatherfy.gatherfyback.Exception.CustomUnauthorizedException
 import com.gatherfy.gatherfyback.dtos.*
 import com.gatherfy.gatherfyback.entities.OTPVerificationRequest
 import com.gatherfy.gatherfyback.entities.ResendOTPRequest
@@ -12,6 +13,7 @@ import org.apache.coyote.BadRequestException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.MethodParameter
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.validation.BeanPropertyBindingResult
@@ -250,6 +252,8 @@ class UserService(
             throw ConflictException(e.message!!)
         } catch (e: BadRequestException){
             throw BadRequestException(e.message)
+        } catch (e: HttpMessageNotReadableException){
+            throw HttpMessageNotReadableException(e.message!!)
         }
     }
 
@@ -257,7 +261,7 @@ class UserService(
 //        val user = userRepository.findByUsername(username)
         val user = userRepository.findByUserId(userId)
         if(user.users_image !== null){
-            user.users_image = getImageUrl("profiles",user.users_image!!)
+            user.users_image = minioService.getImageUrl("profiles",user.users_image!!)
         }
         return user
     }
@@ -273,7 +277,7 @@ class UserService(
         }
 
         if(user.users_image !== null){
-            user.users_image = getImageUrl("profiles",user.users_image!!)
+            user.users_image = minioService.getImageUrl("profiles",user.users_image!!)
         }
         return ProfileDTO(
             userProfile = user,
@@ -290,10 +294,6 @@ class UserService(
             authProvider = user.auth_provider!!
 //            image = getImageUrl("profiles", user.users_image!!)
         )
-    }
-
-    fun getImageUrl(bucketName: String, objectName: String): String {
-        return "$minioDomain/$bucketName/$objectName"
     }
 
     fun updatePassword(userId: String, editPasswordDTO: EditPasswordDTO): ResponseEntity<String>{
@@ -316,11 +316,11 @@ class UserService(
         try{
             val encoder = BCryptPasswordEncoder(16)
             if(!encoder.matches(rawPassword,encodedPassword)){
-                throw BadRequestException("Password not match")
+                throw CustomUnauthorizedException("Current password is not correct")
             }
             return true
-        }catch (e: BadRequestException){
-            throw BadRequestException(e.message)
+        }catch (e: CustomUnauthorizedException){
+            throw CustomUnauthorizedException(e.message!!)
         }
     }
 }

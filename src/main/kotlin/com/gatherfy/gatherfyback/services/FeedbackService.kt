@@ -18,20 +18,13 @@ import com.gatherfy.gatherfyback.repositories.RegistrationRepository
 @Service
 class FeedbackService(
     val feedbackRepository: FeedbackRepository,
-    private val userRepository: UserRepository,
     private val eventRepository: EventRepository,
     private val registrationRepository: RegistrationRepository
 ){
-    fun getAllFeedback() : List<Feedback>{
-        val feedbackList = feedbackRepository.findAll()
-        return feedbackList
-    }
 
     fun getAllFeedbackByEventId(userId: Int, eventId: Long) : List<FeedbackDTO>{
         try{
-//            val user = userRepository.findByUsername(username)
-            val isEventExist = eventRepository.findEventByEventId(eventId)
-                ?: throw EntityNotFoundException("Event id $eventId does not exist")
+            eventRepository.findEventByEventId(eventId) ?: throw EntityNotFoundException("Event id $eventId does not exist")
             val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), eventId)
 
             if(existEvent === null){
@@ -48,8 +41,6 @@ class FeedbackService(
 
     fun getFeedbackAndCountByEventId(userId: Int, eventId: Long): FeedbackCountDTO {
         try{
-//            val user = userRepository.findByUsername(username)
-
             val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), eventId)
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
@@ -64,41 +55,8 @@ class FeedbackService(
         }
     }
 
-    fun getAllFeedbackByOwner(ownerId: Long) : List<FeedbackDTO>{
-        val feedbackList = feedbackRepository.findFeedbacksByOwnerId(ownerId)
-        return feedbackList.map { toFeedbackDTO(it) }
-    }
-
-    fun createFeedback(createFeedback: Feedback): Feedback {
-        try {
-            val existingFeedback = feedbackRepository.findByUserIdAndEventId(
-                createFeedback.userId,
-                createFeedback.eventId
-            )
-            if (existingFeedback != null) {
-                throw ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "User is already feedback this event"
-                )
-            }
-            val feedback = Feedback(
-                eventId = createFeedback.eventId,
-                userId = createFeedback.userId,
-                feedbackComment = createFeedback.feedbackComment,
-                feedbackRating = createFeedback.feedbackRating,
-            )
-            val savedFeedback = feedbackRepository.save(feedback)
-            return savedFeedback
-        } catch (e: ResponseStatusException) {
-            throw e
-        } catch (e: Exception){
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST)
-        }
-    }
-
     fun createFeedbackWithAuth(userId: Long, createFeedback: CreateFeedbackDTO): Feedback {
         try {
-//            val user = userRepository.findByUsername(username)
             val event = eventRepository.findById(createFeedback.eventId)
                 .orElseThrow { EntityNotFoundException("Event id ${createFeedback.eventId} does not exist") }
             val registration = registrationRepository.findRegistrationsByUserIdAndEventId(userId.toInt(),createFeedback.eventId.toInt())
@@ -125,22 +83,7 @@ class FeedbackService(
             throw ConflictException(e.message!!)
         }
     }
-
-    fun deleteFeedback(feedbackId: Long){
-        try {
-            val feedback = feedbackRepository.findById(feedbackId).orElseThrow {
-                EntityNotFoundException("Feedback id $feedbackId does not exist")
-            }
-            feedbackRepository.delete(feedback)
-        } catch (e: ResponseStatusException) {
-            throw e
-        } catch (e: Exception) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
-        }
-    }
-
     fun getEventAlreadyFeedbacked(userId: Long): Map<String, List<Long>>{
-//        val user = userRepository.findByUsername(username)
         val eventList = feedbackRepository.findFeedbacksByUserId(userId)
         return mapOf("eventId" to eventList!!.mapNotNull { it.eventId })
     }

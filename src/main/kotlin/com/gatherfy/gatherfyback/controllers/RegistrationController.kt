@@ -21,27 +21,10 @@ class RegistrationController(
     private val tokenService: TokenService,
     @Qualifier("userDetailsService") private val userDetailsService: UserDetailsService
 ) {
-    @GetMapping("/v1/registrations")
-    fun getAllRegistrations():List<RegistrationDTO> {
-        return registrationService.getAllRegistration()
-    }
-    @GetMapping("/v1/registrations/owner/{ownerId}")
-    fun getRegistrationsByOwner(@PathVariable("ownerId") ownerId: String): List<RegistrationDTO>? {
-        val registrationId = ownerId.toLongOrNull()
-            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid registration ID format")
-        return registrationService.getAllRegistrationsByOwner(registrationId)
-    }
     @GetMapping("/v2/registrations")
     fun getRegistrationsByAuth(@RequestHeader("Authorization") token: String): List<RegistrationDTO>? {
         val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
         return registrationService.getAllRegistrationsByOwnerAuth(userId.toLong())
-    }
-
-    @GetMapping("/v1/registrations/{id}")
-    fun getRegistrationById(@PathVariable("id") id: String): Optional<RegistrationDTO>? {
-        val registrationId = id.toLongOrNull()
-            ?: throw BadRequestException("Invalid registration ID format")
-        return registrationService.getRegistrationById(registrationId)
     }
 
     @GetMapping("/v2/registrations/{id}")
@@ -76,14 +59,6 @@ class RegistrationController(
         val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
         val updatedRegistration = registrationService.updateStatusWithAuth(userId.toLong(), registrationId, registrationDTO.status)
         return ResponseEntity.ok(updatedRegistration)
-    }
-
-    @PostMapping("/v1/registrations")
-    fun createRegistration(
-        @RequestBody registrationCreateDTO: RegistrationCreateDTO
-    ): ResponseEntity<RegistrationDTO> {
-        val createdRegistration = registrationService.createRegistration(registrationCreateDTO)
-        return ResponseEntity.ok(createdRegistration)
     }
 
     @PostMapping("/v2/registrations")

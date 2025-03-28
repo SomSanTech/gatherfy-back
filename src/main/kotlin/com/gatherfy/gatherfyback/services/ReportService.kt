@@ -22,7 +22,6 @@ class ReportService(
     private val feedbackRepository: FeedbackRepository,
     private val questionService: QuestionService,
     private val answerService: AnswerService,
-    private val userRepository: UserRepository,
     private val eventRepository: EventRepository
 ) {
     fun generateReport(userId: Long, eventId: Long): ByteArray{
