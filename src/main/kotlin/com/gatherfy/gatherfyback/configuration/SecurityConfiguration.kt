@@ -35,8 +35,6 @@ class SecurityConfiguration(
                         "/api/v1/tags",
                         "/api/v1/views",
                         "/api/v1/questions/event/**",
-//                        "/api/google",
-//                        "/api/profile"
                         )
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
@@ -58,29 +56,24 @@ class SecurityConfiguration(
                         "/api/v1/feedbacks/**",
                         "/api/v2/feedbacks/**",
                         "/api/v1/answers/**")
-                    .hasRole("Organization")
+                    .hasRole("Organizer")
                     .requestMatchers(HttpMethod.POST,
-                        "/api/v1/questions",
                         "/api/v2/questions",
-                        "/api/v1/backoffice/**",
                         "/api/v2/backoffice/**",
                         "/api/v1/report/**"
                         )
-                    .hasRole("Organization")
+                    .hasRole("Organizer")
                     .requestMatchers(HttpMethod.PUT,
-                        "/api/v1/questions/**",
-                        "/api/v1/backoffice/**",
+                        "/api/v2/questions/**",
                         "/api/v2/backoffice/**",
                         "/api/v1/check-in",
                         "/api/v2/check-in",
                         "/api/v2/registrations/**")
-                    .hasRole("Organization")
+                    .hasRole("Organizer")
                     .requestMatchers(HttpMethod.DELETE,
-                        "/api/v1/questions/**",
-                        "/api/v1/backoffice/**",
-                        "/api/v2/backoffice/**",
-                        "/api/v1/feedbacks/**",)
-                    .hasRole("Organization")
+                        "/api/v2/questions/**",
+                        "/api/v2/backoffice/**")
+                    .hasRole("Organizer")
                     .anyRequest()
                     .authenticated()
             }
