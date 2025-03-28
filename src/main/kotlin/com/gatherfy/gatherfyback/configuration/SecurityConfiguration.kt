@@ -35,8 +35,8 @@ class SecurityConfiguration(
                         "/api/v1/tags",
                         "/api/v1/views",
                         "/api/v1/questions/event/**",
-                        "/api/google",
-                        "/api/profile"
+//                        "/api/google",
+//                        "/api/profile"
                         )
                     .permitAll()
                     .requestMatchers(HttpMethod.POST,
@@ -51,9 +51,7 @@ class SecurityConfiguration(
                         )
                     .permitAll()
                     .requestMatchers(HttpMethod.GET,
-                        "/api/v1/registrations",
                         "/api/v2/registrations",
-                        "/api/v1/registrations/**",
                         "/api/v2/registrations/**",
                         "/api/v2/backoffice/**",
                         "/api/v1/backoffice/**",

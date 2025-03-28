@@ -245,8 +245,10 @@ class RegistrationService(
 
     fun CheckedInAttendeeWithAuth(userId: Int, tokenDto: TokenDTO): RegistrationCreateDTO{
         try{
-//            val user = userRepository.findByUsername(username)
-//            val userId = (tokenService.getAdditionalClaims(tokenDto.qrToken, "userId")) as Int
+            val isTokenExpired = tokenService.isTokenExpired(tokenDto.qrToken)
+            if (isTokenExpired) {
+                throw CustomUnauthorizedException("Check-in token has expired. Please generate a new token.")
+            }
             val eventId = (tokenService.getAdditionalClaims(tokenDto.qrToken, "eventId")) as Int
             val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), eventId.toLong())
 
@@ -254,12 +256,13 @@ class RegistrationService(
                 throw AccessDeniedException("You are not owner of this event")
             }
             val registration = registrationRepository.findRegistrationsByUserIdAndEventId(userId,eventId)
-
             registration?.status = "Checked In"
             val updatedRegistration = registrationRepository.save(registration!!)
             return toCheckedInDto(updatedRegistration)
         }catch (e: AccessDeniedException){
             throw AccessDeniedException(e.message!!)
+        }catch (e: CustomUnauthorizedException){
+            throw CustomUnauthorizedException(e.message!!)
         }
     }
 
