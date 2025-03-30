@@ -150,10 +150,9 @@ class UserService(
             if (user.is_verified) {
                 throw BadRequestException("Email is already verified. No OTP required.")
             }
-            // Prevent too many OTP requests (e.g., only allow a new OTP every 1 minute)
             val now = LocalDateTime.now()
-            if (user.otp_expires_at != null && user.otp_expires_at!!.isAfter(now.minusMinutes(1))) {
-                throw BadRequestException("Please wait before requesting a new OTP.")
+            if (user.otp_expires_at != null && now.isBefore(user.otp_expires_at!!.minusMinutes(2))) {
+                throw BadRequestException("Please wait until 3 minutes after we sent OTP.")
             }
             user.otp = generateOTP()
             user.otp_expires_at = LocalDateTime.now().plusMinutes(5)
