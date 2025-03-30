@@ -19,8 +19,8 @@ class MinioService(
 
     fun uploadFile(bucket: String, file: MultipartFile): String {
         try{
-//            val fileName = "${System.currentTimeMillis()}-${file.originalFilename}"
-            val fileName = "${file.originalFilename}"
+            val fileName = "${System.currentTimeMillis()}-${file.originalFilename}"
+//            val fileName = "${file.originalFilename}"
             val isBucketExist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())
             if(!isBucketExist){
                 throw EntityNotFoundException("Bucket $bucket is not exist")
