@@ -20,6 +20,7 @@ class FileController(private val minioService: MinioService) {
         val fileUrl = minioService.getFileUrl(bucket, fileName)
         val response = mapOf(
             "message" to "File uploaded successfully",
+            "fileName" to fileName,
             "fileUrl" to fileUrl
         )
         return ResponseEntity.ok(response)
