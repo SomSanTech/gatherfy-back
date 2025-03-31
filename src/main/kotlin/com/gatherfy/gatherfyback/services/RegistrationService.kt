@@ -250,12 +250,13 @@ class RegistrationService(
                 throw CustomUnauthorizedException("Check-in token has expired. Please generate a new token.")
             }
             val eventId = (tokenService.getAdditionalClaims(tokenDto.qrToken, "eventId")) as Int
+            val attendeeId = (tokenService.getAdditionalClaims(tokenDto.qrToken, "userId")) as Int
             val existEvent = eventRepository.findEventByEventOwnerAndEventId(userId.toLong(), eventId.toLong())
 
             if(existEvent === null){
                 throw AccessDeniedException("You are not owner of this event")
             }
-            val registration = registrationRepository.findRegistrationsByUserIdAndEventId(userId,eventId)
+            val registration = registrationRepository.findRegistrationsByUserIdAndEventId(attendeeId,eventId)
             registration?.status = "Checked In"
             val updatedRegistration = registrationRepository.save(registration!!)
             return toCheckedInDto(updatedRegistration)
