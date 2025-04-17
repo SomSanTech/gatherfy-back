@@ -1,6 +1,7 @@
 package com.gatherfy.gatherfyback.entities
 
 import jakarta.persistence.*
+import java.time.LocalDateTime
 
 @Entity(name = "favorites")
 data class Favorite(
@@ -13,5 +14,7 @@ data class Favorite(
     var eventId: Long,
     @ManyToOne
     @JoinColumn(name = "event_id")
-    var event: Event
+    var event: Event,
+    @Column(name = "created_at")
+    var createdAt: LocalDateTime
 )

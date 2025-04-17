@@ -8,6 +8,7 @@ import com.gatherfy.gatherfyback.repositories.EventRepository
 import com.gatherfy.gatherfyback.repositories.FavoriteRepository
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class FavoriteService(
@@ -16,7 +17,7 @@ class FavoriteService(
     private val eventRepository: EventRepository
 ) {
     fun getAllFavoriteEvents(userId: Int): List<FavoriteDTO>{
-        val favoriteList = favoriteRepository.findFavoritesByUserId(userId.toLong())
+        val favoriteList = favoriteRepository.findFavoritesByUserIdOrderByCreatedAtAsc(userId.toLong())
         return  favoriteList.map { toFavoriteDto(it) }
     }
 
@@ -30,7 +31,8 @@ class FavoriteService(
                 val fav = Favorite(
                     userId = userId.toLong(),
                     eventId = createFavoriteDTO.eventId,
-                    event = isEventExist
+                    event = isEventExist,
+                    createdAt = LocalDateTime.now()
                 )
                 val savedFav = favoriteRepository.save(fav)
                 return toFavoriteDto(savedFav)
@@ -63,9 +65,10 @@ class FavoriteService(
         return FavoriteDTO(
             favoriteId = favorite.favoriteId!!,
             eventId = favorite.event.event_id!!,
-            eventName = favorite.event.event_name,
-            eventSlug = favorite.event.event_slug,
-            eventImage = minioService.getImageUrl("thumbnails", favorite.event.event_image)
+            name = favorite.event.event_name,
+            slug = favorite.event.event_slug,
+            image = minioService.getImageUrl("thumbnails", favorite.event.event_image),
+            createdAt = favorite.createdAt
         )
     }
 }
