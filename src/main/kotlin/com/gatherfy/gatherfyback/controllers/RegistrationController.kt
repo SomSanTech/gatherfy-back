@@ -56,7 +56,7 @@ class RegistrationController(
         @RequestBody createRegistrationDTO: CreateRegistrationDTO
     ): RegistrationDTO {
         val userId = tokenService.getSubjectFromToken(token.substringAfter("Bearer "))
-        return registrationService.createRegistrationWithAuth(userId.toLong(),createRegistrationDTO.eventId)
+        return registrationService.createRegistrationWithAuth(userId.toLong(),createRegistrationDTO.eventId,createRegistrationDTO.regisDate)
     }
 
     @GetMapping("/v2/registrations/event/{id}")

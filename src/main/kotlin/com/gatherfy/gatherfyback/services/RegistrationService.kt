@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -112,7 +113,7 @@ class RegistrationService(
     }
 
 
-    fun createRegistrationWithAuth(userId: Long, eventId: Long): RegistrationDTO {
+    fun createRegistrationWithAuth(userId: Long, eventId: Long, regisDate: LocalDateTime): RegistrationDTO {
         try {
 //            val user = userRepository.findByUsername(username)
             val user = userRepository.findByUserId(userId)
@@ -139,7 +140,8 @@ class RegistrationService(
                 status = "Awaiting Check-in",
                 createdAt = ZonedDateTime.now(),
                 eventId = eventId,
-                userId = userId
+                userId = userId,
+                regisDate = regisDate
             )
 
             val savedRegistration = registrationRepository.save(registration)
