@@ -104,7 +104,9 @@ class UserService(
         try{
             val accountDetail = tokenService.getAllClaimsFromToken(createUserGoogle.token)
 
-            val profilePicture = minioService.uploadImageFromUrl("profiles", accountDetail!!["picture"].toString(),accountDetail["name"].toString())
+            val defaultProfilePic = accountDetail!!["picture"].toString()
+            val highResPicture = defaultProfilePic.replace("=s96-c", "=s400-c")
+            val profilePicture = minioService.uploadImageFromUrl("profiles",highResPicture,accountDetail["name"].toString())
 
             val user = User(
                 users_id = null,
