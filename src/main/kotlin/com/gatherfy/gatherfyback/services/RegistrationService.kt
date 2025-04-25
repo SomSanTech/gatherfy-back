@@ -205,7 +205,8 @@ class RegistrationService(
             slug = registration.event.event_slug,
             image = minioService.getImageUrl("thumbnails", registration.event.event_image),
             owner = ownerEventName,
-            tags = registration.event.tags?.map { it.tag_title }
+            tags = registration.event.tags?.map { it.tag_title },
+            regisDate = registration.regisDate
         )
     }
 

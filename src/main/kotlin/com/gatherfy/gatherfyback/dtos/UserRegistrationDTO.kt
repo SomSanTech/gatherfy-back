@@ -15,5 +15,6 @@ data class UserRegistrationDTO(
     var slug: String,
     var image: String,
     var owner: String,
-    var tags: List<String>?
+    var tags: List<String>?,
+    var regisDate: LocalDateTime,
 )
