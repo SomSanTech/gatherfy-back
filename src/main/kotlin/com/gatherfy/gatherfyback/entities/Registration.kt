@@ -1,7 +1,9 @@
 package com.gatherfy.gatherfyback.entities
 
 import jakarta.persistence.*
+import java.time.LocalDateTime
 import java.time.ZonedDateTime
+import java.util.*
 
 @Entity(name="registrations")
 data class Registration(
@@ -20,5 +22,8 @@ data class Registration(
     var user: User,
     var status: String,
     @Column(columnDefinition = "created_at")
-    var createdAt: ZonedDateTime= ZonedDateTime.now()
+    var createdAt: ZonedDateTime= ZonedDateTime.now(),
+
+    @Column(columnDefinition = "regis_date")
+    var regisDate: LocalDateTime
 )
