@@ -34,6 +34,12 @@ class EventController(
         return eventService.getEventBySlug(slug)
     }
 
+    @GetMapping("/v2/events/{slug}")
+    fun getEventWithStatus(@PathVariable slug: String) : EventAndStatusDTO {
+        return eventService.getEventBySlugWithRegisDate(slug)
+    }
+
+
     @GetMapping("/v1/backoffice/events/{eventId}")
     fun getEvent(@RequestHeader("Authorization")token: String, @PathVariable eventId: String) : EventDTO {
     val id = eventId.toLongOrNull()
