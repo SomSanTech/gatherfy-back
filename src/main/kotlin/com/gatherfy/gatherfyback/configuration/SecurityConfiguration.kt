@@ -30,6 +30,7 @@ class SecurityConfiguration(
                 it
                     .requestMatchers(HttpMethod.GET,
                         "/api/v1/events/**",
+                        "/api/v2/events/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/api/v1/tags",

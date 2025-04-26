@@ -1,6 +1,7 @@
 package com.gatherfy.gatherfyback.entities
 
 import jakarta.persistence.*
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.*
@@ -25,5 +26,5 @@ data class Registration(
     var createdAt: ZonedDateTime= ZonedDateTime.now(),
 
     @Column(columnDefinition = "regis_date")
-    var regisDate: LocalDateTime
+    var regisDate: LocalDate
 )

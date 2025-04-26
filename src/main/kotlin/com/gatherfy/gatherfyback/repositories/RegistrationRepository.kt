@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 
 @Repository
 interface RegistrationRepository: JpaRepository<Registration,Long> {
@@ -24,4 +25,6 @@ interface RegistrationRepository: JpaRepository<Registration,Long> {
 
     @Query("SELECT r FROM registrations r JOIN r.event e where r.eventId = :eventId and e.event_owner = :ownerId and r.registrationId = :registrationId")
     fun findByOwnerIdAndEventId(ownerId: Long, eventId: Long, registrationId: Long): Registration?
+
+    fun findByEventIdAndRegisDate(eventId: Long?, regisDate: LocalDate): List<Registration>?
 }

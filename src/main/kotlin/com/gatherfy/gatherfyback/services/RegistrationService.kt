@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -113,14 +113,19 @@ class RegistrationService(
     }
 
 
-    fun createRegistrationWithAuth(userId: Long, eventId: Long, regisDate: LocalDateTime): RegistrationDTO {
+    fun createRegistrationWithAuth(userId: Long, eventId: Long, regisDate: LocalDate): RegistrationDTO {
         try {
 //            val user = userRepository.findByUsername(username)
             val user = userRepository.findByUserId(userId)
             val event = eventRepository.findById(eventId)
                 .orElseThrow { EntityNotFoundException("Event id $eventId does not exist") }
 
-            val countRegistration = registrationRepository.findRegistrationsByEventId(eventId).count()
+//            val countRegistration = registrationRepository.findRegistrationsByEventId(eventId).count()
+//            if(countRegistration == event.event_capacity.toInt()){
+//                throw ConflictException("This event has reached full capacity")
+//            }
+
+            val countRegistration = registrationRepository.findByEventIdAndRegisDate(eventId,regisDate)?.count()
             if(countRegistration == event.event_capacity.toInt()){
                 throw ConflictException("This event has reached full capacity")
             }
@@ -146,11 +151,14 @@ class RegistrationService(
 
             val savedRegistration = registrationRepository.save(registration)
             emailSenderService.sendRegistrationConfirmation(event,user)
-            val updateEventRegistration = countRegistration + 1
-            if(updateEventRegistration == event.event_capacity.toInt()){
-                event.event_status = "full"
-                eventRepository.save(event)
-            }
+//            val updateEventRegistration = countRegistration + 1
+//            if(updateEventRegistration == event.event_capacity.toInt()){
+//                event.event_status = "full"
+//                eventRepository.save(event)
+//            }
+
+
+
             return toRegistrationDTO(savedRegistration)
         } catch (e: EntityNotFoundException) {
             throw EntityNotFoundException(e.message)
@@ -174,7 +182,8 @@ class RegistrationService(
             email = registration.user.users_email,
             phone = registration.user.users_phone,
             status = registration.status,
-            createdAt = registration.createdAt
+            createdAt = registration.createdAt,
+            regisDate = registration.regisDate,
         )
     }
 

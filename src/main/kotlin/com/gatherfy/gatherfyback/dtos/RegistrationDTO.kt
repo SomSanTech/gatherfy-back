@@ -1,5 +1,6 @@
 package com.gatherfy.gatherfyback.dtos
 
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
@@ -15,5 +16,6 @@ class RegistrationDTO(
     val email: String,
     val phone: String?,
     val status: String,
-    val createdAt: ZonedDateTime
+    val createdAt: ZonedDateTime,
+    val regisDate: LocalDate?
 )
