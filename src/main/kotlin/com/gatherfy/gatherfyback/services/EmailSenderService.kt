@@ -51,7 +51,7 @@ class EmailSenderService(
     }
 
     // New events notification
-    @Scheduled(cron = "\${scheduler.email-new-event-notification-cron}")
+    @Scheduled(cron = "\${scheduler.email-new-event-notification-cron}", zone = "Asia/Bangkok")
     fun processQueuedEmailsNewEvents() {
         if (pendingEmailsNewEvent.isEmpty()) return
         val eventsToSend = mutableListOf<Event>()
@@ -80,7 +80,6 @@ class EmailSenderService(
         // Send emails
         for ((email, eventList) in userEmailMap) {
             buildEmailNewEvent(eventList, email)
-            println(email)
         }
     }
 
@@ -88,13 +87,8 @@ class EmailSenderService(
         events: List<Event>,
         targetEmail: String
     ){
-        val eventDetails = events.joinToString("<br>") {
-            "<p><b>EVENT : </b> ${it.event_name}<br> " +
-            "<b>&#128198; Date:</b>  ${it.event_start_date.toLocalDate()} - ${it.event_end_date.toLocalDate()} <br>" +
-            "<b>&#128205; Location:</b> ${it.event_location} </p>"
-        }
         val context = Context()
-        context.setVariable("eventDetails", eventDetails)
+        context.setVariable("events", events)
 
         sendEmail("A New Event Just Dropped! Don’t Miss Out!", targetEmail, "new-events.html", context)
     }
@@ -137,7 +131,7 @@ class EmailSenderService(
 
     }
 
-    @Scheduled(cron = "\${scheduler.email-reminder-notification-cron}")
+    @Scheduled(cron = "\${scheduler.email-reminder-notification-cron}", zone = "Asia/Bangkok")
     fun sendReminderEmails(){
         val localDate = LocalDate.now()
         val tomorrow = localDate.plusDays(1).atStartOfDay() // 2025-02-13T00:00:00
@@ -162,7 +156,7 @@ class EmailSenderService(
         sendEmail("Reminder: ${event.event_name} starts soon!",user.users_email,"reminder.html",context)
     }
 
-    @Scheduled(cron = "\${scheduler.email-countdown-notification-cron}")
+    @Scheduled(cron = "\${scheduler.email-countdown-notification-cron}", zone = "Asia/Bangkok")
     fun sendHourReminderEmails(){
         val now = LocalDateTime.now()
         val oneHourLater = now.plusHours(1).truncatedTo(ChronoUnit.MINUTES)
