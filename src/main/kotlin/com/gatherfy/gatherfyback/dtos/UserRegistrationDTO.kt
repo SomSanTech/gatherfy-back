@@ -18,4 +18,5 @@ data class UserRegistrationDTO(
     var owner: String,
     var tags: List<String>?,
     var regisDate: LocalDate,
+    var regisStatus: String,
 )
